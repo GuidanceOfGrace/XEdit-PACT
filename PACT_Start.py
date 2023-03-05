@@ -55,7 +55,7 @@ pact_ini_create()
 PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
 PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Start.ini")
-PACT_Date = "030323"  # DDMMYY
+PACT_Date = "050323"  # DDMMYY
 PACT_Current = "PACT v1.00"
 PACT_Updated = False
 
@@ -100,12 +100,11 @@ Warn_Invalid_INI_Setup = """
 
 # =================== UPDATE FUNCTION ===================
 def pact_update_check():
-    global Check_Updates
     global PACT_Current
     global PACT_Updated
     print("CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL UPDATES...")
     print("(You can disable this check in the EXE or Pact Start.ini) \n")
-    response = requests.get("https://github.com/GuidanceOfGrace/XEdit-PACT/releases")  # RESERVED | type: ignore
+    response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
     PACT_Received = response.json()["name"]
     if PACT_Received == PACT_Current:
         PACT_Updated = True
@@ -115,17 +114,11 @@ def pact_update_check():
         print("===============================================================================")
     return PACT_Updated
 
-
 def pact_update_run():
-    global Check_Updates
     if PACT_config.getboolean("MAIN", "Update Check") is True:
-        try:
-            PACT_CheckUpdates = pact_update_check()
-            return PACT_CheckUpdates
-        except (ImportError, ModuleNotFoundError):
-            print(Warn_Outdated_PACT)
-            print("===============================================================================")
-    elif PACT_config.getboolean("MAIN", "Update Check") is False:
+        PACT_CheckUpdates = pact_update_check()
+        print("===============================================================================")
+    else:
         print("\n ❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
 
 
@@ -230,8 +223,10 @@ def run_xedit(xedit_exc_log, plugin_name):
                 xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {xedit_exc_log}'])
                 Exception_Check = xedit_exc_out.decode()  # This method this since xedit is actively writing to it.
                 if "which can not be found" in Exception_Check:
-                    print("❌ ERROR ENCOUNTERED! KILLING XEDIT...")
-                    clean_failed_list.append(plugin_name)
+                    print("❌ ERROR ENCOUNTERED! KILLING XEDIT AND ADDING PLUGIN TO PACT IGNORE FILE...")
+                    with open("PACT_Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_Ignore:
+                        PACT_Ignore.write(f"{plugin_name}\n")
+                        clean_failed_list.append(plugin_name)
                     plugins_processed -= 1
                     proc.kill()
                     time.sleep(1)
@@ -328,7 +323,6 @@ def clean_plugins():
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
-    pact_update_check()
     pact_update_run()
     check_settings_paths()
     check_settings_integrity("FO4Edit", "Fallout4.esm")

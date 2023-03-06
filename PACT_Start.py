@@ -1,9 +1,7 @@
 # PLUGIN AUTO CLEANING TOOL (PACT) | By Poet (The Sound Of Snow)
 import configparser
 import os
-import platform
 import subprocess
-import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -42,7 +40,7 @@ def pact_ini_create():
                         "LoadOrder TXT = \n\n",
                         "# Set or copy-paste your XEdit executable path below. Example: XEdit EXE = E:/Tools/FO4Edit/FO4Edit.exe \n",
                         "# Make sure that the XEdit version you are setting is for the actual game you wish to clean. \n",
-                        "XEdit EXE = \n\n",
+                        "XEDIT EXE = \n\n",
                         "# Set or copy-paste your MO2 executable path below. Example: MO2 EXE = E:/MO2/ModOrganizer.exe \n",
                         "# This is only required if you are using Mod Organizer 2. Otherwise, leave this blank. \n",
                         "MO2 EXE = "]
@@ -55,8 +53,8 @@ pact_ini_create()
 PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
 PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Start.ini")
-PACT_Date = "050323"  # DDMMYY
-PACT_Current = "PACT v1.00"
+PACT_Date = "060323"  # DDMMYY
+PACT_Current = "PACT v1.10"
 PACT_Updated = False
 
 
@@ -71,15 +69,9 @@ def pact_ini_update(section: str, value: str):  # Convenience function for check
 
 
 # =================== WARNING MESSAGES ==================
-""" Warn_PACT_Python_Version = | RESERVED
-❌  WARNING : YOUR PYTHON VERSION IS OUT OF DATE! PLEASE UPDATE PYTHON.
-    FOR LINUX / WIN 10 / WIN 11: https://www.python.org/downloads
-    FOR WIN 7 / 8 / 8.1 : https://github.com/adang1345/PythonWin7
-"""
-""" Warn_PACT_Python_Platform = | RESERVED
-❌  WARNING : NEWEST PYTHON VERSIONS ARE NOT OFFICIALLY SUPPORTED ON WINDOWS 7/8/8.1
-    Install the newest Py version from here: https://github.com/adang1345/PythonWin7
-    Click on green Code button and Download Zip, then extract and install Python 3.11
+Warn_PACT_Update_Failed = """
+❌  WARNING : PACT WAS UNABLE TO CHECK FOR UPDATES, BUT WILL CONTINUE RUNNING
+    CHECK FOR ANY PACT UPDATES HERE: https://www.nexusmods.com/fallout4/mods/xxxxx
 """
 Warn_Outdated_PACT = """
 ❌  WARNING : YOUR PACT VERSION IS OUT OF DATE!
@@ -102,8 +94,8 @@ Warn_Invalid_INI_Setup = """
 def pact_update_check():
     global PACT_Current
     global PACT_Updated
-    print("CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL UPDATES...")
-    print("(You can disable this check in the EXE or Pact Start.ini) \n")
+    print("✔️ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL UPDATES...")
+    print("   (You can disable this check in the EXE or Pact Start.ini) \n")
     response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
     PACT_Received = response.json()["name"]
     if PACT_Received == PACT_Current:
@@ -114,17 +106,22 @@ def pact_update_check():
         print("===============================================================================")
     return PACT_Updated
 
+
 def pact_update_run():
     if PACT_config.getboolean("MAIN", "Update Check") is True:
-        PACT_CheckUpdates = pact_update_check()
-        print("===============================================================================")
+        try:
+            pact_update_check()
+            print("===============================================================================")
+        except (OSError, requests.exceptions.RequestException):
+            print(Warn_PACT_Update_Failed)
+            print("===============================================================================")
     else:
         print("\n ❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
 
 
 # =================== TERMINAL OUTPUT START ====================
 print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| For SSE & FO4")
-print("DO NOT FORGET TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE RUNNING THIS TOOL")
+print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING PLUGINS")
 print("===============================================================================")
 
 
@@ -140,7 +137,7 @@ class Info:
 info = Info()
 info.LoadOrder_TXT = PACT_config["MAIN"]["LoadOrder TXT"]
 info.LoadOrder_Path = os.path.dirname(info.LoadOrder_TXT)
-info.XEdit_EXE = PACT_config["MAIN"]["XEdit EXE"]
+info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"]
 info.XEdit_Path = os.path.dirname(info.XEdit_EXE)
 info.MO2_EXE = PACT_config["MAIN"]["MO2 EXE"]
 MO2Mode = False
@@ -199,7 +196,7 @@ def run_xedit(xedit_exc_log, plugin_name):
     if os.path.exists("PACT_Cleaning.bat"):
         os.remove("PACT_Cleaning.bat")
     with open("PACT_Cleaning.bat", "w+") as PACT_Cleaning:
-        if MO2Mode:  # Command will not work if plugin has "&" in the name. Other special characters would likely also apply.
+        if MO2Mode:  # Command will not work if plugin has "&" or "+" in name. Other special characters likely also apply.
             PACT_Cleaning.write(f'"{info.MO2_EXE}" run "{info.XEdit_EXE}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""')
         else:
             PACT_Cleaning.write(f'"{info.XEdit_EXE}" -a -QAC -autoexit -autoload "{plugin_name}"')
@@ -266,6 +263,7 @@ def check_results(xedit_log, plugin_name):
 
 
 def clean_plugins():
+    global MO2Mode
     global VIP_skip_list, LCL_skip_list
     xedit_log_exe = str(info.XEdit_EXE)
     xedit_log_path = xedit_log_exe.replace('.exe', '_log.txt')
@@ -284,22 +282,27 @@ def clean_plugins():
     # Run XEdit with arguments for each valid plugin in loadorder.txt file.
     # Subprocess automatically waits for instance to finish before running again.
     with open("PACT_Ignore.txt", "r", encoding="utf-8", errors="ignore") as IG_List:
-        IG_Plugins = [line.strip() for line in IG_List.readlines()[1:]]
+        IG_Plugins = [line.strip() for line in IG_List.readlines()[1:]]  # type: ignore # DO NOT REMOVE, RESERVED FOR LATER
 
     with open(info.LoadOrder_TXT, "r", encoding="utf-8", errors="ignore") as LO_List:
         ALL_skip_list = VIP_skip_list + LCL_skip_list
-        LO_List.seek(0)  # Have to return line pointer to start of file.
+        LO_List.seek(0)  # Return line pointer to first line.
         LO_Plugins = [line.strip() for line in LO_List.readlines()[1:]]
 
-    count_plugins = len(set(LO_Plugins) - set(IG_Plugins))
+    count_plugins = len(set(LO_Plugins) - set(ALL_skip_list))
+    count_plugins_set = set(LO_Plugins) - set(ALL_skip_list)
     print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {count_plugins} )\n")
+    if len(count_plugins_set) > 0:
+        print(f"❌ PLUGINS THAT WILL BE SKIPPED : \n")
+        for item in count_plugins_set:
+            print(item)
     count_cleaned = 0
     for plugin in LO_Plugins:
         if not any(plugin in elem for elem in ALL_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
             count_cleaned += 1
             run_xedit(xedit_exc_path, plugin)
-            print(f"Finished cleaning: {plugin} ({count_cleaned} / {count_plugins})")
             check_results(xedit_log_path, plugin)
+            print(f"Finished cleaning: {plugin} ({count_cleaned} / {count_plugins})")
 
     print("✔️ CLEANING COMPLETE !")
     print(f"Successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.")
@@ -323,9 +326,9 @@ def clean_plugins():
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
-    pact_update_run()
     check_settings_paths()
     check_settings_integrity("FO4Edit", "Fallout4.esm")
     check_settings_integrity("SSEEdit", "Skyrim.esm")
+    pact_update_run()
     clean_plugins()
     os.system("pause")

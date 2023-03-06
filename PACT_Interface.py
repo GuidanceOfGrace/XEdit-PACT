@@ -1,34 +1,40 @@
 import os
 import sys
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QUrl, QTimer, QThread, Signal
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFileDialog
-from PACT_Start import (PACT_config, PACT_Current, pact_ini_update, pact_update_run, check_settings_paths, check_settings_integrity, clean_plugins)
+from PACT_Start import (PACT_config, PACT_Current, pact_ini_update, pact_update_check, check_settings_paths, check_settings_integrity, clean_plugins)
 
+'''TEMPLATES
+QMessageBox.NoIcon | Question | Information | Warning | Critical
+'''
 
 class UiPACTMainWin(object):
     def __init__(self):
-        self.LBL_Settings2 = None
-        self.LBL_Settings1 = None
         self.configured_LO = False
         self.configured_MO2 = False
         self.configured_XEDIT = False
+
         self.ChkBT_Update = None
         self.ChkBT_Stats = None
         self.Line_Separator_1 = None
-
+        self.LBL_Settings1 = None
+        self.LBL_Settings2 = None
         self.RegBT_Browse_LO = None
         self.RegBT_Browse_MO2 = None
         self.RegBT_Browse_XEDIT = None
         self.RegBT_CheckUpdates = None
-        self.RegBT_Exit = None
-        self.RegBT_Help = None
-        self.RegBT_CheckUpdates = None
         self.RegBT_CLEAN_PLUGINS = None
 
-        self.timer = QTimer()  # Timer for CLEAN PLUGINS
+        self.RegBT_Help = None
+        self.RegBT_Exit = None
+        self.RegBT_CheckUpdates = None
+
+        self.timer = QTimer()  # For CLEAN PLUGINS Button
         self.timer.timeout.connect(self.check_configured)
-        self.timer.start(3000)  # 1000 milliseconds = 1 second
+        self.timer.start(2000)  # In milliseconds.
+
 
     def setup_ui(self, PACT_MainWin):
         # MAIN WINDOW
@@ -84,6 +90,7 @@ class UiPACTMainWin(object):
         self.Line_Separator_1.setFrameShape(QtWidgets.QFrame.Shape.HLine)  # type: ignore
         self.Line_Separator_1.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)  # type: ignore
         self.Line_Separator_1.setObjectName("Line_Separator_1")
+        
         # SEPARATOR TEXT 1
         self.LBL_Settings1 = QtWidgets.QLabel(PACT_MainWin)
         self.LBL_Settings1.setGeometry(QtCore.QRect(50, 120, 550, 24))
@@ -93,6 +100,7 @@ class UiPACTMainWin(object):
         font.setBold(True)
         self.LBL_Settings1.setFont(font)
         self.LBL_Settings1.setObjectName("LBL_NOTE_SET")
+        
         # SEPARATOR TEXT 2
         self.LBL_Settings2 = QtWidgets.QLabel(PACT_MainWin)
         self.LBL_Settings2.setGeometry(QtCore.QRect(120, 140, 550, 24))
@@ -103,6 +111,7 @@ class UiPACTMainWin(object):
         self.LBL_Settings2.setFont(font)
         self.LBL_Settings2.setObjectName("LBL_NOTE_MO2")
 
+        # MAIN
         # Button - CLEAN PLUGINS
         self.RegBT_CLEAN_PLUGINS = QtWidgets.QPushButton(PACT_MainWin)
         self.RegBT_CLEAN_PLUGINS.setGeometry(QtCore.QRect(245, 200, 150, 32))
@@ -111,18 +120,44 @@ class UiPACTMainWin(object):
         font.setPointSize(10)
         font.setBold(True)
         self.RegBT_CLEAN_PLUGINS.setFont(font)
-        self.RegBT_CLEAN_PLUGINS.setEnabled(False)
         self.RegBT_CLEAN_PLUGINS.setText("CLEAN PLUGINS")
-        self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: lightgray; border-radius: 5px; border: 1px solid gray;")
-        self.RegBT_CLEAN_PLUGINS.clicked.connect(self.Plugins_CLEAN)  # type: ignore
+        self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: white; border-radius: 5px; border: 1px solid gray;")
+        self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)  # type: ignore
+        self.worker = PACT_Worker()
+
+        # BOTTOM
+        # Button - HELP
+        self.RegBT_Help = QtWidgets.QPushButton(PACT_MainWin)
+        self.RegBT_Help.setGeometry(QtCore.QRect(20, 280, 110, 24))
+        self.RegBT_Help.setObjectName("RegBT_Help")
+        self.RegBT_Help.setText("HELP")
+        self.RegBT_Help.setToolTip("How To Use PACT GUI")
+        self.RegBT_Help.clicked.connect(self.Help_Popup)  # type: ignore
+        
+        # Button - Check Updates
+        self.RegBT_CheckUpdates = QtWidgets.QPushButton(PACT_MainWin)
+        self.RegBT_CheckUpdates.setGeometry(QtCore.QRect(245, 280, 150, 24))
+        self.RegBT_CheckUpdates.setObjectName("RegBT_CheckUpdates")
+        self.RegBT_CheckUpdates.setText("CHECK FOR UPDATES")
+        self.RegBT_CheckUpdates.clicked.connect(self.Update_Popup)  # type: ignore
+        
+        # Button - EXIT
+        self.RegBT_Exit = QtWidgets.QPushButton(PACT_MainWin)
+        self.RegBT_Exit.setGeometry(QtCore.QRect(510, 280, 110, 24))
+        self.RegBT_Exit.setObjectName("RegBT_Exit")
+        self.RegBT_Exit.setText("EXIT")
+        self.RegBT_Exit.setToolTip("Exit PACT GUI")
+        self.RegBT_Exit.clicked.connect(PACT_MainWin.close)  # type: ignore
+
 
     # ============== CLEAN PLUGINS BUTTON STATES ================
+    def start_cleaning(self):
+        self.RegBT_CLEAN_PLUGINS.setEnabled(False)
+        self.worker.start()
+
     def check_configured(self):
         if not (self.configured_LO and self.configured_XEDIT):
             self.RegBT_CLEAN_PLUGINS.setEnabled(False)
-        else:
-            self.RegBT_CLEAN_PLUGINS.setEnabled(True)
-            self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: white; border-radius: 5px; border: 1px solid gray;")
 
     def disable_config_lo(self):
         self.configured_LO = False
@@ -148,16 +183,34 @@ class UiPACTMainWin(object):
         self.configured_XEDIT = True
         self.RegBT_CLEAN_PLUGINS.setEnabled(self.configured_LO and self.configured_XEDIT)
 
+    # ================== POP-UPS / WARNINGS =====================
+
+    help_popup_msg = """If you have trouble running this program or wish to submit your PACT logs for additional help, join the Collective Modding Discord server.
+    
+    Press OK to open the server link in your internet browser."""
+
+    @staticmethod
+    def Help_Popup():
+        msgBox = QtWidgets.QMessageBox()
+        msgBox.setIcon(QtWidgets.QMessageBox.Question)
+        msgBox.setWindowTitle("Need Help?")
+        msgBox.setText(UiPACTMainWin.help_popup_msg)  # RESERVED | msgBox.setInformativeText("...")
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+        if msgBox.exec() != QtWidgets.QMessageBox.Cancel:
+            QDesktopServices.openUrl(QUrl("https://discord.com/invite/7ZZbrsGQh4"))
+
+
+    @staticmethod
+    def Update_Popup():
+        if pact_update_check():
+            QtWidgets.QMessageBox.information(PACT_MainWin, "PACT Update", "You have the latest version of PACT!")
+        else:
+            QtWidgets.QMessageBox.warning(PACT_MainWin, "PACT Update", "New PACT version is available!\nPress OK to open the PACT Nexus Page.")
+            QDesktopServices.openUrl(QUrl("https://www.nexusmods.com/fallout4/mods/56255"))
+
     # ================= MAIN BUTTON FUNCTIONS ===================
     # @staticmethod recommended for func that don't call "self".
 
-    @staticmethod
-    def Plugins_CLEAN():
-        pact_update_run()
-        check_settings_paths()
-        check_settings_integrity("FO4Edit", "Fallout4.esm")
-        check_settings_integrity("SSEEdit", "Skyrim.esm")
-        clean_plugins()
 
     def select_file_lo(self):
         LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")
@@ -197,6 +250,23 @@ class UiPACTMainWin(object):
             self.RegBT_Browse_XEDIT.setText("❌ WRONG XEDIT EXE")
             self.RegBT_Browse_XEDIT.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")
             self.disable_config_xedit()
+
+
+# NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI
+class PACT_Worker(QThread):
+    progress_signal = Signal(int)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+    def run(self):  # def Plugins_CLEAN():
+        pact_update_check()
+        check_settings_paths()
+        check_settings_integrity("FO4Edit", "Fallout4.esm")
+        check_settings_integrity("SSEEdit", "Skyrim.esm")
+        clean_plugins()
+        for i in range(100):
+            self.progress_signal.emit(i)
+            self.msleep(100)
 
 
 if __name__ == "__main__":

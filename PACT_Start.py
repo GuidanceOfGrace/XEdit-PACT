@@ -64,12 +64,12 @@ def pact_ini_update(section: str, value: str):  # Convenience function for check
 # =================== WARNING MESSAGES ==================
 Warn_PACT_Update_Failed = """
 ❌  WARNING : PACT WAS UNABLE TO CHECK FOR UPDATES, BUT WILL CONTINUE RUNNING
-    CHECK FOR ANY PACT UPDATES HERE: https://www.nexusmods.com/fallout4/mods/xxxxx
+    CHECK FOR ANY PACT UPDATES HERE: https://www.nexusmods.com/fallout4/mods/69413
 """
 Warn_Outdated_PACT = """
 ❌  WARNING : YOUR PACT VERSION IS OUT OF DATE!
     Please download the latest version from here:
-    https://www.nexusmods.com/fallout4/mods/XXXXX
+    https://www.nexusmods.com/fallout4/mods/69413
 """
 Warn_Invalid_INI_Path = """
 ❌  WARNING : YOUR PACT INI PATHS ARE INCORRECT!

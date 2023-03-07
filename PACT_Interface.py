@@ -39,7 +39,7 @@ class UiPACTMainWin(object):
     def setup_ui(self, PACT_MainWin):
         # MAIN WINDOW
         PACT_MainWin.setObjectName("PACT_MainWin")
-        PACT_MainWin.setWindowTitle(f"Plugin Analyzer & Cleaning Tool  {PACT_Current[-4:]}")
+        PACT_MainWin.setWindowTitle(f"Plugin Auto Cleaning Tool  {PACT_Current[-4:]}")
         PACT_MainWin.resize(640, 640)
         PACT_MainWin.setMinimumSize(QtCore.QSize(640, 320))
         PACT_MainWin.setMaximumSize(QtCore.QSize(640, 320))

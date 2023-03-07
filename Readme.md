@@ -1,4 +1,4 @@
-=====================================================================================================
+===========================================================================
 # LINKS #
 
 Mod Organizer 2 - https://github.com/ModOrganizer2/modorganizer/releases
@@ -9,7 +9,7 @@ FO4Edit - https://www.nexusmods.com/fallout4/mods/2737/?tab=files
 
 FO4 PACT - https://www.nexusmods.com/fallout4/mods/69413
 
-=====================================================================================================
+===========================================================================
 # BEFORE YOU ASK #
 
 > Is it safe to clean plugins?
@@ -31,7 +31,7 @@ Exact reason is unknown, could be due to certain record types being treated as f
 
 If you know any better, feel free to enlighten me.
 
-=====================================================================================================
+===========================================================================
 # CONTENTS & FILES #
 
 *PACT Readme.md* - The file that you're reading right now.
@@ -45,7 +45,7 @@ This file will be auto generated after running the exe for the first time. Remov
 *PACT Ignore.txt* - Additional file where you can exclude plugins from cleaning, simply add one plugin name to each line.
 This file will be auto generated after running the exe for the first time. Remove it to reset the ignore list.
 
-=====================================================================================================
+===========================================================================
 # HOW TO USE PACT #
 
 After running the PACT EXE, you'll have to set up the required file paths for your *loadorder.txt* file and *XEdit.exe* executable.
@@ -79,7 +79,7 @@ PACT will add to *PACT Ignore.txt* file any plugin which is already clean (no IT
 PACT will skip and add to ignore list any plugin that *XEdit* cannot load because of missing plugin requirements.
 PACT will also skip other invalid plugins, though it will take *5 minutes* for the process to time out, unless you close *XEdit* manually.
 
-=====================================================================================================
+===========================================================================
 # KNOWN ISSUES #
 
 - PACT currently cannot clean plugins that have "&" or "+" in their name. Other special characters likely also apply.
@@ -87,7 +87,7 @@ PACT will also skip other invalid plugins, though it will take *5 minutes* for t
 
 - If any plugin takes longer than *5 minutes* to clean, PACT will automatically close *XEdit* and skip that plugin.
 
-=====================================================================================================
+===========================================================================
 # CHANGELOG #
 
 1.11

@@ -20,7 +20,7 @@ AUTHOR NOTES (POET):
 
 # =================== PACT INI FILE ===================
 def pact_ini_create():
-    if not os.path.exists("PACT Start.ini"):  # INI FILE FOR AUTO-SCANNER
+    if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR AUTO-SCANNER
         INI_Settings = ["[MAIN]\n",
                         "# This file contains configuration settings for both PACT_Start.py and Plugin Auto Cleaning Tool.exe \n",
                         "# Set to true if you want PACT to check if you have the latest version of PACT. \n",
@@ -37,7 +37,7 @@ def pact_ini_create():
                         "# Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below. \n",
                         "# Only required if using Mod Organizer 2. Otherwise, leave this blank. \n",
                         "MO2 EXE = "]
-        with open("PACT Start.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
+        with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
             INI_PACT.writelines(INI_Settings)
 
 
@@ -45,9 +45,9 @@ pact_ini_create()
 # Use optionxform = str to preserve INI formatting. | Set comment_prefixes to unused char to keep INI comments.
 PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
 PACT_config.optionxform = str  # type: ignore
-PACT_config.read("PACT Start.ini")
-PACT_Date = "060323"  # DDMMYY
-PACT_Current = "PACT v1.11"
+PACT_config.read("PACT Settings.ini")
+PACT_Date = "080323"  # DDMMYY
+PACT_Current = "PACT v1.15"
 PACT_Updated = False
 
 
@@ -57,7 +57,7 @@ def pact_ini_update(section: str, value: str):  # Convenience function for check
     else:
         PACT_config["MAIN"][str(section)] = str(value)
 
-    with open("PACT Start.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
+    with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
         PACT_config.write(INI_PACT)
 
 
@@ -73,13 +73,13 @@ Warn_Outdated_PACT = """
 """
 Warn_Invalid_INI_Path = """
 ❌  WARNING : YOUR PACT INI PATHS ARE INCORRECT!
-    Please run the PACT program or open Pact Start.ini
+    Please run the PACT program or open PACT Settings.ini
     And make sure that file / folder paths are correctly set!
 """
 Warn_Invalid_INI_Setup = """
 ❌  WARNING : YOUR PACT INI SETUP IS INCORRECT!
     You likely set the wrong XEdit version for your game.
-    Check your EXE or Pact Start.ini settings and try again.
+    Check your EXE or PACT Settings.ini settings and try again.
 """
 
 
@@ -88,7 +88,7 @@ def pact_update_check():
     global PACT_Current
     global PACT_Updated
     print("✔️ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL UPDATES...")
-    print("   (You can disable this check in the EXE or Pact Start.ini) \n")
+    print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
     response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
     PACT_Received = response.json()["name"]
     if PACT_Received == PACT_Current:
@@ -227,8 +227,8 @@ def run_xedit(xedit_exc_log, plugin_name):
                 Exception_Check = xedit_exc_out.decode()  # This method this since xedit is actively writing to it.
                 if "which can not be found" in Exception_Check:
                     print("❌ ERROR ENCOUNTERED! KILLING XEDIT AND ADDING PLUGIN TO PACT IGNORE FILE...")
-                    with open("PACT_Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_Ignore:
-                        PACT_Ignore.write(f"{plugin_name}\n")
+                    with open("PACT_Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                        PACT_IGNORE.write(f"\n{plugin_name}\n")
                         clean_failed_list.append(plugin_name)
                     plugins_processed -= 1
                     proc.kill()
@@ -261,8 +261,8 @@ def check_results(xedit_log, plugin_name):
                 plugins_cleaned += 1
             else:
                 print("Nothing to clean! Adding plugin to PACT Ignore file...")
-                with open("PACT_Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_Ignore:
-                    PACT_Ignore.write(f"{plugin_name}\n")
+                with open("PACT_Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                    PACT_IGNORE.write(f"\n{plugin_name}")
                     LCL_skip_list.append(plugin_name)
         os.remove(xedit_log)
 
@@ -295,9 +295,6 @@ def clean_plugins():
         LO_Plugins = [line.strip() for line in LO_List.readlines()[1:]]
 
     count_plugins = len(set(LO_Plugins) - set(ALL_skip_list))
-    #count_test = set(LO_Plugins) - set(ALL_skip_list)
-    #for item in count_test:
-    #    print(item)
     print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {count_plugins} )\n")
     count_cleaned = 0
     for plugin in LO_Plugins:  # Run XEdit and log checks for each valid plugin in loadorder.txt file.
@@ -307,7 +304,7 @@ def clean_plugins():
             check_results(xedit_log_path, plugin)
             print(f"Finished cleaning: {plugin} ({count_cleaned} / {count_plugins})")
 
-    print(f"✔️ CLEANING COMPLETE ! {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.")
+    print(f"\n✔️ CLEANING COMPLETE! {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
     if len(clean_failed_list) > 1:
         print(f"\n❌ {xedit_process.upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {xedit_process} Timed Out):")
         for elem in clean_failed_list:
@@ -325,6 +322,7 @@ def clean_plugins():
         print("   Such plugins may cause navmesh related problems or crashes.")
         for elem in clean_results_NVM:
             print(elem)
+    return True  # Required for running function check in Interface.
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.

@@ -1,6 +1,8 @@
 # PLUGIN AUTO CLEANING TOOL (PACT) | By Poet (The Sound Of Snow)
 import configparser
+import datetime
 import os
+import platform
 import sys
 import subprocess
 import time
@@ -17,9 +19,10 @@ AUTHOR NOTES (POET):
 - (..., encoding="utf-8", errors="ignore") needs to go with every opened file because unicode errors are a bitch.
 '''
 
+
 # =================== PACT INI FILE ===================
 def pact_ini_create():
-    if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR AUTO-SCANNER
+    if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR PACT
         INI_Settings = ["[MAIN]\n",
                         "# This file contains configuration settings for both PACT_Start.py and Plugin Auto Cleaning Tool.exe \n",
                         "# Set to true if you want PACT to check if you have the latest version of PACT. \n",
@@ -45,8 +48,8 @@ pact_ini_create()
 PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
 PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Settings.ini")
-PACT_Date = "080323"  # DDMMYY
-PACT_Current = "PACT v1.15"
+PACT_Date = "090323"  # DDMMYY
+PACT_Current = "PACT v1.25"
 PACT_Updated = False
 
 
@@ -58,6 +61,11 @@ def pact_ini_update(section: str, value: str):  # Convenience function for check
 
     with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
         PACT_config.write(INI_PACT)
+
+
+def pact_log_update(log_message):
+    with open("PACT Journal.log", "a", encoding="utf-8", errors="ignore") as LOG_PACT:
+        LOG_PACT.write(log_message)
 
 
 # =================== WARNING MESSAGES ==================
@@ -169,11 +177,11 @@ def check_settings_integrity(xedit_version, game_esm):
 
 
 LCL_skip_list = []
-if not os.path.exists("PACT_Ignore.txt"):  # Local plugin skip / ignore list.
-    with open("PACT_Ignore.txt", "w+", encoding="utf-8", errors="ignore") as PACT_Ignore:
+if not os.path.exists("PACT Ignore.txt"):  # Local plugin skip / ignore list.
+    with open("PACT Ignore.txt", "w+", encoding="utf-8", errors="ignore") as PACT_Ignore:
         PACT_Ignore.write("Write plugin names you want PACT to ignore here. (ONE PLUGIN PER LINE)\n")
 else:
-    with open("PACT_Ignore.txt", "r+", encoding="utf-8", errors="ignore") as PACT_Ignore:
+    with open("PACT Ignore.txt", "r+", encoding="utf-8", errors="ignore") as PACT_Ignore:
         LCL_skip_list = [line.strip() for line in PACT_Ignore.readlines()[1:]]
 
 # HARD EXCLUDE PLUGINS PER GAME HERE
@@ -183,6 +191,7 @@ VIP_skip_list = FO4_skip_list + SSE_skip_list
 
 info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"] # type: ignore
 xedit_process = os.path.basename(info.XEdit_EXE)
+mo2_process = os.path.basename(info.MO2_EXE)
 clean_results_UDR = []  # Undisabled Records
 clean_results_ITM = []  # Identical To Master
 clean_results_NVM = []  # Deleted Navmeshes
@@ -207,30 +216,34 @@ def run_xedit(xedit_exc_log, plugin_name):
             PACT_Cleaning.write(f'"{info.MO2_EXE}" run "{info.XEdit_EXE}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""')
         else:
             PACT_Cleaning.write(f'"{info.XEdit_EXE}" -a -QAC -autoexit -autoload "{plugin_escape}"')
-    if MO2Mode:
-        bat_process = psutil.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd = Path(info.MO2_EXE).resolve().parent)  # Subprocess waits for instance to finish before running again.
-    else:
-        bat_process = psutil.Popen(f"{batdir}\\PACT_Cleaning.bat")
-    
-    while bat_process.is_running() == True:  # Check if xedit encountered errors with this while loop.
+
+    try:
+        if MO2Mode:  # Looks like we cannot use psutil.Popen(), subprocess.Popen() is what runs only one instance at a time.
+            bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd = Path(info.MO2_EXE).resolve().parent)
+        else:
+            bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat")
+    except (OSError, FileNotFoundError):
+        print("\n❌ ERROR : MISSING PACT FILE! MAKE SURE TO WHITELIST PACT IN YOUR ANTIVIRUS AND TRY AGAIN!")
+
+    while bat_process.poll() is None:  # Check if xedit encountered errors while above subprocess.Popen() is running.
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'Edit.exe' in proc.info['name']] # type: ignore
         for proc in xedit_procs:
             if proc.info['name'] == str(xedit_process): # type: ignore
                 create_time = proc.info['create_time'] # type: ignore
-                # Kill if runtime is >5 minutes.
+                # Check if xedit timed out.
                 if (time.time() - create_time) > 300:
-                    print("❌ ERROR ENCOUNTERED! KILLING XEDIT...")
+                    print("❌ ERROR : XEDIT TIMED OUT! KILLING XEDIT...")
                     clean_failed_list.append(plugin_name)
                     plugins_processed -= 1
                     proc.kill()
                     break
 
-            if proc.info['name'] == str(xedit_process) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean. # type: ignore
+            if proc.info['name'] == str(xedit_process) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean.
                 xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {xedit_exc_log}'])
                 Exception_Check = xedit_exc_out.decode()  # This method this since xedit is actively writing to it.
                 if "which can not be found" in Exception_Check:
-                    print("❌ ERROR ENCOUNTERED! KILLING XEDIT AND ADDING PLUGIN TO PACT IGNORE FILE...")
-                    with open("PACT_Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                    print("❌ ERROR : MISSING PLUGIN REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                    with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
                         PACT_IGNORE.write(f"\n{plugin_name}\n")
                         clean_failed_list.append(plugin_name)
                     plugins_processed -= 1
@@ -253,18 +266,22 @@ def check_results(xedit_log, plugin_name):
         with open(xedit_log, "r", encoding="utf-8", errors="ignore") as XE_Check:
             Cleaning_Check = XE_Check.read()
             if "Undeleting:" in Cleaning_Check:
+                pact_log_update(f"\n{plugin_name} -> Cleaned UDRs")
                 clean_results_UDR.append(plugin_name)
                 cleaned_something = True
             if "Removing:" in Cleaning_Check:
+                pact_log_update(f"\n{plugin_name} -> Cleaned ITMs")
                 clean_results_ITM.append(plugin_name)
                 cleaned_something = True
             if "Skipping:" in Cleaning_Check:
+                pact_log_update(f"\n{plugin_name} -> Found Deleted Navmeshes")
                 clean_results_NVM.append(plugin_name)
             if cleaned_something is True:
                 plugins_cleaned += 1
             else:
+                pact_log_update(f"\n{plugin_name} -> Nothing To Clean")
                 print("Nothing to clean! Adding plugin to PACT Ignore file...")
-                with open("PACT_Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
                     PACT_IGNORE.write(f"\n{plugin_name}")
                     LCL_skip_list.append(plugin_name)
         os.remove(xedit_log)
@@ -272,33 +289,60 @@ def check_results(xedit_log, plugin_name):
 
 def clean_plugins():
     global MO2Mode
+    global mo2_process
     global xedit_process
     global VIP_skip_list, LCL_skip_list
+    ALL_skip_list = VIP_skip_list + LCL_skip_list
     info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"] # type: ignore
     xedit_log_exe = str(info.XEdit_EXE)
     xedit_log_path = xedit_log_exe.replace('.exe', '_log.txt')
     xedit_exc_path = xedit_log_exe.replace('.exe', 'Exception.log')
+    
+    # Abort cleaning if Mod Organizer is already running.
+    mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if 'modorganizer' in proc.info['name'].lower()] # type: ignore
+    for proc in mo2_procs:
+        if proc.info['name'] == "ModOrganizer.exe": # type: ignore
+            print("\n❌ ERROR : CANNOT START CLEANING IF MOD ORGANIZER 2 IS ALREADY RUNNING!")
+            print("\n❌ PLEASE CLOSE MOD ORGANIZER 2 AND RUN PACT AGAIN! (DO NOT RUN PACT IN MO2)")
+            os.system("pause")
+            sys.exit()
+
     # Clear xedit log files to check logs for each plugin separately.
     if os.path.exists(xedit_log_path):
         os.remove(xedit_log_path)
     if os.path.exists(xedit_exc_path):
         os.remove(xedit_exc_path)
 
+    # Change mod manager modes and check ignore list.
     if MO2Mode is True:
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")
     else:
         print("❌ MO2 EXECUTABLE NOT SET OR FOUND. SWITCHING TO VORTEX MODE...")
 
-    with open("PACT_Ignore.txt", "r", encoding="utf-8", errors="ignore") as IG_List:  # RESERVED
-        IG_Plugins = [line.strip() for line in IG_List.readlines()[1:]]  # type: ignore
-    info.LoadOrder_TXT = PACT_config["MAIN"]["LoadOrder TXT"] # type: ignore
-    with open(info.LoadOrder_TXT, "r", encoding="utf-8", errors="ignore") as LO_List:
-        ALL_skip_list = VIP_skip_list + LCL_skip_list
-        LO_List.seek(0)  # Return line pointer to first line.
-        LO_Plugins = [line.strip() for line in LO_List.readlines()[1:]]
+    with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as IG_File:  # RESERVED
+        IG_Plugins = [line.strip() for line in IG_File.readlines()[1:]]  # type: ignore
 
+    # Add plugins from loadorder or plugins file to separate plugin list.
+    info.LoadOrder_TXT = PACT_config["MAIN"]["LoadOrder TXT"] # type: ignore
+    with open(info.LoadOrder_TXT, "r", encoding="utf-8", errors="ignore") as LO_File:
+        LO_File.seek(0)  # Return line pointer to first line.
+        LO_Plugins = []
+        LO_List = LO_File.readlines()[1:]
+        if "plugins" in info.LoadOrder_TXT:
+            for line in LO_List:
+                line = line.strip()
+                if "*" in line:
+                    line = line.replace("*", "")
+                    LO_Plugins.append(line)
+        else:
+            LO_Plugins = [line.strip() for line in LO_File.readlines()[1:]]
+
+    # Start cleaning process if everything is OK.
     count_plugins = len(set(LO_Plugins) - set(ALL_skip_list))
     print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {count_plugins} )\n")
+    log_start = time.perf_counter()
+    log_time = datetime.datetime.now()
+    pact_log_update(f"\nSTARTED CLEANING AT : {log_time}")
     count_cleaned = 0
     for plugin in LO_Plugins:  # Run XEdit and log checks for each valid plugin in loadorder.txt file.
         if not any(plugin in elem for elem in ALL_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
@@ -307,7 +351,13 @@ def clean_plugins():
             check_results(xedit_log_path, plugin)
             print(f"Finished cleaning: {plugin} ({count_cleaned} / {count_plugins})")
 
-    print(f"\n✔️ CLEANING COMPLETE! {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
+    # Show stats once cleaning is complete.
+    pact_log_update(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in", (str(time.perf_counter() - log_start)[:5]), "seconds.")
+    pact_log_update(f"\n   {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
+
+    print(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in", (str(time.perf_counter() - log_start)[:5]), "seconds.")
+    print(f"\n   {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
+
     if len(clean_failed_list) > 1:
         print(f"\n❌ {xedit_process.upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {xedit_process} Timed Out):")
         for elem in clean_failed_list:
@@ -325,7 +375,7 @@ def clean_plugins():
         print("   Such plugins may cause navmesh related problems or crashes.")
         for elem in clean_results_NVM:
             print(elem)
-    return True  # Required for running function check in Interface.
+    return True  # Required for running function check in PACT_Interface.
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.

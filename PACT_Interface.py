@@ -3,7 +3,7 @@ import sys
 import time
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QUrl, QTimer, QThread, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import QFileDialog
 from PACT_Start import (PACT_config, PACT_Current, pact_ini_update, pact_update_check, check_settings_paths, check_settings_integrity, clean_plugins)
 
@@ -58,7 +58,7 @@ class UiPACTMainWin(object):
         self.RegBT_Browse_LO.setText("SET LOAD ORDER FILE")
         self.RegBT_Browse_LO.setStyleSheet("background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
         self.RegBT_Browse_LO.clicked.connect(self.select_file_lo)  # type: ignore
-        if "loadorder" in PACT_config["MAIN"]["LoadOrder TXT"]:
+        if "loadorder" in PACT_config["MAIN"]["LoadOrder TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder TXT"]:
             self.RegBT_Browse_LO.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_Browse_LO.setText("✔️ LOAD ORDER FILE SET")
             self.configured_LO = True
@@ -152,6 +152,7 @@ class UiPACTMainWin(object):
         self.RegBT_Exit.clicked.connect(PACT_MainWin.close)  # type: ignore
 
     # ============== CLEAN PLUGINS BUTTON STATES ================
+
     def start_cleaning(self):
         if self.thread is not None:
             pass
@@ -265,13 +266,13 @@ class UiPACTMainWin(object):
 
     def select_file_lo(self):
         LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")
-        if os.path.exists(LO_file) and "loadorder" in LO_file:
+        if os.path.exists(LO_file) and ("loadorder" in LO_file or "plugins" in LO_file):
             QtWidgets.QMessageBox.information(PACT_MainWin, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")  # type: ignore
             pact_ini_update("LoadOrder TXT", LO_file)
             self.RegBT_Browse_LO.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_Browse_LO.setText("✔️ LOAD ORDER FILE SET")
             self.enable_config_lo()
-        elif os.path.exists(LO_file) and "loadorder" not in LO_file:
+        elif os.path.exists(LO_file) and "loadorder" not in LO_file and "plugins" not in LO_file:
             self.RegBT_Browse_LO.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_Browse_LO.setText("❌ WRONG LO FILE")
             self.disable_config_lo()

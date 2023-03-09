@@ -198,9 +198,9 @@ def run_xedit(xedit_exc_log, plugin_name):
     global clean_failed_list
     info.MO2_EXE = PACT_config["MAIN"]["MO2 EXE"] # type: ignore
     info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"] # type: ignore
-    if os.path.exists("PACT_Cleaning.bat"):
-        os.remove("PACT_Cleaning.bat")
     batdir = str(Path.cwd())
+    if os.path.exists(f"{batdir}\\PACT_Cleaning.bat"):
+        os.remove(f"{batdir}\\PACT_Cleaning.bat")
     plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)").replace(" ", "^ ")  # Escape special characters for command line.
     with open(f"{batdir}\\PACT_Cleaning.bat", "w+") as PACT_Cleaning:
         if MO2Mode:  # Command will not work if plugin has "&" or "+" in name. Other special characters likely also apply.
@@ -240,7 +240,7 @@ def run_xedit(xedit_exc_log, plugin_name):
                     break
         time.sleep(1)
     plugins_processed += 1
-    os.remove("PACT_Cleaning.bat")
+    os.remove(f"{batdir}\\PACT_Cleaning.bat")
 
 
 def check_results(xedit_log, plugin_name):

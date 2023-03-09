@@ -42,27 +42,34 @@ Simply run it, then set up the required file paths and click on the big CLEAN PL
 *PACT Settings.ini* - Configuration file for the main exe / tool where some parameters can be adjusted.
 This file will be auto generated after running the exe for the first time. Remove it to reset settings.
 
+*PACT Journal.log* - Logging file where PACT records all cleaned plugins and deleted navmeshes found during each session.
+
 *PACT Ignore.txt* - Additional file where you can exclude plugins from cleaning, simply add one plugin name to each line.
 This file will be auto generated after running the exe for the first time. Remove it to reset the ignore list.
 
 ===========================================================================
-# HOW TO USE PACT #
+# HOW TO USE PACT (DO NOT RUN PACT THROUGH MO2, RUN THE EXE NORMALLY) #
 
-After running the PACT EXE, you'll have to set up the required file paths for your *loadorder.txt* file and *XEdit.exe* executable.
+After running the PACT EXE, you'll have to set up file paths for either *loadorder.txt* or *plugins.txt* and *XEdit.exe* executable.
 All paths can be set directly through PACT EXE or by manually editing *PACT Settings.ini* after you run the PACT EXE at least once.
 
-- *loadorder.txt* file contains your currently active plugins from the game you wish to clean them.
-Vortex -> loadorder.txt can be found by selecting Open > Game Application Data Folder. 
-MO2 -> loadorder.txt can be found in your currently active MO2 profile folder.
+- *plugins.txt* file contains all currently active plugins for your game.
+- *loadorder.txt* file contains all currently loaded plugins for your game.
+
+Vortex -> Both *plugins.txt* and *loadorder.txt* can be found by selecting *Open* > *Game Application Data Folder* in Vortex.
+
+MO2 -> Both *plugins.txt* and *loadorder.txt* can be found in your current MO2 profile folder. (MO2 / profiles / <profile name>)
 
 - *XEdit.exe* file is the main program that does the actual cleaning, where the X part of the name is different depending on the game.
-Both FO4Edit (Fallout 4) and SSEEdit (Skyrim Special Edition) can be downloaded form their respective Nexus sites, linked at the top.
-Make sure to run your *XEdit* tool at least once before running *PACT* to ensure that both tools are properly configured before cleaning plugins.
+You should run your *XEdit* tool at least once before running *PACT* to ensure that both tools are properly configured before cleaning plugins.
+Both FO4Edit (Fallout 4) and SSEEdit (Skyrim Special Edition) are supported and can be downloaded form their respective Nexus sites, links on top.
 
-- *Mod Organizer 2* users also need to set the file path for the *ModOrganizer.exe* executable.
-MO2 requires that you run *XEdit.exe* through it to correctly detect game plugins.
+- *Mod Organizer 2* users also need to set the file path for the *ModOrganizer.exe* executable in PACT.
+Vortex and other mod manager users don't need to do this, simply leave the MO2 EXE line blank.
 
-Once you set each file path, the buttons will turn green to indicate that the required files are correct, though you can still change the paths.
+# MAKE SURE THAT MO2 IS COMPLETELY CLOSED BEFORE YOU START CLEANING #
+
+Once you set each file path, the buttons will turn green to indicate that the required files are correct, though you can still change them.
 Once at least *loadorder.txt* file and *XEdit.exe* executable are set, the *START CLEANING* button will become colored blue and enabled.
 
 Press *START CLEANING* to start the cleaning process, at which point *STOP CLEANING* button will be displayed instead until cleaning completes.
@@ -82,14 +89,37 @@ PACT will also skip other invalid plugins, though it will take *5 minutes* for t
 ===========================================================================
 # KNOWN ISSUES #
 
-- PACT currently cannot clean plugins that have "&" or "+" in their name. Other special characters likely also apply.
-  (For now, you can clean these plugins manually with QAC from the respective *XEdit* program you have downloaded.)
+PACT SHOULD ONLY CLEAN ONE ( 1 ) PLUGIN AT A TIME AND ONLY HAVE ONE ( 1 ) INSTANCE OF FO4EDIT OPEN
+IF IT STARTS SPAMMING MULTIPLE XEDIT WINDOWS, IMMEDIATELY CLOSE PACT AND REPORT TO PACT NEXUS SITE
 
 - If any plugin takes longer than *5 minutes* to clean, PACT will automatically close *XEdit* and skip that plugin.
-  (It will also add that plugin name to *PACT Ignore.txt*, though PACT might still try to process it regardless).
+  (You can close XEdit yourself to skip the wait. PACT will add that plugin name to the ignore list in PACT Ignore.txt)
+
+- If you get a message in XEdit saying *Exactly one module must be selected for Quick Clean mode*, this means either:
+
+1)	The plugin name is invalid. Simply press OK to close XEdit and PACT will continue cleaning other plugins.
+2)	You didn't set the ModOrganizer.exe file path correctly and PACT is running in Vortex mode instead.
+
+- If you get an error in XEdit saying *This application failed to start because no Qt Platform...*, this means either:
+
+1)	You are trying to run PACT with MO2 already open. Don't do that. Close all MO2 instances and run PACT normally.
+2)	Your MO2 might be missing some files. Make sure to reinstall latest 2.4 version of MO2 or try the portable version.
+
+- If you get an error in PACT saying *The system cannot find the file specified...*, this means:
+
+1) Your antivirus is most likely messing with PACT files. Try whitelisting the whole folder where PACT exe is located.
 
 ===========================================================================
 # CHANGELOG #
+
+1.25
+- Removed underscore character from *PACT Ignore.txt* to match the naming scheme.
+- You can now set the Load Order File to either *loadorder.txt* or *plugins.txt*
+- PACT will now log processed plugins & some other data to *PACT Journal.log*
+- PACT will now stop and warn you if MO2 is already running before cleaning.
+- PACT should now warn you if it gets interrupted by your antivirus.
+- PACT should now support a wider range of plugin names.
+- Updated PACT Readme with some more details.
 
 1.15
 - FO4 Nexus Release

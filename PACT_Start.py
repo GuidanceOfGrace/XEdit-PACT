@@ -17,7 +17,6 @@ AUTHOR NOTES (POET):
 - (..., encoding="utf-8", errors="ignore") needs to go with every opened file because unicode errors are a bitch.
 '''
 
-
 # =================== PACT INI FILE ===================
 def pact_ini_create():
     if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR AUTO-SCANNER
@@ -118,7 +117,7 @@ print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING P
 print("===============================================================================")
 
 
-@dataclass
+@ dataclass
 class Info:
     MO2_EXE: Path = field(default_factory=Path)
     XEdit_EXE: Path = field(default_factory=Path)
@@ -201,14 +200,18 @@ def run_xedit(xedit_exc_log, plugin_name):
     info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"]
     if os.path.exists("PACT_Cleaning.bat"):
         os.remove("PACT_Cleaning.bat")
-    with open("PACT_Cleaning.bat", "w+") as PACT_Cleaning:
+    batdir = str(Path.cwd())
+    plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)").replace(" ", "^ ")  # Escape special characters for command line.
+    with open(f"{batdir}\\PACT_Cleaning.bat", "w+") as PACT_Cleaning:
         if MO2Mode:  # Command will not work if plugin has "&" or "+" in name. Other special characters likely also apply.
-            PACT_Cleaning.write(f'"{info.MO2_EXE}" run "{info.XEdit_EXE}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""')
+            PACT_Cleaning.write(f'"{info.MO2_EXE}" run "{info.XEdit_EXE}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""')
         else:
             PACT_Cleaning.write(f'"{info.XEdit_EXE}" -a -QAC -autoexit -autoload "{plugin_name}"')
-
-    bat_process = subprocess.Popen("PACT_Cleaning.bat")  # Subprocess waits for instance to finish before running again.
-
+    if MO2Mode:
+        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd = Path(info.MO2_EXE).resolve().parent)  # Subprocess waits for instance to finish before running again.
+    else:
+        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat")
+    
     while bat_process.poll() is None:  # Check if xedit encountered errors with this while loop.
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'Edit.exe' in proc.info['name']]
         for proc in xedit_procs:

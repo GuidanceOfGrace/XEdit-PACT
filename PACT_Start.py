@@ -208,11 +208,11 @@ def run_xedit(xedit_exc_log, plugin_name):
         else:
             PACT_Cleaning.write(f'"{info.XEdit_EXE}" -a -QAC -autoexit -autoload "{plugin_name}"')
     if MO2Mode:
-        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd = Path(info.MO2_EXE).resolve().parent)  # Subprocess waits for instance to finish before running again.
+        bat_process = psutil.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd = Path(info.MO2_EXE).resolve().parent)  # Subprocess waits for instance to finish before running again.
     else:
-        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat")
+        bat_process = psutil.Popen(f"{batdir}\\PACT_Cleaning.bat")
     
-    while bat_process.poll() is None:  # Check if xedit encountered errors with this while loop.
+    while bat_process.is_running() == True:  # Check if xedit encountered errors with this while loop.
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'Edit.exe' in proc.info['name']]
         for proc in xedit_procs:
             if proc.info['name'] == str(xedit_process):

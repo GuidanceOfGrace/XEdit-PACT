@@ -34,7 +34,7 @@ class UiPACTMainWin(object):
         self.RegBT_CheckUpdates = None
 
         self.timer = QTimer()  # For CLEAN PLUGINS Button
-        self.timer.timeout.connect(self.check_config) # type: ignore
+        self.timer.timeout.connect(self.check_config)  # type: ignore
         self.timer.start(3000)  # In milliseconds.
         self.thread = None
 
@@ -158,7 +158,7 @@ class UiPACTMainWin(object):
         else:
             self.thread = PactThread()
             self.thread.start()
-            self.RegBT_CLEAN_PLUGINS.setEnabled(True) # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setEnabled(True)  # type: ignore
             self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")  # type: ignore
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: pink; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore

@@ -2,22 +2,18 @@
 import configparser
 import datetime
 import os
-import sys
-import subprocess
-import time
-from dataclasses import dataclass, field
-from pathlib import Path
-import requests
 import psutil
-
-'''
-AUTHOR NOTES (POET):
-- CURRENTLY SUPPORTED: SKYRIM | FALLOUT 4 | PLANNED: NEW VEGAS | OLD SKYRIM
+import requests
+import subprocess
+import sys
+import time
+from pathlib import Path
+from dataclasses import dataclass, field
+'''AUTHOR NOTES (POET) | CURRENTLY SUPPORTED: SKYRIM , FALLOUT 4 | PLANNED: NEW VEGAS , OLD SKYRIM
 - Module importing is disabled as this is only meant to be run through exe. Will also likely disable for Buffout CLAS.
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
 - (..., encoding="utf-8", errors="ignore") needs to go with every opened file because unicode errors are a bitch.
 '''
-
 # =================== PACT INI FILE ===================
 
 
@@ -49,7 +45,7 @@ PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$
 PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Settings.ini")
 PACT_Date = "100323"  # DDMMYY
-PACT_Current = "PACT v1.30"
+PACT_Current = "PACT v1.40"
 PACT_Updated = False
 
 
@@ -135,14 +131,26 @@ class Info:
 
 
 info = Info()
-MO2Mode = False
 ''' # TEMPLATES | Only access INI just before needed to prevent missing file errors.
-info.LoadOrder_TXT = PACT_config["MAIN"]["LoadOrder TXT"]
-info.LoadOrder_Path = os.path.dirname(info.LoadOrder_TXT)
-info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"]
-info.XEdit_Path = os.path.dirname(info.XEdit_EXE)
-info.MO2_EXE = PACT_config["MAIN"]["MO2 EXE"]
+info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]
+info.LoadOrder_Path = os.path.dirname(info.LOAD_ORDER_PATH)
+info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]
+info.XEdit_Path = os.path.dirname(info.XEDIT_PATH)
+info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]
 '''
+info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
+info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
+xedit_process_name = os.path.basename(info.XEDIT_PATH)
+mo2_process_name = os.path.basename(info.MO2_PATH)
+xedit_log_path = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
+xedit_exc_path = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+clean_results_UDR = []  # Undisabled References
+clean_results_ITM = []  # Identical To Master
+clean_results_NVM = []  # Deleted Navmeshes
+clean_failed_list = []  # Cleaning Failed
+plugins_processed = 0
+plugins_cleaned = 0
+MO2Mode = False
 
 
 # Make sure Mod Organizer 2 is not already running.
@@ -158,9 +166,9 @@ def check_process_mo2():
 
 # Make sure required file and folder paths exist.
 def check_settings_paths():
-    info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-    info.LoadOrder_TXT = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
-    if os.path.exists(info.LoadOrder_TXT) and os.path.exists(info.XEdit_EXE):
+    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
+    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+    if os.path.exists(info.LOAD_ORDER_PATH) and os.path.exists(info.XEDIT_PATH):
         print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF YOUR INI SETUP IS CORRECT...")
     else:
         print(Warn_Invalid_INI_Path)
@@ -171,15 +179,15 @@ def check_settings_paths():
 # Make sure right XEdit version is running for the right game.
 def check_settings_integrity(xedit_version, game_esm):
     global MO2Mode
-    info.MO2_EXE = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
-    info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-    info.LoadOrder_TXT = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
-    if os.path.exists(info.MO2_EXE):
+    info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
+    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
+    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+    if os.path.exists(info.MO2_PATH):
         MO2Mode = True
-    with open(info.LoadOrder_TXT, "r+", encoding="utf-8", errors="ignore") as LO_Check:
+    with open(info.LOAD_ORDER_PATH, "r+", encoding="utf-8", errors="ignore") as LO_Check:
         LO_Plugins = LO_Check.read()
-        if game_esm.lower() in LO_Plugins.lower():
-            if xedit_version.lower() in str(info.XEdit_EXE).lower():
+        if game_esm.lower() in LO_Plugins.lower():  # Check both specific and universal xedit.
+            if xedit_version.lower() in info.XEDIT_PATH.lower() or "xedit" in info.XEDIT_PATH.lower():
                 pass
             else:
                 print(Warn_Invalid_INI_Setup)
@@ -200,33 +208,54 @@ FO4_skip_list = ["", "Unofficial Fallout 4 Patch.esp", "Fallout4.esm", "DLCCoast
 SSE_skip_list = ["", "Unofficial Skyrim Special Edition Patch.esp", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm"]
 VIP_skip_list = FO4_skip_list + SSE_skip_list
 
-info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-xedit_process = os.path.basename(info.XEdit_EXE)
-mo2_process = os.path.basename(info.MO2_EXE)
-clean_results_UDR = []  # Undisabled Records
-clean_results_ITM = []  # Identical To Master
-clean_results_NVM = []  # Deleted Navmeshes
-clean_failed_list = []  # Cleaning Failed
-plugins_processed = 0
-plugins_cleaned = 0
-
 
 def run_xedit(xedit_exc_log, plugin_name):
     global MO2Mode
-    global xedit_process
+    global xedit_log_path
+    global xedit_process_name
     global plugins_processed
     global clean_failed_list
-    info.MO2_EXE = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
-    info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
+    info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
+    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
+    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
     batdir = str(Path.cwd())
     if os.path.exists(f"{batdir}\\PACT_Cleaning.bat"):
         os.remove(f"{batdir}\\PACT_Cleaning.bat")
-    plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)").replace(" ", "^ ")  # Escape special characters for command line.
+
+    # Write proper bat command depending on XEDIT and MO2 selections.
+    plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
     with open(f"{batdir}\\PACT_Cleaning.bat", "w+") as PACT_Cleaning:
-        if MO2Mode:  # Command will not work if plugin has "&" or "+" in name. Other special characters likely also apply.
-            PACT_Cleaning.write(f'"{info.MO2_EXE}" run "{info.XEdit_EXE}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""')
-        else:
-            PACT_Cleaning.write(f'"{info.XEdit_EXE}" -a -QAC -autoexit -autoload "{plugin_escape}"')
+
+        # If specific xedit (fo4edit, sseedit) is set.
+        if MO2Mode and any(xedit_exe in xedit_process_name for xedit_exe in ["fo4edit", "sseedit"]):
+            PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""')
+        elif not MO2Mode and any(xedit_exe in xedit_process_name for xedit_exe in ["fo4edit", "sseedit"]):
+            PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"')
+
+        # If universal xedit (xedit.exe) is set.
+        if "loadorder" in info.LOAD_ORDER_PATH and "xedit" in info.XEDIT_PATH.lower():
+            with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
+
+                if "Fallout4.esm" in LO_Check.read():
+                    xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
+                    if MO2Mode:
+                        PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""')
+                    else:
+                        PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"')
+
+                elif "Skyrim.esm" in LO_Check.read():
+                    xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
+                    if MO2Mode:
+                        PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""')
+                    else:
+                        PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"')
+
+        elif "loadorder" not in info.LOAD_ORDER_PATH and "xedit" in info.XEDIT_PATH.lower():
+            print("\n❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!")
+            print("   You have to set your load order file path to loadorder.txt and NOT plugins.txt")
+            print("   This is so PACT can detect you game version. Change the load order file path and try again.")
+            os.system("pause")
+            sys.exit()
 
     time.sleep(0.5)  # Wait a bit to see if antivirus deletes bat file.
     if os.path.exists(f"{batdir}\\PACT_Cleaning.bat"):
@@ -237,26 +266,25 @@ def run_xedit(xedit_exc_log, plugin_name):
         sys.exit()
 
     if MO2Mode:  # Looks like we cannot use psutil.Popen(), subprocess.Popen() is what runs only one instance at a time.
-        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd=Path(info.MO2_EXE).resolve().parent)
+        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd=Path(info.MO2_PATH).resolve().parent)
     else:
         bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat")
 
-    while bat_process.poll() is None:  # Check if xedit encountered errors while above subprocess.Popen() is running.
+    while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
         for proc in xedit_procs:
-            if proc.info['name'] == str(xedit_process):  # type: ignore
+            if proc.info['name'] == str(xedit_process_name):  # type: ignore
                 create_time = proc.info['create_time']  # type: ignore
-                # Check if xedit timed out.
-                if (time.time() - create_time) > 300:
+                if (time.time() - create_time) > 300:  # 5 min time-out.
                     print("❌ ERROR : XEDIT TIMED OUT! KILLING XEDIT...")
                     clean_failed_list.append(plugin_name)
                     plugins_processed -= 1
                     proc.kill()
                     break
 
-            if proc.info['name'] == str(xedit_process) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean. # type: ignore
+            if proc.info['name'] == str(xedit_process_name) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean. # type: ignore
                 xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {xedit_exc_log}'])
-                Exception_Check = xedit_exc_out.decode()  # This method this since xedit is actively writing to it.
+                Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
                 if "which can not be found" in Exception_Check:
                     print("❌ ERROR : MISSING PLUGIN REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
                     with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
@@ -305,14 +333,12 @@ def check_results(xedit_log, plugin_name):
 
 def clean_plugins():
     global MO2Mode
-    global mo2_process
-    global xedit_process
+    global xedit_log_path
+    global xedit_exc_path
+    global mo2_process_name
+    global xedit_process_name
     global VIP_skip_list, LCL_skip_list
     ALL_skip_list = VIP_skip_list + LCL_skip_list
-    info.XEdit_EXE = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-    xedit_log_exe = str(info.XEdit_EXE)
-    xedit_log_path = xedit_log_exe.replace('.exe', '_log.txt')
-    xedit_exc_path = xedit_log_exe.replace('.exe', 'Exception.log')
 
     # Clear xedit log files to check logs for each plugin separately.
     if os.path.exists(xedit_log_path):
@@ -321,7 +347,7 @@ def clean_plugins():
         os.remove(xedit_exc_path)
 
     # Change mod manager modes and check ignore list.
-    if MO2Mode is True:
+    if MO2Mode:
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")
     else:
         print("❌ MO2 EXECUTABLE NOT SET OR FOUND. SWITCHING TO VORTEX MODE...")
@@ -330,12 +356,12 @@ def clean_plugins():
         IG_Plugins = [line.strip() for line in IG_File.readlines()[1:]]  # type: ignore
 
     # Add plugins from loadorder or plugins file to separate plugin list.
-    info.LoadOrder_TXT = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
-    with open(info.LoadOrder_TXT, "r", encoding="utf-8", errors="ignore") as LO_File:
+    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+    with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_File:
         LO_File.seek(0)  # Return line pointer to first line.
         LO_Plugin_List = []
         LO_List = LO_File.readlines()[1:]
-        if "plugins" in info.LoadOrder_TXT:
+        if "plugins" in info.LOAD_ORDER_PATH:
             for line in LO_List:
                 line = line.strip()
                 if "*" in line:
@@ -360,22 +386,21 @@ def clean_plugins():
             print(f"Finished cleaning: {plugin} ({count_cleaned} / {count_plugins})")
 
     # Show stats once cleaning is complete.
-    pact_log_update(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in {(str(time.perf_counter() - log_start)[:5])} seconds.")
-    pact_log_update(f"\n   {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
+    pact_log_update(f"\n✔️ CLEANING COMPLETE! {xedit_process_name} processed all available plugins in {(str(time.perf_counter() - log_start)[:3])} seconds.")
+    pact_log_update(f"\n   {xedit_process_name} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
 
-    print(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in", (str(time.perf_counter() - log_start)[:5]), "seconds.")
-    print(f"\n   {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
-
+    print(f"\n✔️ CLEANING COMPLETE! {xedit_process_name} processed all available plugins in", (str(time.perf_counter() - log_start)[:3]), "seconds.")
+    print(f"\n   {xedit_process_name} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
     if len(clean_failed_list) > 1:
-        print(f"\n❌ {xedit_process.upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {xedit_process} Timed Out):")
+        print(f"\n❌ {xedit_process_name.upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {xedit_process_name} Timed Out):")
         for elem in clean_failed_list:
             print(elem)
     if len(clean_results_UDR) > 1:
-        print(f"\n✔️ The following plugins had Undisabled Records and {xedit_process} properly disabled them:")
+        print(f"\n✔️ The following plugins had Undisabled Records and {xedit_process_name} properly disabled them:")
         for elem in clean_results_UDR:
             print(elem)
     if len(clean_results_ITM) > 1:
-        print(f"\n✔️ The following plugins had Identical To Master Records and {xedit_process} successfully cleaned them:")
+        print(f"\n✔️ The following plugins had Identical To Master Records and {xedit_process_name} successfully cleaned them:")
         for elem in clean_results_ITM:
             print(elem)
     if len(clean_results_NVM) > 1:
@@ -387,10 +412,10 @@ def clean_plugins():
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
+    pact_update_check()
     check_process_mo2()
     check_settings_paths()
     check_settings_integrity("FO4Edit", "Fallout4.esm")
     check_settings_integrity("SSEEdit", "Skyrim.esm")
-    pact_update_check()
     clean_plugins()
     os.system("pause")

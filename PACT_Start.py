@@ -225,7 +225,7 @@ def run_xedit(xedit_exc_log, plugin_name):
     except (OSError, FileNotFoundError):
         print("\n❌ ERROR : MISSING PACT FILE! MAKE SURE TO WHITELIST PACT IN YOUR ANTIVIRUS AND TRY AGAIN!")
 
-    while bat_process.poll() is None:  # Check if xedit encountered errors while above subprocess.Popen() is running.
+    while bat_process.poll() is None:  # Check if xedit encountered errors while above subprocess.Popen() is running. # type: ignore
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'Edit.exe' in proc.info['name']] # type: ignore
         for proc in xedit_procs:
             if proc.info['name'] == str(xedit_process): # type: ignore
@@ -238,7 +238,7 @@ def run_xedit(xedit_exc_log, plugin_name):
                     proc.kill()
                     break
 
-            if proc.info['name'] == str(xedit_process) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean.
+            if proc.info['name'] == str(xedit_process) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean. # type: ignore
                 xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {xedit_exc_log}'])
                 Exception_Check = xedit_exc_out.decode()  # This method this since xedit is actively writing to it.
                 if "which can not be found" in Exception_Check:
@@ -352,7 +352,7 @@ def clean_plugins():
             print(f"Finished cleaning: {plugin} ({count_cleaned} / {count_plugins})")
 
     # Show stats once cleaning is complete.
-    pact_log_update(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in", (str(time.perf_counter() - log_start)[:5]), "seconds.")
+    pact_log_update(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in" + (str(time.perf_counter() - log_start)[:5]) + "seconds.")
     pact_log_update(f"\n   {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
 
     print(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in", (str(time.perf_counter() - log_start)[:5]), "seconds.")

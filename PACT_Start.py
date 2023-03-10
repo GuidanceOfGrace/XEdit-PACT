@@ -352,7 +352,7 @@ def clean_plugins():
             print(f"Finished cleaning: {plugin} ({count_cleaned} / {count_plugins})")
 
     # Show stats once cleaning is complete.
-    pact_log_update(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in" + (str(time.perf_counter() - log_start)[:5]) + "seconds.")
+    pact_log_update(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in {(str(time.perf_counter() - log_start)[:5])} seconds.")
     pact_log_update(f"\n   {xedit_process} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
 
     print(f"\n✔️ CLEANING COMPLETE! {xedit_process} processed all available plugins in", (str(time.perf_counter() - log_start)[:5]), "seconds.")

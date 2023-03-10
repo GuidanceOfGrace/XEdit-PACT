@@ -13,7 +13,7 @@ QMessageBox.NoIcon | Question | Information | Warning | Critical
 
 class UiPACTMainWin(object):
     def __init__(self):
-        super().__init__()  # Allow subclasses to inherit and extend behavior of parent class.
+        super().__init__()  # Allow subclasses to inherit & extend behavior of parent class.
         self.configured_LO = False
         self.configured_MO2 = False
         self.configured_XEDIT = False
@@ -35,7 +35,7 @@ class UiPACTMainWin(object):
 
         self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
         self.timer.timeout.connect(self.check_config)  # type: ignore
-        self.timer.start(3000)  # In milliseconds, will override QTimer.singleShot
+        self.timer.start(3000)  # In ms, will override QTimer.singleShot
         self.thread = None
 
     def setup_ui(self, PACT_MainWin):

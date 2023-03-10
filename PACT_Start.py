@@ -218,36 +218,38 @@ def run_xedit(xedit_exc_log, plugin_name):
     info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
     info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
     info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+    xedit_process_name = os.path.basename(info.XEDIT_PATH)
     batdir = str(Path.cwd())
     if os.path.exists(f"{batdir}\\PACT_Cleaning.bat"):
         os.remove(f"{batdir}\\PACT_Cleaning.bat")
 
     # Write proper bat command depending on XEDIT and MO2 selections.
     plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
-    with open(f"{batdir}\\PACT_Cleaning.bat", "w+") as PACT_Cleaning:
+    with open(f"{batdir}\\PACT_Cleaning.bat", "w") as PACT_Cleaning:
 
-        # If specific xedit (fo4edit, sseedit) is set.
-        if MO2Mode and any(xedit_exe in xedit_process_name.lower() for xedit_exe in ["fo4edit", "sseedit"]):
+        # If specific xedit (fo4edit, sseedit) executable is set.
+        if MO2Mode and xedit_process_name.lower() in ("fo4edit.exe", "sseedit.exe"):
             PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""')
 
-        elif not MO2Mode and any(xedit_exe in xedit_process_name.lower() for xedit_exe in ["fo4edit", "sseedit"]):
+        elif not MO2Mode and xedit_process_name.lower() in ("fo4edit.exe", "sseedit.exe"):
             PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"')
 
-        # If universal xedit (xedit.exe) is set.
+        # If universal xedit (xedit.exe) executable is set.
         if "loadorder" in info.LOAD_ORDER_PATH and "xedit" in info.XEDIT_PATH.lower():
-            if "Fallout4.esm" in LO_Check.read():
-                xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
-                if MO2Mode:
-                    PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""')
-                else:
-                    PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"')
+            with open(info.LOAD_ORDER_PATH, "r+", encoding="utf-8", errors="ignore") as LO_Check:
+                if "Fallout4.esm" in LO_Check.read():
+                    xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
+                    if MO2Mode:
+                        PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""')
+                    else:
+                        PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"')
 
-            elif "Skyrim.esm" in LO_Check.read():
-                xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
-                if MO2Mode:
-                    PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""')
-                else:
-                    PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"')
+                elif "Skyrim.esm" in LO_Check.read():
+                    xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
+                    if MO2Mode:
+                        PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""')
+                    else:
+                        PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"')
 
         elif "loadorder" not in info.LOAD_ORDER_PATH and "xedit" in info.XEDIT_PATH.lower():
             print("\n❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!")

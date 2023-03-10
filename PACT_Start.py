@@ -216,7 +216,8 @@ def run_xedit(xedit_exc_log, plugin_name):
             PACT_Cleaning.write(f'"{info.MO2_EXE}" run "{info.XEdit_EXE}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""')
         else:
             PACT_Cleaning.write(f'"{info.XEdit_EXE}" -a -QAC -autoexit -autoload "{plugin_escape}"')
-
+    
+    bat_process = None # type: ignore
     try:
         if MO2Mode:  # Looks like we cannot use psutil.Popen(), subprocess.Popen() is what runs only one instance at a time.
             bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd = Path(info.MO2_EXE).resolve().parent)

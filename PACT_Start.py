@@ -18,7 +18,6 @@ AUTHOR NOTES (POET):
 - (..., encoding="utf-8", errors="ignore") needs to go with every opened file because unicode errors are a bitch.
 '''
 
-
 # =================== PACT INI FILE ===================
 def pact_ini_create():
     if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR PACT
@@ -47,8 +46,8 @@ pact_ini_create()
 PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
 PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Settings.ini")
-PACT_Date = "090323"  # DDMMYY
-PACT_Current = "PACT v1.25"
+PACT_Date = "100323"  # DDMMYY
+PACT_Current = "PACT v1.30"
 PACT_Updated = False
 
 
@@ -211,7 +210,7 @@ plugins_cleaned = 0
 
 
 def run_xedit(xedit_exc_log, plugin_name):
-    global MO2Mode, bat_process
+    global MO2Mode
     global xedit_process
     global plugins_processed
     global clean_failed_list
@@ -227,13 +226,18 @@ def run_xedit(xedit_exc_log, plugin_name):
         else:
             PACT_Cleaning.write(f'"{info.XEdit_EXE}" -a -QAC -autoexit -autoload "{plugin_escape}"')
 
-    try:
-        if MO2Mode:  # Looks like we cannot use psutil.Popen(), subprocess.Popen() is what runs only one instance at a time.
-            bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd=Path(info.MO2_EXE).resolve().parent)
-        else:
-            bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat")
-    except (OSError, FileNotFoundError):
+    time.sleep(0.5)  # Wait a bit to see if antivirus deletes bat file.
+    if os.path.exists(f"{batdir}\\PACT_Cleaning.bat"):
+        pass
+    else:  # Do this instead of try - except so bat_process is defined in any case.
         print("\n❌ ERROR : MISSING PACT FILE! MAKE SURE TO WHITELIST PACT IN YOUR ANTIVIRUS AND TRY AGAIN!")
+        os.system("pause")
+        sys.exit()
+
+    if MO2Mode:  # Looks like we cannot use psutil.Popen(), subprocess.Popen() is what runs only one instance at a time.
+        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd=Path(info.MO2_EXE).resolve().parent)
+    else:
+        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat")
 
     while bat_process.poll() is None:  # Check if xedit encountered errors while above subprocess.Popen() is running.
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
@@ -327,25 +331,26 @@ def clean_plugins():
     info.LoadOrder_TXT = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
     with open(info.LoadOrder_TXT, "r", encoding="utf-8", errors="ignore") as LO_File:
         LO_File.seek(0)  # Return line pointer to first line.
-        LO_Plugins = []
+        LO_Plugin_List = []
         LO_List = LO_File.readlines()[1:]
         if "plugins" in info.LoadOrder_TXT:
             for line in LO_List:
                 line = line.strip()
                 if "*" in line:
                     line = line.replace("*", "")
-                    LO_Plugins.append(line)
+                    LO_Plugin_List.append(line)
         else:
-            LO_Plugins = [line.strip() for line in LO_File.readlines()[1:]]
+            for line in LO_List:
+                LO_Plugin_List.append(line.strip())
 
     # Start cleaning process if everything is OK.
-    count_plugins = len(set(LO_Plugins) - set(ALL_skip_list))
+    count_plugins = len(set(LO_Plugin_List) - set(ALL_skip_list))
     print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {count_plugins} )\n")
     log_start = time.perf_counter()
     log_time = datetime.datetime.now()
     pact_log_update(f"\nSTARTED CLEANING AT : {log_time}")
     count_cleaned = 0
-    for plugin in LO_Plugins:  # Run XEdit and log checks for each valid plugin in loadorder.txt file.
+    for plugin in LO_Plugin_List:  # Run XEdit and log checks for each valid plugin in loadorder.txt file.
         if not any(plugin in elem for elem in ALL_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
             count_cleaned += 1
             run_xedit(xedit_exc_path, plugin)

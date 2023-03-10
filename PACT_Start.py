@@ -19,6 +19,8 @@ AUTHOR NOTES (POET):
 '''
 
 # =================== PACT INI FILE ===================
+
+
 def pact_ini_create():
     if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR PACT
         INI_Settings = ["[MAIN]\n",
@@ -252,7 +254,7 @@ def run_xedit(xedit_exc_log, plugin_name):
                     proc.kill()
                     break
 
-            if proc.info['name'] == str(xedit_process) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean.
+            if proc.info['name'] == str(xedit_process) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean. # type: ignore
                 xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {xedit_exc_log}'])
                 Exception_Check = xedit_exc_out.decode()  # This method this since xedit is actively writing to it.
                 if "which can not be found" in Exception_Check:

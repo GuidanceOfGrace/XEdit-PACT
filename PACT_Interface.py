@@ -13,7 +13,7 @@ QMessageBox.NoIcon | Question | Information | Warning | Critical
 
 class UiPACTMainWin(object):
     def __init__(self):
-        super().__init__()  # Allows subclasses to inherit and extend behavior of parent class.
+        super().__init__()  # Allow subclasses to inherit and extend behavior of parent class.
         self.configured_LO = False
         self.configured_MO2 = False
         self.configured_XEDIT = False
@@ -33,9 +33,9 @@ class UiPACTMainWin(object):
         self.RegBT_Exit = None
         self.RegBT_CheckUpdates = None
 
-        self.timer = QTimer()  # For CLEAN PLUGINS Button
+        self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
         self.timer.timeout.connect(self.check_config)  # type: ignore
-        self.timer.start(3000)  # In milliseconds.
+        self.timer.start(3000)  # In milliseconds, will override QTimer.singleShot
         self.thread = None
 
     def setup_ui(self, PACT_MainWin):
@@ -180,7 +180,7 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")  # type: ignore
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
-            QTimer.singleShot(10000, self.stop_delay_style)  # Delay should match self.timer.start
+            QTimer.singleShot(5000, self.stop_delay_style)  # Delay should match self.timer.start
 
     def check_config(self):
         if not (self.configured_LO and self.configured_XEDIT):  # Incorrect settings, ignore MO2 for now.
@@ -210,7 +210,7 @@ class UiPACTMainWin(object):
                 thread.finished_signal.connect(thread.quit)  # type: ignore
                 thread.finished_signal.connect(thread.wait)  # type: ignore
                 self.thread = None  # Switch to None thread since last one is still in memory.
-                QTimer.singleShot(10000, self.stop_delay_style)
+                QTimer.singleShot(5000, self.stop_delay_style)
 
     def disable_config_lo(self):
         self.configured_LO = False

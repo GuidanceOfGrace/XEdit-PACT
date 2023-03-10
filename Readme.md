@@ -15,21 +15,21 @@ FO4 PACT - https://www.nexusmods.com/fallout4/mods/69413
 > Is it safe to clean plugins?
 
 Short answer? Yes. Long answer?
-Yeeeeeeeeeeeeeeeeeeeeeeee... It's fine, though PACT will skip cleaning DLCs.
+Yeeeeeeeeeeeeeeeeeeeeeeee... As long as you're not cleaning official game DLC plugins, it's all good.
 
 Sometimes, a mod author will open a plugin record simply to investigate a field or property and not change anything.
 But the CK will still flag that record as edited, even if it remains identical in every way. These are *Identical To Master Records (ITMs)*
 They will frequently overwrite valid changes made by other mods and should be cleaned whenever possible. Intentional ITMs are next to nonexistent.
 
-*Undisabled References (UDRs)* are potentially more harmful. Mod authors will sometimes delete records they no longer wish to use.
+*Undisabled Records (UDRs)* are potentially more harmful. Mod authors will sometimes delete records they no longer wish to use.
 Depending on what record has been deleted, other mods may try to reference it. When they can't find this record,
 this can lead to broken quests to game crashes. These records need to be restored and properly disabled.
 
-After a discussion with many veteran FO4 mod authors, it’s advised that you do not clean official DLCs from Fallout 4 yet.
+After a discussion with many veteran game modders, it’s advised that you do not clean any ESM plugins from the official DLC content (excluding any Creation Club content).
 Even if you already cleaned them, there shouldn’t be any problems, though here have been reports that cleaning them can cause weird NPC pathing and dialogue behavior.
 Exact reason is unknown, could be due to certain record types being treated as false positives or simply because XEdit doesn't have full record information.
 
-Skyrim DLC plugins can and should be cleaned. *If you know any better, feel free to enlighten me.*
+*If you know any better, feel free to enlighten me.*
 
 ===========================================================================
 # CONTENTS & FILES #
@@ -85,6 +85,15 @@ You can add or remove plugin names from *PACT Ignore.txt* if you wish to include
 PACT will add to *PACT Ignore.txt* file any plugin which is already clean (no ITMs or UDRs found to clean).
 PACT will skip and add to ignore list any plugin that *XEdit* cannot load because of missing plugin requirements.
 PACT will also skip other invalid plugins, though it will take *5 minutes* for the process to time out, unless you close *XEdit* manually.
+
+===========================================================================
+# IF YOU WANT TO STOP PACT AND XEDIT WINDOWS FROM BOTHERING YOU #
+
+Simply press [ WIN ] + [ CTRL ] + [ -> ] keys on your keyboard to switch to another virtual desktop.
+Run PACT there and switch back to your main desktop with [ WIN ] + [ CTRL ] + [ <- ]
+More info and complete guide here:
+Windows 11 - https://www.howtogeek.com/796349/how-to-use-virtual-desktops-on-windows-11/
+Windows 10 - https://www.howtogeek.com/197625/how-to-use-virtual-desktops-in-windows-10/
 
 ===========================================================================
 # KNOWN ISSUES #

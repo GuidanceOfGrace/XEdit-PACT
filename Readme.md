@@ -21,15 +21,15 @@ Sometimes, a mod author will open a plugin record simply to investigate a field 
 But the CK will still flag that record as edited, even if it remains identical in every way. These are *Identical To Master Records (ITMs)*
 They will frequently overwrite valid changes made by other mods and should be cleaned whenever possible. Intentional ITMs are next to nonexistent.
 
-*Undisabled Records (UDRs)* are potentially more harmful. Mod authors will sometimes delete records they no longer wish to use.
+*Undisabled References (UDRs)* are potentially more harmful. Mod authors will sometimes delete records they no longer wish to use.
 Depending on what record has been deleted, other mods may try to reference it. When they can't find this record,
 this can lead to broken quests to game crashes. These records need to be restored and properly disabled.
 
-After a discussion with many veteran game modders, it’s advised that you do not clean any ESM plugins from the official DLC content (excluding any Creation Club content).
+After a discussion with many veteran FO4 mod authors, it’s advised that you do not clean official DLCs from Fallout 4 yet.
 Even if you already cleaned them, there shouldn’t be any problems, though here have been reports that cleaning them can cause weird NPC pathing and dialogue behavior.
 Exact reason is unknown, could be due to certain record types being treated as false positives or simply because XEdit doesn't have full record information.
 
-*If you know any better, feel free to enlighten me.*
+Skyrim DLC plugins can and should be cleaned. *If you know any better, feel free to enlighten me.*
 
 ===========================================================================
 # CONTENTS & FILES #

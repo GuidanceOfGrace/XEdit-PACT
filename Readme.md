@@ -91,9 +91,10 @@ PACT will also skip other invalid plugins, though it will take *5 minutes* for t
 
 Simply press [ WIN ] + [ CTRL ] + [ -> ] keys on your keyboard to switch to another virtual desktop.
 Run PACT there and switch back to your main desktop with [ WIN ] + [ CTRL ] + [ <- ]
+
 More info and complete guide here:
-Windows 11 - https://www.howtogeek.com/796349/how-to-use-virtual-desktops-on-windows-11/
-Windows 10 - https://www.howtogeek.com/197625/how-to-use-virtual-desktops-in-windows-10/
+- Windows 11 - https://www.howtogeek.com/796349/how-to-use-virtual-desktops-on-windows-11/
+- Windows 10 - https://www.howtogeek.com/197625/how-to-use-virtual-desktops-in-windows-10/
 
 ===========================================================================
 # KNOWN ISSUES #

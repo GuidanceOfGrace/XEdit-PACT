@@ -15,7 +15,7 @@ FO4 PACT - https://www.nexusmods.com/fallout4/mods/69413
 > Is it safe to clean plugins?
 
 Short answer? Yes. Long answer?
-Yeeeeeeeeeeeeeeeeeeeeeeee... As long as you're not cleaning official game DLC plugins, it's all good.
+Yeeeeeeeeeeeeeeeeeeeeeeee... It's fine, though PACT will skip cleaning DLCs.
 
 Sometimes, a mod author will open a plugin record simply to investigate a field or property and not change anything.
 But the CK will still flag that record as edited, even if it remains identical in every way. These are *Identical To Master Records (ITMs)*

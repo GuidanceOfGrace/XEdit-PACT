@@ -1,11 +1,10 @@
 import os
 import sys
-import time
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QUrl, QTimer, QThread, Signal
-from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtCore import Qt, QUrl, QTimer, QThread
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFileDialog
-from PACT_Start import (PACT_config, PACT_Current, pact_ini_update, pact_update_check, check_settings_paths, check_settings_integrity, clean_plugins)
+from PACT_Start import (PACT_config, PACT_Current, pact_ini_update, pact_update_check, check_process_mo2, check_settings_paths, check_settings_integrity, clean_plugins)
 
 '''TEMPLATES
 QMessageBox.NoIcon | Question | Information | Warning | Critical
@@ -191,14 +190,14 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
             self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)
         
-        elif self.configured_LO and self.configured_XEDIT and self.thread is None: # Correct settings BUT nothing running.
+        elif self.configured_LO and self.configured_XEDIT and self.thread is None:  # Correct settings BUT nothing running.
             self.RegBT_CLEAN_PLUGINS.setEnabled(True)
             self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
             self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)  # type: ignore
         
-        elif self.configured_LO and self.configured_XEDIT and self.thread is not None: # Correct settings AND thread running.
+        elif self.configured_LO and self.configured_XEDIT and self.thread is not None:  # Correct settings AND thread running.
             self.RegBT_CLEAN_PLUGINS.setEnabled(True)
             self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: pink; border-radius: 5px; border: 1px solid gray;")
@@ -311,6 +310,7 @@ class PactThread(QThread):
         self.cleaning_done = False
 
     def run(self):  # def Plugins_CLEAN():
+        check_process_mo2()
         while not self.cleaning_done:
             pact_update_check()
             check_settings_paths()

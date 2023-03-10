@@ -112,6 +112,21 @@ IF IT STARTS SPAMMING MULTIPLE XEDIT WINDOWS, IMMEDIATELY CLOSE PACT AND REPORT 
 ===========================================================================
 # CHANGELOG #
 
+1.50
+- HOTFIX 1: I am slowly going insane | Fixed OSError: [WinError 193] %1 is not a valid Win32 application in v1.41
+- HOTFIX 2: Fixed wrong version number, updated readme on how to hide PACT and XEDIT from desktop.
+- HOTFIX 3: Fixed one line of code being in the wrong place at the wrong time, should finally fix [WinError 193]
+- Removed some test messages from terminal output.
+
+1.40
+- Fixed PACT failing to process plugins with special & space characters.
+- Added support for processing and cleaning plugins with *xEdit.exe*
+
+1.30
+- Changed how plugin list is read from *loadorder.txt* to fix 0 plugins found.
+- Improved a few file checks to correctly trigger errors and prevent crashes.
+- Changed the MO2 instance checking method so it only checks when necessary.
+
 1.25
 - Removed underscore character from *PACT Ignore.txt* to match the naming scheme.
 - You can now set the Load Order File to either *loadorder.txt* or *plugins.txt*

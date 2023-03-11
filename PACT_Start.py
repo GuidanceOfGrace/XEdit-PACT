@@ -124,18 +124,17 @@ print("=========================================================================
 @dataclass
 class Info:
     MO2_EXE: Path = field(default_factory=Path)
-    XEdit_EXE: Path = field(default_factory=Path)
-    XEdit_Path: Path = field(default_factory=Path)
-    LoadOrder_TXT: Path = field(default_factory=Path)
-    LoadOrder_Path: Path = field(default_factory=Path)
+    MO2_PATH: Path = field(default_factory=Path)
+    XEDIT_EXE: Path = field(default_factory=Path)
+    XEDIT_PATH: Path = field(default_factory=Path)
+    LOAD_ORDER_TXT: Path = field(default_factory=Path)
+    LOAD_ORDER_PATH: Path = field(default_factory=Path)
 
 
 info = Info()
 ''' # TEMPLATES | Only access INI just before needed to prevent missing file errors.
 info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]
-info.LoadOrder_Path = os.path.dirname(info.LOAD_ORDER_PATH)
 info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]
-info.XEdit_Path = os.path.dirname(info.XEDIT_PATH)
 info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]
 '''
 info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
@@ -219,45 +218,51 @@ def run_xedit(xedit_exc_log, plugin_name):
     info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
     info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
     xedit_process_name = os.path.basename(info.XEDIT_PATH)
-    batdir = str(Path.cwd())
-    if os.path.exists(f"{batdir}\\PACT_Cleaning.bat"):
-        os.remove(f"{batdir}\\PACT_Cleaning.bat")
+    #batdir = str(Path.cwd())
+    #if os.path.exists(f"{batdir}\\PACT_Cleaning.bat"):
+    #    os.remove(f"{batdir}\\PACT_Cleaning.bat")
 
     # Write proper bat command depending on XEDIT and MO2 selections.
     plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
-    with open(f"{batdir}\\PACT_Cleaning.bat", "w") as PACT_Cleaning:
+    # with open(f"{batdir}\\PACT_Cleaning.bat", "w") as PACT_Cleaning:
 
-        # If specific xedit (fo4edit, sseedit) executable is set.
-        if MO2Mode and xedit_process_name.lower() in ("fo4edit.exe", "sseedit.exe"):
-            PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""')
+    # If specific xedit (fo4edit, sseedit) executable is set.
+    if MO2Mode and xedit_process_name.lower() in ("fo4edit.exe", "sseedit.exe"):
+        bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""'
+        #PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""')
 
-        elif not MO2Mode and xedit_process_name.lower() in ("fo4edit.exe", "sseedit.exe"):
-            PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"')
+    elif not MO2Mode and xedit_process_name.lower() in ("fo4edit.exe", "sseedit.exe"):
+        bat_command = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
+        #PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"')
 
-        # If universal xedit (xedit.exe) executable is set.
-        if "loadorder" in info.LOAD_ORDER_PATH and "xedit" in info.XEDIT_PATH.lower():
-            with open(info.LOAD_ORDER_PATH, "r+", encoding="utf-8", errors="ignore") as LO_Check:
-                if "Fallout4.esm" in LO_Check.read():
-                    xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
-                    if MO2Mode:
-                        PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""')
-                    else:
-                        PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"')
+    # If universal xedit (xedit.exe) executable is set.
+    if "loadorder" in info.LOAD_ORDER_PATH and xedit_process_name.lower() in "xedit.exe":
+        with open(info.LOAD_ORDER_PATH, "r+", encoding="utf-8", errors="ignore") as LO_Check:
+            if "Fallout4.esm" in LO_Check.read():
+                xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
+                if MO2Mode:
+                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""'
+                    #PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""')
+                else:
+                    bat_command = f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"'
+                    #PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"')
 
-                elif "Skyrim.esm" in LO_Check.read():
-                    xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
-                    if MO2Mode:
-                        PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""')
-                    else:
-                        PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"')
+            elif "Skyrim.esm" in LO_Check.read():
+                xedit_log_path = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
+                if MO2Mode:
+                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""'
+                    #PACT_Cleaning.write(f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""')
+                else:
+                    bat_command = f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"'
+                    #PACT_Cleaning.write(f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"')
 
-        elif "loadorder" not in info.LOAD_ORDER_PATH and "xedit" in info.XEDIT_PATH.lower():
-            print("\n❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!")
-            print("   You have to set your load order file path to loadorder.txt and NOT plugins.txt")
-            print("   This is so PACT can detect you game version. Change the load order file path and try again.")
-            os.system("pause")
-            sys.exit()
-
+    elif "loadorder" not in info.LOAD_ORDER_PATH and "xedit" in info.XEDIT_PATH.lower():
+        print("\n❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!")
+        print("   You have to set your load order file path to loadorder.txt and NOT plugins.txt")
+        print("   This is so PACT can detect you game version. Change the load order file path and try again.")
+        os.system("pause")
+        sys.exit()
+    '''
     time.sleep(0.5)  # Wait a bit to see if antivirus deletes bat file.
     if os.path.exists(f"{batdir}\\PACT_Cleaning.bat"):
         pass
@@ -265,11 +270,14 @@ def run_xedit(xedit_exc_log, plugin_name):
         print("\n❌ ERROR : MISSING PACT FILE! MAKE SURE TO WHITELIST PACT IN YOUR ANTIVIRUS AND TRY AGAIN!")
         os.system("pause")
         sys.exit()
-
+    '''
+    print(bat_command)
     if MO2Mode:  # Looks like we cannot use psutil.Popen(), subprocess.Popen() is what runs only one instance at a time.
-        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd=Path(info.MO2_PATH).resolve().parent)
+        bat_process = subprocess.Popen(bat_command)
+        #bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat", cwd=Path(info.MO2_PATH).resolve().parent)
     else:
-        bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat")
+        bat_process = subprocess.Popen(bat_command)
+        #bat_process = subprocess.Popen(f"{batdir}\\PACT_Cleaning.bat")
 
     while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore

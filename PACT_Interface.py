@@ -312,10 +312,8 @@ class PactThread(QThread):
     def run(self):  # def Plugins_CLEAN():
         check_process_mo2()
         while not self.cleaning_done:
-            pact_update_check()
             check_settings_paths()
-            check_settings_integrity("FO4Edit", "Fallout4.esm")
-            check_settings_integrity("SSEEdit", "Skyrim.esm")
+            check_settings_integrity()
             self.cleaning_done = clean_plugins()
             self.msleep(1000)
 

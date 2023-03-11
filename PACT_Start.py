@@ -11,7 +11,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 
 '''AUTHOR NOTES (POET)
-- Module try - excpet importing is disabled as this is only meant to be run through exe. Will also disable for CLAS.
+- Module try - except importing is disabled as this is only meant to be run through exe. Will also disable for CLAS.
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
 - (..., encoding="utf-8", errors="ignore") needs to go with every opened file because unicode errors are a bitch.
   IMPORTANT
@@ -30,12 +30,12 @@ def pact_ini_create():
                         "Update Check = true\n\n",
                         "# Set to true if you want PACT to show extra stats about cleaned plugins in the command line window. \n",
                         "Stat Logging = true\n\n",
-                        "# Set or copy-paste your loadorder file path below, PACT will use it to determine activated plugins. \n",
-                        "# Vortex -> loadorder txt can be found by selecting Open > Game Application Data Folder. \n",
-                        "# MO2 -> loadorder txt can be found in your currently active MO2 profile folder. \n",
+                        "# Set or copy-paste your load order (loadorder.txt / plugins.txt) file path below. \n",
+                        "# Vortex -> Both can be found by selecting Open > Game Application Data Folder. \n",
+                        "# MO2 -> Both can be found in your currently active MO2 profile folder. \n",
                         "LoadOrder TXT = \n\n",
-                        "# Set or copy-paste your XEdit (FO4Edit.exe, SSEEdit.exe) executable file path below. \n",
-                        "# Make sure the XEdit version you set is for the actual plugins you wish to clean. \n",
+                        "# Set or copy-paste your XEdit (FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below. \n",
+                        "# xEdit.exe is also supported, but requires that you set LoadOrder TXT path to your loadorder.txt \n",
                         "XEDIT EXE = \n\n",
                         "# Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below. \n",
                         "# Only required if using Mod Organizer 2. Otherwise, leave this blank. \n",
@@ -170,7 +170,7 @@ FNV_skip_list = ["", "FalloutNV.esm", "DeadMoney.esm", "OldWorldBlues.esm", "Hon
 FO4_skip_list = ["", "Fallout4.esm", "DLCCoast.esm", "DLCNukaWorld.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCworkshop02.esm", "DLCworkshop03.esm",
                  "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm"]
 
-SSE_skip_list = ["", "Unofficial Skyrim Special Edition Patch.esp", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm"]
+SSE_skip_list = ["", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm", "Unofficial Skyrim Special Edition Patch.esp"]
 
 VIP_skip_list = FNV_skip_list + FO4_skip_list + SSE_skip_list
 
@@ -261,7 +261,7 @@ def run_xedit(xedit_exc_log, plugin_name):
     # Write proper bat command depending on XEDIT and MO2 selections.
     plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
 
-    # If specific xedit (fo4edit, sseedit) executable is set.
+    # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
     if MO2Mode and info.XEDIT_EXE.lower() in xedit_list_specific:
         bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""'
 
@@ -271,7 +271,14 @@ def run_xedit(xedit_exc_log, plugin_name):
     # If universal xedit (xedit.exe) executable is set.
     if "loadorder" in info.LOAD_ORDER_PATH and info.XEDIT_EXE.lower() in xedit_list_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
-            if "Fallout4.esm" in LO_Check.read():
+            if "FalloutNV.esm" in LO_Check.read():
+                info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
+                if MO2Mode:
+                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fnv -QAC -autoexit -autoload \\"{plugin_escape}\\""'
+                else:
+                    bat_command = f'"{info.XEDIT_PATH}" -a -fnv -QAC -autoexit -autoload "{plugin_name}"'
+
+            elif "Fallout4.esm" in LO_Check.read():
                 info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""'

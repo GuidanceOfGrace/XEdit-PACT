@@ -154,8 +154,8 @@ def pact_update_settings():
     info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
 
 
-xedit_list_universal = ("xedit.exe", "xedit64.exe")
-xedit_list_newvegas = ("fnvedit", "fnvedit64")
+xedit_list_universal = ("xedit.exe", "xedit64.exe", "xfoedit.exe", "xfoedit64.exe")
+xedit_list_newvegas = ("fnvedit.exe", "fnvedit64.exe")
 xedit_list_fallout4 = ("fo4edit.exe", "fo4edit64.exe")
 xedit_list_skyrimse = ("sseedit.exe", "sseedit64.exe")
 xedit_list_specific = xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
@@ -210,11 +210,8 @@ def check_settings_integrity():
     global xedit_list_fallout4
     global xedit_list_skyrimse
     global xedit_list_universal
-    
-    info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
-    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-    info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
-    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+
+    pact_update_settings()
 
     if os.path.exists(info.MO2_PATH):
         MO2Mode = True
@@ -368,12 +365,7 @@ def clean_plugins():
     global VIP_skip_list, LCL_skip_list
     ALL_skip_list = VIP_skip_list + LCL_skip_list
 
-    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-    info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
-    info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
-    info.MO2_EXE = os.path.basename(info.MO2_PATH)
-    info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-    info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+    pact_update_settings()
 
     # Clear xedit log files to check logs for each plugin separately.
     if os.path.exists(info.XEDIT_LOG_TXT):

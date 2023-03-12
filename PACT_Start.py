@@ -128,14 +128,14 @@ print("=========================================================================
 
 @dataclass
 class Info:
-    MO2_EXE: Path = field(default_factory=Path)
-    MO2_PATH: Path = field(default_factory=Path)
-    XEDIT_EXE: Path = field(default_factory=Path)
-    XEDIT_PATH: Path = field(default_factory=Path)
-    LOAD_ORDER_TXT: Path = field(default_factory=Path)
-    LOAD_ORDER_PATH: Path = field(default_factory=Path)
-    XEDIT_LOG_TXT: Path = field(default_factory=Path)
-    XEDIT_EXC_LOG: Path = field(default_factory=Path)
+    MO2_EXE: str | Path = field(default_factory=Path)
+    MO2_PATH: str | Path = field(default_factory=Path)
+    XEDIT_EXE: str | Path = field(default_factory=Path)
+    XEDIT_PATH: str | Path = field(default_factory=Path)
+    LOAD_ORDER_TXT: str | Path = field(default_factory=Path)
+    LOAD_ORDER_PATH: str | Path = field(default_factory=Path)
+    XEDIT_LOG_TXT: str | Path = field(default_factory=Path)
+    XEDIT_EXC_LOG: str | Path = field(default_factory=Path)
 
 
 info = Info()
@@ -260,7 +260,8 @@ def run_xedit(xedit_exc_log, plugin_name):
 
     # Write proper bat command depending on XEDIT and MO2 selections.
     plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
-
+    
+    bat_command = ""
     # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
     if MO2Mode and info.XEDIT_EXE.lower() in xedit_list_specific:
         bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""'

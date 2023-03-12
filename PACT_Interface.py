@@ -163,6 +163,7 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: pink; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore
             self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)  # type: ignore
+            self.RegBT_Exit.setEnabled(False)  # type: ignore
 
     def stop_delay_style(self):  # Cannot use time.sleep() to delay button change, must use QTimer.
         self.RegBT_CLEAN_PLUGINS.setEnabled(True)  # type: ignore
@@ -170,6 +171,7 @@ class UiPACTMainWin(object):
         self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: lightblue; border-radius: 5px; border: 1px solid gray;")  # type: ignore
         self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore
         self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)  # type: ignore
+        self.RegBT_Exit.setEnabled(True)  # type: ignore
 
     def stop_cleaning(self):
         if self.thread is not None:

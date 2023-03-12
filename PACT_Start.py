@@ -25,8 +25,8 @@ from dataclasses import dataclass, field
 def pact_ini_create():
     if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR PACT
         INI_Settings = ["[MAIN]\n",
-                        "# This file contains configuration settings for both PACT_Start.py and Plugin Auto Cleaning Tool.exe \n",
-                        "# Set to true if you want PACT to check if you have the latest version of PACT. \n",
+                        "# This file contains settings for both PACT_Start.py and Plugin Auto Cleaning Tool.exe \n",
+                        "# Set to true if you want PACT to check that you have the latest version of PACT. \n",
                         "Update Check = true\n\n",
                         "# Set to true if you want PACT to show extra stats about cleaned plugins in the command line window. \n",
                         "Stat Logging = true\n\n",
@@ -70,6 +70,8 @@ def pact_log_update(log_message):
 
 
 # =================== WARNING MESSAGES ==================
+# Can change first line to """\ to remove the spacing.
+
 Warn_PACT_Update_Failed = """
 ❌  WARNING : PACT WAS UNABLE TO CHECK FOR UPDATES, BUT WILL CONTINUE RUNNING
     CHECK FOR ANY PACT UPDATES HERE: https://www.nexusmods.com/fallout4/mods/69413
@@ -95,13 +97,13 @@ Warn_Invalid_INI_Setup = """
 def pact_update_check():
     global PACT_Current
     global PACT_Updated
-    print("✔️ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL UPDATES...")
+    print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
     print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
     response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
     PACT_Received = response.json()["name"]
     if PACT_Received == PACT_Current:
         PACT_Updated = True
-        print("✔️ You have the latest version of PACT! \n")
+        print("\n✔️ You have the latest version of PACT!")
     else:
         print(Warn_Outdated_PACT)
         print("===============================================================================")
@@ -116,12 +118,12 @@ def pact_update_run():
         except (OSError, requests.exceptions.RequestException):
             print(Warn_PACT_Update_Failed)
             print("===============================================================================")
-    else:
-        print("\n ❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
+    elif PACT_config.getboolean("MAIN", "Update Check") is False:
+        print("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
 
 
 # =================== TERMINAL OUTPUT START ====================
-print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "FNV, FO4, SSE")
+print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| FNV, FO4, SSE")
 print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING PLUGINS")
 print("===============================================================================")
 
@@ -140,14 +142,17 @@ class Info:
 
 info = Info()
 
-info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
-info.LOAD_ORDER_TXT = os.path.basename(info.LOAD_ORDER_PATH)
-info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
-info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
-info.MO2_EXE = os.path.basename(info.MO2_PATH)
-info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+
+def pact_update_settings():
+    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+    info.LOAD_ORDER_TXT = os.path.basename(info.LOAD_ORDER_PATH)
+    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
+    info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
+    info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
+    info.MO2_EXE = os.path.basename(info.MO2_PATH)
+    info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
+    info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+
 
 xedit_list_universal = ("xedit.exe", "xedit64.exe")
 xedit_list_newvegas = ("fnvedit", "fnvedit64")
@@ -251,16 +256,11 @@ def run_xedit(xedit_exc_log, plugin_name):
     global xedit_list_universal
     global xedit_list_specific
 
-    info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
-    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
-    info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-    info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
-    info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
+    pact_update_settings()
 
     # Write proper bat command depending on XEDIT and MO2 selections.
     plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
-    
+
     bat_command = ""
     # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
     if MO2Mode and info.XEDIT_EXE.lower() in xedit_list_specific:
@@ -447,6 +447,7 @@ def clean_plugins():
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
+    pact_update_settings()
     check_process_mo2()
     check_settings_paths()
     check_settings_integrity()

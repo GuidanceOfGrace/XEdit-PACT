@@ -7,6 +7,7 @@ import requests
 import subprocess
 import sys
 import time
+from typing import Union
 from pathlib import Path
 from dataclasses import dataclass, field
 
@@ -130,14 +131,14 @@ print("=========================================================================
 
 @dataclass
 class Info:
-    MO2_EXE: str | Path = field(default_factory=Path)
-    MO2_PATH: str | Path = field(default_factory=Path)
-    XEDIT_EXE: str | Path = field(default_factory=Path)
-    XEDIT_PATH: str | Path = field(default_factory=Path)
-    LOAD_ORDER_TXT: str | Path = field(default_factory=Path)
-    LOAD_ORDER_PATH: str | Path = field(default_factory=Path)
-    XEDIT_LOG_TXT: str | Path = field(default_factory=Path)
-    XEDIT_EXC_LOG: str | Path = field(default_factory=Path)
+    MO2_EXE: Union[str, Path] = field(default_factory=Path)
+    MO2_PATH: Union[str, Path] = field(default_factory=Path)
+    XEDIT_EXE: Union[str, Path] = field(default_factory=Path)
+    XEDIT_PATH: Union[str, Path] = field(default_factory=Path)
+    LOAD_ORDER_TXT: Union[str, Path] = field(default_factory=Path)
+    LOAD_ORDER_PATH: Union[str, Path] = field(default_factory=Path)
+    XEDIT_LOG_TXT: Union[str, Path] = field(default_factory=Path)
+    XEDIT_EXC_LOG: Union[str, Path] = field(default_factory=Path)
 
 
 info = Info()
@@ -218,20 +219,20 @@ def check_settings_integrity():
     else:
         MO2Mode = False
 
-    if info.XEDIT_EXE.lower() not in xedit_list_universal:  # Check if right xedit version.
+    if str(info.XEDIT_EXE).lower() not in xedit_list_universal:  # Check if right xedit version.
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             LO_Plugins = LO_Check.read()
-            if "FalloutNV.esm" in LO_Plugins and info.XEDIT_EXE.lower() not in xedit_list_newvegas:
+            if "FalloutNV.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in xedit_list_newvegas:
                 print(Warn_Invalid_INI_Setup)
                 os.system("pause")
                 sys.exit()
 
-            if "Fallout4.esm" in LO_Plugins and info.XEDIT_EXE.lower() not in xedit_list_fallout4:
+            if "Fallout4.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in xedit_list_fallout4:
                 print(Warn_Invalid_INI_Setup)
                 os.system("pause")
                 sys.exit()
 
-            if "Skyrim.esm" in LO_Plugins and info.XEDIT_EXE.lower() not in xedit_list_skyrimse:
+            if "Skyrim.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in xedit_list_skyrimse:
                 print(Warn_Invalid_INI_Setup)
                 os.system("pause")
                 sys.exit()
@@ -260,14 +261,14 @@ def run_xedit(xedit_exc_log, plugin_name):
 
     bat_command = ""
     # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
-    if MO2Mode and info.XEDIT_EXE.lower() in xedit_list_specific:
+    if MO2Mode and str(info.XEDIT_EXE).lower() in xedit_list_specific:
         bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""'
 
-    elif not MO2Mode and info.XEDIT_EXE.lower() in xedit_list_specific:
+    elif not MO2Mode and str(info.XEDIT_EXE).lower() in xedit_list_specific:
         bat_command = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
 
     # If universal xedit (xedit.exe) executable is set.
-    if "loadorder" in info.LOAD_ORDER_PATH and info.XEDIT_EXE.lower() in xedit_list_universal:
+    if "loadorder" in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in xedit_list_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             if "FalloutNV.esm" in LO_Check.read():
                 info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
@@ -290,43 +291,53 @@ def run_xedit(xedit_exc_log, plugin_name):
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"'
 
-    elif "loadorder" not in info.LOAD_ORDER_PATH and info.XEDIT_EXE.lower() in xedit_list_universal:
+    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in xedit_list_universal:
         print("\n❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!")
         print("   You have to set your load order file path to loadorder.txt and NOT plugins.txt")
         print("   This is so PACT can detect the right game. Change the load order file path and try again.")
         os.system("pause")
         sys.exit()
 
-    print(f"\nCURRENTLY RUNNING : {bat_command}") 
-    bat_process = subprocess.Popen(bat_command)
-    time.sleep(1)
-    while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
-        for proc in xedit_procs:
-            if proc.info['name'] == str(info.XEDIT_EXE):  # type: ignore
-                create_time = proc.info['create_time']  # type: ignore
-                if (time.time() - create_time) > 300:  # 5 min time-out.
-                    print("❌ ERROR : XEDIT TIMED OUT! KILLING XEDIT...")
-                    clean_failed_list.append(plugin_name)
-                    plugins_processed -= 1
-                    proc.kill()
-                    break
-
-            if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean. # type: ignore
-                xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {xedit_exc_log}'])
-                Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
-                if "which can not be found" in Exception_Check:
-                    print("❌ ERROR : MISSING PLUGIN REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
-                    with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
-                        PACT_IGNORE.write(f"\n{plugin_name}\n")
-                        clean_failed_list.append(plugin_name)
-                    plugins_processed -= 1
-                    proc.kill()
-                    time.sleep(1)
-                    os.remove(xedit_exc_log)
-                    break
+    bat_process = subprocess.Popen # This lets the type-checker know that bat_process is a subprocess.Popen object.
+    try:
+        bat_process = subprocess.Popen(bat_command)
         time.sleep(1)
-    plugins_processed += 1
+        while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
+            xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
+            for proc in xedit_procs:
+                if proc.info['name'] == str(info.XEDIT_EXE):  # type: ignore
+                    create_time = proc.info['create_time']  # type: ignore
+                    if (time.time() - create_time) > 300:  # 5 min time-out.
+                        print("❌ ERROR : XEDIT TIMED OUT! KILLING XEDIT...")
+                        clean_failed_list.append(plugin_name)
+                        plugins_processed -= 1
+                        proc.kill()
+                        break
+
+                if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean. # type: ignore
+                    xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {xedit_exc_log}'])
+                    Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
+                    if "which can not be found" in Exception_Check:
+                        print("❌ ERROR : MISSING PLUGIN REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                        with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                            PACT_IGNORE.write(f"\n{plugin_name}\n")
+                            clean_failed_list.append(plugin_name)
+                        plugins_processed -= 1
+                        proc.kill()
+                        time.sleep(1)
+                        os.remove(xedit_exc_log)
+                        break
+            time.sleep(1)
+    except OSError as e:
+        print("❌ XEDIT DID NOT START! CHECK YOUR XEDIT PATH AND TRY AGAIN.")
+        print("Diagnostic Info:")
+        print(f"❌ ERROR : {e}")
+        print(f"INI data:\n{PACT_config}")
+        print(f"Command-line variable:\n{bat_command}")
+        print(f"subprocess function arguments:\n{bat_process.args}")
+        raise
+    else:
+        plugins_processed += 1
 
 
 def check_results(xedit_log, plugin_name):
@@ -419,7 +430,7 @@ def clean_plugins():
     print(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in", (str(time.perf_counter() - log_start)[:3]), "seconds.")
     print(f"\n   {info.XEDIT_EXE} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
     if len(clean_failed_list) > 1:
-        print(f"\n❌ {info.XEDIT_EXE.upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {info.XEDIT_EXE} Timed Out):")
+        print(f"\n❌ {str(info.XEDIT_EXE).upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {info.XEDIT_EXE} Timed Out):")
         for elem in clean_failed_list:
             print(elem)
     if len(clean_results_UDR) > 1:

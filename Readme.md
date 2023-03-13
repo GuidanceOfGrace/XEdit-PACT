@@ -115,10 +115,6 @@ IF IT STARTS SPAMMING MULTIPLE XEDIT WINDOWS, IMMEDIATELY CLOSE PACT AND REPORT 
 1)	You are trying to run PACT with MO2 already open. Don't do that. Close all MO2 instances and run PACT normally.
 2)	Your MO2 might be missing some files. Make sure to reinstall latest 2.4 version of MO2 or try the portable version.
 
-- If you get an error in PACT saying *The system cannot find the file specified...*, this means:
-
-1) Your antivirus is most likely messing with PACT files. Try whitelisting the whole folder where PACT exe is located.
-
 ===========================================================================
 # LATEST CHANGES #
 

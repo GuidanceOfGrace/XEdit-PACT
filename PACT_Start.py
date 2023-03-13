@@ -9,6 +9,7 @@ import sys
 import time
 from pathlib import Path
 from dataclasses import dataclass, field
+from typing import Union
 
 '''AUTHOR NOTES (POET)
 - Module try - except importing is disabled as this is only meant to be run through exe. Will also disable for CLAS.
@@ -130,14 +131,13 @@ print("=========================================================================
 
 @dataclass
 class Info:
-    MO2_EXE: str | Path = field(default_factory=Path)
-    MO2_PATH: str | Path = field(default_factory=Path)
-    XEDIT_EXE: str | Path = field(default_factory=Path)
-    XEDIT_PATH: str | Path = field(default_factory=Path)
-    LOAD_ORDER_TXT: str | Path = field(default_factory=Path)
-    LOAD_ORDER_PATH: str | Path = field(default_factory=Path)
-    XEDIT_LOG_TXT: str | Path = field(default_factory=Path)
-    XEDIT_EXC_LOG: str | Path = field(default_factory=Path)
+    MO2_EXE: Union[str, Path] = field(default_factory=Path)
+    MO2_PATH: Union[str, Path] = field(default_factory=Path)
+    XEDIT_EXE: Union[str, Path] = field(default_factory=Path)
+    XEDIT_PATH: Union[str, Path] = field(default_factory=Path)
+    LOAD_ORDER_TXT: Union[str, Path] = field(default_factory=Path)
+    LOAD_ORDER_PATH: Union[str, Path] = field(default_factory=Path)
+
 
 
 info = Info()
@@ -150,12 +150,17 @@ def pact_update_settings():
     info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
     info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
     info.MO2_EXE = os.path.basename(info.MO2_PATH)
+    print(f"Load order path is: {info.LOAD_ORDER_PATH}")
+    print(f"Load order file is: {info.LOAD_ORDER_TXT}")
+    print(f"XEDIT path is : {info.XEDIT_PATH}")
+    print(f"XEDIT exe is : {info.XEDIT_EXE}")
+    print(f"MO2 path is : {info.MO2_PATH}")
+    print(f"MO2 exe is : {info.MO2_EXE}")
 
 
-# DO NOT AUTO UPDATE THESE BECAUSE OF xEdit.exe
-info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
-
+pact_update_settings()
+XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
+XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
 xedit_list_universal = ("xedit.exe", "xedit64.exe", "xfoedit.exe", "xfoedit64.exe")
 xedit_list_newvegas = ("fnvedit.exe", "fnvedit64.exe")
 xedit_list_fallout4 = ("fo4edit.exe", "fo4edit64.exe")
@@ -248,12 +253,13 @@ else:
         LCL_skip_list = [line.strip() for line in PACT_Ignore.readlines()[1:]]
 
 
-def run_xedit(xedit_exc_log, plugin_name):
+def run_xedit(plugin_name):
     global MO2Mode
     global plugins_processed
     global clean_failed_list
     global xedit_list_universal
     global xedit_list_specific
+    global XEDIT_LOG_TXT, XEDIT_EXC_LOG
 
     pact_update_settings()
 
@@ -272,21 +278,21 @@ def run_xedit(xedit_exc_log, plugin_name):
     if "loadorder" in info.LOAD_ORDER_PATH and info.XEDIT_EXE.lower() in xedit_list_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             if "FalloutNV.esm" in LO_Check.read():
-                info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
+                XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FNVEdit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fnv -QAC -autoexit -autoload \\"{plugin_escape}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -fnv -QAC -autoexit -autoload "{plugin_name}"'
 
             elif "Fallout4.esm" in LO_Check.read():
-                info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
+                XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"'
 
             elif "Skyrim.esm" in LO_Check.read():
-                info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
+                XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""'
                 else:
@@ -307,6 +313,19 @@ def run_xedit(xedit_exc_log, plugin_name):
         os.system("pause")
         sys.exit()
 
+    print(XEDIT_LOG_TXT, XEDIT_EXC_LOG)
+    # Clear xedit log files to check logs for each plugin separately.
+    try:
+        if os.path.exists(XEDIT_LOG_TXT):
+            os.remove(XEDIT_LOG_TXT)
+        if os.path.exists(XEDIT_EXC_LOG):
+            os.remove(XEDIT_EXC_LOG)
+    except PermissionError:
+        print("❌ ERROR : CANNOT CLEAR XEDIT LOGS. Try running PACT in Admin Mode.")
+        print("   If problems continue, please report this to the PACT Nexus page.")
+        os.system("pause")
+        sys.exit()
+
     print(f"\nCURRENTLY RUNNING : {bat_command}") 
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
@@ -322,8 +341,8 @@ def run_xedit(xedit_exc_log, plugin_name):
                     proc.kill()
                     break
 
-            if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(xedit_exc_log):  # Check if xedit cannot clean. # type: ignore
-                xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {xedit_exc_log}'])
+            if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(XEDIT_EXC_LOG):  # Check if xedit cannot clean. # type: ignore
+                xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {XEDIT_EXC_LOG}'])
                 Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
                 if "which can not be found" in Exception_Check:
                     print("❌ ERROR : MISSING PLUGIN REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
@@ -333,20 +352,20 @@ def run_xedit(xedit_exc_log, plugin_name):
                     plugins_processed -= 1
                     proc.kill()
                     time.sleep(1)
-                    os.remove(xedit_exc_log)
+                    os.remove(XEDIT_EXC_LOG)
                     break
         time.sleep(1)
     plugins_processed += 1
 
 
-def check_results(xedit_log, plugin_name):
+def check_results(plugin_name):
     time.sleep(1)  # Wait to make sure xedit generates its log.
     global clean_results_UDR, clean_results_ITM, clean_results_NVM
     global plugins_cleaned
     global LCL_skip_list
-    if os.path.exists(xedit_log):
+    if os.path.exists(XEDIT_LOG_TXT):
         cleaned_something = False
-        with open(xedit_log, "r", encoding="utf-8", errors="ignore") as XE_Check:
+        with open(XEDIT_LOG_TXT, "r", encoding="utf-8", errors="ignore") as XE_Check:
             Cleaning_Check = XE_Check.read()
             if "Undeleting:" in Cleaning_Check:
                 pact_log_update(f"\n{plugin_name} -> Cleaned UDRs")
@@ -367,21 +386,16 @@ def check_results(xedit_log, plugin_name):
                 with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
                     PACT_IGNORE.write(f"\n{plugin_name}")
                     LCL_skip_list.append(plugin_name)
-        os.remove(xedit_log)
+        os.remove(XEDIT_LOG_TXT)
 
 
 def clean_plugins():
     global MO2Mode
+    global XEDIT_LOG_TXT, XEDIT_EXC_LOG
     global VIP_skip_list, LCL_skip_list
     ALL_skip_list = VIP_skip_list + LCL_skip_list
 
     pact_update_settings()
-
-    # Clear xedit log files to check logs for each plugin separately.
-    if os.path.exists(info.XEDIT_LOG_TXT):
-        os.remove(info.XEDIT_LOG_TXT)
-    if os.path.exists(info.XEDIT_EXC_LOG):
-        os.remove(info.XEDIT_EXC_LOG)
 
     # Change mod manager modes and check ignore list.
     if MO2Mode:
@@ -420,8 +434,8 @@ def clean_plugins():
     for plugin in LO_Plugin_List:  # Run XEdit and log checks for each valid plugin in loadorder.txt file.
         if not any(plugin in elem for elem in ALL_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
             count_cleaned += 1
-            run_xedit(info.XEDIT_EXC_LOG, plugin)
-            check_results(info.XEDIT_LOG_TXT, plugin)
+            run_xedit(plugin)
+            check_results(plugin)
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {count_plugins})")
 
     # Show stats once cleaning is complete.

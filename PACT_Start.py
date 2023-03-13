@@ -50,7 +50,7 @@ PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$
 PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Settings.ini")
 PACT_Date = "110323"  # DDMMYY
-PACT_Current = "PACT v1.55"
+PACT_Current = "PACT v1.60"
 PACT_Updated = False
 
 
@@ -150,9 +150,11 @@ def pact_update_settings():
     info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
     info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
     info.MO2_EXE = os.path.basename(info.MO2_PATH)
-    info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-    info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
 
+
+# DO NOT AUTO UPDATE THESE BECAUSE OF xEdit.exe
+info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
+info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
 
 xedit_list_universal = ("xedit.exe", "xedit64.exe", "xfoedit.exe", "xfoedit64.exe")
 xedit_list_newvegas = ("fnvedit.exe", "fnvedit64.exe")
@@ -297,6 +299,14 @@ def run_xedit(xedit_exc_log, plugin_name):
         os.system("pause")
         sys.exit()
 
+    if bat_command == "":
+        print("\n❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?")
+        print("   If you're seeing this, make sure that your load order / xedit paths are correct.")
+        print("   If problems continue, try a different load order file or xedit executable.")
+        print("   If nothing works, please report this error to the PACT Nexus page.")
+        os.system("pause")
+        sys.exit()
+
     print(f"\nCURRENTLY RUNNING : {bat_command}") 
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
@@ -396,7 +406,9 @@ def clean_plugins():
                     LO_Plugin_List.append(line)
         else:
             for line in LO_List:
-                LO_Plugin_List.append(line.strip())
+                line = line.strip()
+                if ".ghost" not in line:
+                    LO_Plugin_List.append(line)
 
     # Start cleaning process if everything is OK.
     count_plugins = len(set(LO_Plugin_List) - set(ALL_skip_list))

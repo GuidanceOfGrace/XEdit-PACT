@@ -150,12 +150,13 @@ def pact_update_settings():
     info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
     info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
     info.MO2_EXE = os.path.basename(info.MO2_PATH)
-    print(f"Load order path is: {info.LOAD_ORDER_PATH}")
-    print(f"Load order file is: {info.LOAD_ORDER_TXT}")
-    print(f"XEDIT path is : {info.XEDIT_PATH}")
-    print(f"XEDIT exe is : {info.XEDIT_EXE}")
-    print(f"MO2 path is : {info.MO2_PATH}")
-    print(f"MO2 exe is : {info.MO2_EXE}")
+    # RESERVED FOR TESTING PURPOSES
+    # print(f"Load order path is: {info.LOAD_ORDER_PATH}")
+    # print(f"Load order file is: {info.LOAD_ORDER_TXT}")
+    # print(f"XEDIT path is : {info.XEDIT_PATH}")
+    # print(f"XEDIT exe is : {info.XEDIT_EXE}")
+    # print(f"MO2 path is : {info.MO2_PATH}")
+    # print(f"MO2 exe is : {info.MO2_EXE}")
 
 
 pact_update_settings()
@@ -326,32 +327,55 @@ def run_xedit(plugin_name):
         os.system("pause")
         sys.exit()
 
-    print(XEDIT_LOG_TXT, XEDIT_EXC_LOG)
-    # Clear xedit log files to check logs for each plugin separately.
-    try:
-        if os.path.exists(XEDIT_LOG_TXT):
-            os.remove(XEDIT_LOG_TXT)
-        if os.path.exists(XEDIT_EXC_LOG):
-            os.remove(XEDIT_EXC_LOG)
-    except PermissionError:
-        print("❌ ERROR : CANNOT CLEAR XEDIT LOGS. Try running PACT in Admin Mode.")
-        print("   If problems continue, please report this to the PACT Nexus page.")
-        os.system("pause")
-        sys.exit()
 
+    def clear_xedit_logs():  # Clear xedit log files to check logs for each plugin separately.
+        try:
+            if os.path.exists(XEDIT_LOG_TXT):
+                os.remove(XEDIT_LOG_TXT)
+            if os.path.exists(XEDIT_EXC_LOG):
+                os.remove(XEDIT_EXC_LOG)
+        except PermissionError:
+            print("❌ ERROR : CANNOT CLEAR XEDIT LOGS. Try running PACT in Admin Mode.")
+            print("   If problems continue, please report this to the PACT Nexus page.")
+            os.system("pause")
+            sys.exit()
+
+
+    clear_xedit_logs()
     print(f"\nCURRENTLY RUNNING : {bat_command}") 
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
     while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
         for proc in xedit_procs:
+            if proc.info['name'] == str(info.XEDIT_EXE):  # Check CPU usage if xedit gets stuck or interrupted by error.
+                time.sleep(2)
+                cpu_percent = 99
+                try:  # Note that xedit can stop at any moment and checking CPU usage on a dead process will crash.
+                    if proc.is_running():
+                        cpu_percent = proc.cpu_percent()
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
+                if cpu_percent == 0:
+                    print("❌ ERROR : MISSING PLUGIN REQUIREMENTS OR PLUGIN IS DISABLED! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                    with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                        PACT_IGNORE.write(f"\n{plugin_name}\n")
+                        clean_failed_list.append(plugin_name)
+                    plugins_processed -= 1
+                    proc.kill()
+                    time.sleep(1)
+                    clear_xedit_logs()
+                    break
+
             if proc.info['name'] == str(info.XEDIT_EXE):  # type: ignore
                 create_time = proc.info['create_time']  # type: ignore
                 if (time.time() - create_time) > 300:  # 5 min time-out.
-                    print("❌ ERROR : XEDIT TIMED OUT! KILLING XEDIT...")
+                    print("❌ ERROR : XEDIT TIMED OUT (>5 MINUTES)! KILLING XEDIT...")
                     clean_failed_list.append(plugin_name)
                     plugins_processed -= 1
                     proc.kill()
+                    time.sleep(1)
+                    clear_xedit_logs()
                     break
 
             if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(XEDIT_EXC_LOG):  # Check if xedit cannot clean. # type: ignore
@@ -365,9 +389,9 @@ def run_xedit(plugin_name):
                     plugins_processed -= 1
                     proc.kill()
                     time.sleep(1)
-                    os.remove(XEDIT_EXC_LOG)
+                    clear_xedit_logs()
                     break
-        time.sleep(1)
+        time.sleep(2)
     plugins_processed += 1
 
 

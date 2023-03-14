@@ -89,7 +89,7 @@ PACT will skip and add to ignore list any plugin that *XEdit* cannot load becaus
 PACT will also skip other invalid plugins, though it will take *5 minutes* for the process to time out, unless you close *XEdit* manually.
 
 ===========================================================================
-# IF YOU WANT TO STOP PACT AND XEDIT WINDOWS FROM BOTHERING YOU #
+# IF YOU WANT TO STOP PACT AND XEDIT POP-UPS FROM BOTHERING YOU #
 
 Simply press [ WIN ] + [ CTRL ] + [ -> ] keys on your keyboard to switch to another virtual desktop.
 Run PACT there and switch back to your main desktop with [ WIN ] + [ CTRL ] + [ <- ]

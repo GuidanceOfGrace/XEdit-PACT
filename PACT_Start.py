@@ -225,20 +225,20 @@ def check_settings_integrity():
     else:
         MO2Mode = False
 
-    if info.XEDIT_EXE.lower() not in xedit_list_universal:  # Check if right xedit version.
+    if str(info.XEDIT_EXE).lower() not in xedit_list_universal:  # Check if right xedit version.
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             LO_Plugins = LO_Check.read()
-            if "FalloutNV.esm" in LO_Plugins and info.XEDIT_EXE.lower() not in xedit_list_newvegas:
+            if "FalloutNV.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in xedit_list_newvegas:
                 print(Warn_Invalid_INI_Setup)
                 os.system("pause")
                 sys.exit()
 
-            if "Fallout4.esm" in LO_Plugins and info.XEDIT_EXE.lower() not in xedit_list_fallout4:
+            if "Fallout4.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in xedit_list_fallout4:
                 print(Warn_Invalid_INI_Setup)
                 os.system("pause")
                 sys.exit()
 
-            if "Skyrim.esm" in LO_Plugins and info.XEDIT_EXE.lower() not in xedit_list_skyrimse:
+            if "Skyrim.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in xedit_list_skyrimse:
                 print(Warn_Invalid_INI_Setup)
                 os.system("pause")
                 sys.exit()
@@ -268,37 +268,50 @@ def run_xedit(plugin_name):
 
     bat_command = ""
     # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
-    if MO2Mode and info.XEDIT_EXE.lower() in xedit_list_specific:
+    if MO2Mode and str(info.XEDIT_EXE).lower() in xedit_list_specific:
         bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""'
 
-    elif not MO2Mode and info.XEDIT_EXE.lower() in xedit_list_specific:
+    elif not MO2Mode and str(info.XEDIT_EXE).lower() in xedit_list_specific:
         bat_command = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
 
     # If universal xedit (xedit.exe) executable is set.
-    if "loadorder" in info.LOAD_ORDER_PATH and info.XEDIT_EXE.lower() in xedit_list_universal:
+    FNVMode = False
+    FO4Mode = False
+    SSEMode = False
+    if "loadorder" in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in xedit_list_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
-            if "FalloutNV.esm" in LO_Check.read():
+            for elem in LO_Check.readlines():
+                if "Skyrim.esm" in elem:
+                    SSEMode = True
+                    break
+                elif "FalloutNV.esm" in elem:
+                    FNVMode = True
+                    break
+                elif "Fallout4.esm" in elem:
+                    FO4Mode = True
+                    break
+            if FNVMode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FNVEdit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fnv -QAC -autoexit -autoload \\"{plugin_escape}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -fnv -QAC -autoexit -autoload "{plugin_name}"'
 
-            elif "Fallout4.esm" in LO_Check.read():
+            elif FO4Mode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"'
 
-            elif "Skyrim.esm" in LO_Check.read():
+            elif SSEMode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"'
 
-    elif "loadorder" not in info.LOAD_ORDER_PATH and info.XEDIT_EXE.lower() in xedit_list_universal:
+    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in xedit_list_universal:
         print("\n❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!")
         print("   You have to set your load order file path to loadorder.txt and NOT plugins.txt")
         print("   This is so PACT can detect the right game. Change the load order file path and try again.")
@@ -445,7 +458,7 @@ def clean_plugins():
     print(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in", (str(time.perf_counter() - log_start)[:3]), "seconds.")
     print(f"\n   {info.XEDIT_EXE} successfully processed {plugins_processed} plugins and cleaned {plugins_cleaned} of them.\n")
     if len(clean_failed_list) > 1:
-        print(f"\n❌ {info.XEDIT_EXE.upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {info.XEDIT_EXE} Timed Out):")
+        print(f"\n❌ {str(info.XEDIT_EXE).upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {info.XEDIT_EXE} Timed Out):")
         for elem in clean_failed_list:
             print(elem)
     if len(clean_results_UDR) > 1:

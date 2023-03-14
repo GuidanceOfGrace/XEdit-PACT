@@ -275,23 +275,36 @@ def run_xedit(plugin_name):
         bat_command = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
 
     # If universal xedit (xedit.exe) executable is set.
+    FNVMode = False
+    FO4Mode = False
+    SSEMode = False
     if "loadorder" in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in xedit_list_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
-            if "FalloutNV.esm" in LO_Check.read():
+            for elem in LO_Check.readlines():
+                if "Skyrim.esm" in elem:
+                    SSEMode = True
+                    break
+                elif "FalloutNV.esm" in elem:
+                    FNVMode = True
+                    break
+                elif "Fallout4.esm" in elem:
+                    FO4Mode = True
+                    break
+            if FNVMode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FNVEdit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fnv -QAC -autoexit -autoload \\"{plugin_escape}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -fnv -QAC -autoexit -autoload "{plugin_name}"'
 
-            elif "Fallout4.esm" in LO_Check.read():
+            elif FO4Mode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"'
 
-            elif "Skyrim.esm" in LO_Check.read():
+            elif SSEMode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
                 if MO2Mode:
                     bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""'

@@ -346,7 +346,7 @@ def run_xedit(plugin_name):
     while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
         for proc in xedit_procs:
-            if proc.info['name'] == str(info.XEDIT_EXE):  # Check CPU usage if xedit gets stuck or interrupted by error.
+            if proc.info['name'] == str(info.XEDIT_EXE):  # Check CPU usage if xedit gets stuck or interrupted by error. # type: ignore
                 time.sleep(2)
                 cpu_percent = 99
                 try:  # Note that xedit can stop at any moment and checking CPU usage on a dead process will crash.
@@ -390,7 +390,7 @@ def run_xedit(plugin_name):
                         time.sleep(1)
                         clear_xedit_logs()
                         break
-                except subprocess.CalledProcessError:
+                except (subprocess.CalledProcessError, psutil.AccessDenied, PermissionError):
                     pass
         time.sleep(2)
     plugins_processed += 1

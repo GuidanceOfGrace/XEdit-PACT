@@ -390,7 +390,7 @@ def run_xedit(plugin_name):
                         time.sleep(1)
                         clear_xedit_logs()
                         break
-                except subprocess.CalledProcessError:
+                except (subprocess.CalledProcessError, psutil.AccessDenied, PermissionError):
                     pass
         time.sleep(2)
     plugins_processed += 1

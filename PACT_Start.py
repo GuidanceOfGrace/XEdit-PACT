@@ -377,18 +377,21 @@ def run_xedit(plugin_name):
                     break
 
             if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(XEDIT_EXC_LOG):  # Check if xedit cannot clean. # type: ignore
-                xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {XEDIT_EXC_LOG}'])
-                Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
-                if "which can not be found" in Exception_Check:
-                    print("❌ ERROR : MISSING PLUGIN REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
-                    with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
-                        PACT_IGNORE.write(f"\n{plugin_name}\n")
-                        clean_failed_list.append(plugin_name)
-                    plugins_processed -= 1
-                    proc.kill()
-                    time.sleep(1)
-                    clear_xedit_logs()
-                    break
+                try:
+                    xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {XEDIT_EXC_LOG}'])
+                    Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
+                    if "which can not be found" in Exception_Check or "which it does not have the appropriate access" in Exception_Check:
+                        print("❌ ERROR : PLUGIN IS EMPTY OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                        with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                            PACT_IGNORE.write(f"\n{plugin_name}\n")
+                            clean_failed_list.append(plugin_name)
+                        plugins_processed -= 1
+                        proc.kill()
+                        time.sleep(1)
+                        clear_xedit_logs()
+                        break
+                except subprocess.CalledProcessError:
+                    pass
         time.sleep(2)
     plugins_processed += 1
 

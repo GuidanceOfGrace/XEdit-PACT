@@ -242,7 +242,7 @@ class UiPACTMainWin(object):
     # @staticmethod recommended for func that don't call "self".
 
     help_popup_msg = """If you have trouble running this program or wish to submit your PACT logs for additional help, join the Collective Modding Discord server.
-    
+    Please READ the #👋-welcome2 channel, react with the "2" emoji on the bot message there and leave your feedback in #💡-poet-guides-mods channel.
     Press OK to open the server link in your internet browser."""
 
     @staticmethod

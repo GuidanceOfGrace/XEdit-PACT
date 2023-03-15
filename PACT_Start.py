@@ -12,13 +12,11 @@ from dataclasses import dataclass, field
 from typing import Union
 
 '''AUTHOR NOTES (POET)
-- Module try - except importing is disabled as this is only meant to be run through exe. Will also disable for CLAS.
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
 - (..., encoding="utf-8", errors="ignore") needs to go with every opened file because unicode errors are a bitch.
   IMPORTANT
 - Every time any function() uses INI variable from "class Info", we need to redefine the value from that variable,
   just in case the user changed file paths while PACT is open, so function() can grab the updated values.
-  This might be also required for "CHANGE INI PATH" in CLAS Interface / GUI, will implement soon.
 '''
 # =================== PACT INI FILE ===================
 
@@ -357,7 +355,7 @@ def run_xedit(plugin_name):
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     pass
                 if cpu_percent == 0:
-                    print("❌ ERROR : MISSING PLUGIN REQUIREMENTS OR PLUGIN IS DISABLED! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                    print("❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
                     with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
                         PACT_IGNORE.write(f"\n{plugin_name}\n")
                         clean_failed_list.append(plugin_name)

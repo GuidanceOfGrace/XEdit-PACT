@@ -263,7 +263,7 @@ def run_xedit(plugin_name):
     pact_update_settings()
 
     # Write proper bat command depending on XEDIT and MO2 selections.
-    plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
+    plugin_escape = plugin_name.replace("&", "^&").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
 
     bat_command = ""
     # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
@@ -360,7 +360,10 @@ def run_xedit(plugin_name):
                         PACT_IGNORE.write(f"\n{plugin_name}\n")
                         clean_failed_list.append(plugin_name)
                     plugins_processed -= 1
-                    proc.kill()
+                    try:
+                        proc.kill()
+                    except (psutil.AccessDenied, PermissionError):
+                        pass
                     time.sleep(1)
                     clear_xedit_logs()
                     break

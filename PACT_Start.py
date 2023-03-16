@@ -7,6 +7,7 @@ import requests
 import subprocess
 import sys
 import time
+from re import escape
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Union
@@ -263,12 +264,11 @@ def run_xedit(plugin_name):
     pact_update_settings()
 
     # Write proper bat command depending on XEDIT and MO2 selections.
-    plugin_escape = plugin_name.replace("&", "^&").replace("+", "^+").replace("(", "^(").replace(")", "^)")  # Escape special characters for command line.
 
     bat_command = ""
     # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
     if MO2Mode and str(info.XEDIT_EXE).lower() in xedit_list_specific:
-        bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_escape}\\""'
+        bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
 
     elif not MO2Mode and str(info.XEDIT_EXE).lower() in xedit_list_specific:
         bat_command = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
@@ -292,21 +292,21 @@ def run_xedit(plugin_name):
             if FNVMode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FNVEdit_log.txt')
                 if MO2Mode:
-                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fnv -QAC -autoexit -autoload \\"{plugin_escape}\\""'
+                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fnv -QAC -autoexit -autoload \\"{plugin_name}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -fnv -QAC -autoexit -autoload "{plugin_name}"'
 
             elif FO4Mode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
                 if MO2Mode:
-                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_escape}\\""'
+                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_name}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"'
 
             elif SSEMode:
                 XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
                 if MO2Mode:
-                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_escape}\\""'
+                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_name}\\""'
                 else:
                     bat_command = f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"'
 
@@ -360,7 +360,10 @@ def run_xedit(plugin_name):
                         PACT_IGNORE.write(f"\n{plugin_name}\n")
                         clean_failed_list.append(plugin_name)
                     plugins_processed -= 1
-                    proc.kill()
+                    try:
+                        proc.kill()
+                    except (psutil.AccessDenied, PermissionError):
+                        pass
                     time.sleep(1)
                     clear_xedit_logs()
                     break

@@ -20,12 +20,17 @@ from typing import Union, Any
   just in case the user changed file paths while PACT is open, so function() can grab the updated values.
 '''
 # =================== PACT INI FILE ===================
+
+
 @dataclass
 class PACT_Globals:
     PACT_Current: str = field(default_factory=str)
     PACT_config: configparser.ConfigParser = field(default_factory=configparser.ConfigParser)
+
+
 Globals = PACT_Globals()
 Globals.PACT_Current = "PACT v1.60"
+
 
 def pact_ini_create():
     if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR PACT
@@ -57,6 +62,7 @@ Globals.PACT_config.read("PACT Settings.ini")
 PACT_Date = "110323"  # DDMMYY
 PACT_Updated = False
 
+
 def pact_ini_update(section: str, value: str) -> None:
     section_str = str(section)
     value_str = str(value)
@@ -71,6 +77,7 @@ def pact_log_update(log_message: Any) -> None:
 
 # =================== WARNING MESSAGES ==================
 # Can change first line to """\ to remove the spacing.
+
 
 Warn_PACT_Update_Failed = """
 ❌  WARNING : PACT WAS UNABLE TO CHECK FOR UPDATES, BUT WILL CONTINUE RUNNING
@@ -94,7 +101,7 @@ Warn_Invalid_INI_Setup = """
 
 
 # =================== UPDATE FUNCTION ===================
-import requests
+
 
 def pact_update_check(pact_current: str) -> bool:
     print(f"❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
@@ -120,11 +127,10 @@ def pact_update_run(pact_config, pact_current) -> None:
     if update_check:
         updated = pact_update_check(pact_current)
         print("===============================================================================")
-        return updated # type: ignore
+        return updated  # type: ignore
     else:
         print("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
-        return False # type: ignore
-
+        return False  # type: ignore
 
 
 # =================== TERMINAL OUTPUT START ====================
@@ -143,16 +149,15 @@ class Info:
     LOAD_ORDER_PATH: Union[str, Path] = field(default_factory=Path)
 
 
-
 info = Info()
 
 
 def pact_update_settings():
-    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+    info.LOAD_ORDER_PATH = Globals.PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
     info.LOAD_ORDER_TXT = os.path.basename(info.LOAD_ORDER_PATH)
-    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
+    info.XEDIT_PATH = Globals.PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
     info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
-    info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
+    info.MO2_PATH = Globals.PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
     info.MO2_EXE = os.path.basename(info.MO2_PATH)
     # RESERVED FOR TESTING PURPOSES
     # print(f"Load order path is: {info.LOAD_ORDER_PATH}")
@@ -194,13 +199,15 @@ VIP_skip_list = FNV_skip_list + FO4_skip_list + SSE_skip_list
 
 # Make sure Mod Organizer 2 is not already running.
 def check_process_mo2() -> None:
-    mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if 'modorganizer' in proc.info['name'].lower()] # type: ignore
+    mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if 'modorganizer' in proc.info['name'].lower()]  # type: ignore
     for proc in mo2_procs:
-        if proc.info['name'] == "ModOrganizer.exe": # type: ignore
+        if proc.info['name'] == "ModOrganizer.exe":  # type: ignore
             raise Exception("\n❌ ERROR: CANNOT START PACT IF MOD ORGANIZER 2 IS ALREADY RUNNING!\n\n"
                             "❌ PLEASE CLOSE MOD ORGANIZER 2 AND RUN PACT AGAIN! (DO NOT RUN PACT IN MO2)")
 
 # Make sure required file and folder paths exist.
+
+
 def check_settings_paths(pact_config) -> None:
     try:
         xedit_path = pact_config["MAIN"]["XEDIT EXE"]
@@ -213,7 +220,6 @@ def check_settings_paths(pact_config) -> None:
             raise Exception(Warn_Invalid_INI_Path)
     except (KeyError, FileNotFoundError):
         raise Exception(Warn_Invalid_INI_Path)
-
 
 
 # Make sure right XEdit version is running for the right game.
@@ -331,7 +337,6 @@ def run_xedit(plugin_name):
         os.system("pause")
         sys.exit()
 
-
     def clear_xedit_logs():  # Clear xedit log files to check logs for each plugin separately.
         try:
             if os.path.exists(XEDIT_LOG_TXT):
@@ -344,9 +349,8 @@ def run_xedit(plugin_name):
             os.system("pause")
             sys.exit()
 
-
     clear_xedit_logs()
-    print(f"\nCURRENTLY RUNNING : {bat_command}") 
+    print(f"\nCURRENTLY RUNNING : {bat_command}")
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
     while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
@@ -454,7 +458,7 @@ def clean_plugins():
         IG_Plugins = [line.strip() for line in IG_File.readlines()[1:]]  # type: ignore
 
     # Add plugins from loadorder or plugins file to separate plugin list.
-    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+    info.LOAD_ORDER_PATH = Globals.PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
     with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_File:
         LO_File.seek(0)  # Return line pointer to first line.
         LO_Plugin_List = []

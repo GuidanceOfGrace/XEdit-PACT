@@ -10,7 +10,7 @@ import time
 from re import escape
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Union, Any
 
 '''AUTHOR NOTES (POET)
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
@@ -20,7 +20,12 @@ from typing import Union
   just in case the user changed file paths while PACT is open, so function() can grab the updated values.
 '''
 # =================== PACT INI FILE ===================
-
+@dataclass
+class PACT_Globals:
+    PACT_Current: str = field(default_factory=str)
+    PACT_config: configparser.ConfigParser = field(default_factory=configparser.ConfigParser)
+Globals = PACT_Globals()
+Globals.PACT_Current = "PACT v1.60"
 
 def pact_ini_create():
     if not os.path.exists("PACT Settings.ini"):  # INI FILE FOR PACT
@@ -46,28 +51,23 @@ def pact_ini_create():
 
 pact_ini_create()
 # Use optionxform = str to preserve INI formatting. | Set comment_prefixes to unused char to keep INI comments.
-PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
-PACT_config.optionxform = str  # type: ignore
-PACT_config.read("PACT Settings.ini")
+Globals.PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
+Globals.PACT_config.optionxform = str  # type: ignore
+Globals.PACT_config.read("PACT Settings.ini")
 PACT_Date = "110323"  # DDMMYY
-PACT_Current = "PACT v1.60"
 PACT_Updated = False
 
-
-def pact_ini_update(section: str, value: str):  # Convenience function for checking & writing to INI.
-    if isinstance(section, str) and isinstance(value, str):
-        PACT_config["MAIN"][section] = value
-    else:
-        PACT_config["MAIN"][str(section)] = str(value)
-
-    with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
-        PACT_config.write(INI_PACT)
+def pact_ini_update(section: str, value: str) -> None:
+    section_str = str(section)
+    value_str = str(value)
+    Globals.PACT_config["MAIN"][section_str] = value_str
+    with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as ini_file:
+        Globals.PACT_config.write(ini_file)
 
 
-def pact_log_update(log_message):
-    with open("PACT Journal.log", "a", encoding="utf-8", errors="ignore") as LOG_PACT:
-        LOG_PACT.write(log_message)
-
+def pact_log_update(log_message: Any) -> None:
+    with open("PACT Journal.log", "a", encoding="utf-8", errors="ignore") as log_file:
+        log_file.write(str(log_message))
 
 # =================== WARNING MESSAGES ==================
 # Can change first line to """\ to remove the spacing.
@@ -94,36 +94,41 @@ Warn_Invalid_INI_Setup = """
 
 
 # =================== UPDATE FUNCTION ===================
-def pact_update_check():
-    global PACT_Current
-    global PACT_Updated
-    print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
-    print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
-    response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
-    PACT_Received = response.json()["name"]
-    if PACT_Received == PACT_Current:
-        PACT_Updated = True
-        print("\n✔️ You have the latest version of PACT!")
-    else:
-        print(Warn_Outdated_PACT)
+import requests
+
+def pact_update_check(pact_current: str) -> bool:
+    print(f"❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
+    print(f"   (You can disable this check in the EXE or PACT Settings.ini) \n")
+    try:
+        response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")
+        pact_received = response.json()["name"]
+        if pact_received == pact_current:
+            print(f"\n✔️ You have the latest version of PACT!")
+            return True
+        else:
+            print(Warn_Outdated_PACT)
+            print("===============================================================================")
+            return False
+    except requests.exceptions.RequestException:
+        print(Warn_PACT_Update_Failed)
         print("===============================================================================")
-    return PACT_Updated
+        return False
 
 
-def pact_update_run():
-    if PACT_config.getboolean("MAIN", "Update Check") is True:
-        try:
-            pact_update_check()
-            print("===============================================================================")
-        except (OSError, requests.exceptions.RequestException):
-            print(Warn_PACT_Update_Failed)
-            print("===============================================================================")
-    elif PACT_config.getboolean("MAIN", "Update Check") is False:
+def pact_update_run(pact_config, pact_current) -> None:
+    update_check = pact_config.getboolean("MAIN", "Update Check")
+    if update_check:
+        updated = pact_update_check(pact_current)
+        print("===============================================================================")
+        return updated # type: ignore
+    else:
         print("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
+        return False # type: ignore
+
 
 
 # =================== TERMINAL OUTPUT START ====================
-print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| FNV, FO4, SSE")
+print(f"Hello World! | Plugin Auto Cleaning Tool (PACT) | Version {Globals.PACT_Current[-4:]} | FNV, FO4, SSE")
 print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING PLUGINS")
 print("===============================================================================")
 
@@ -188,26 +193,27 @@ VIP_skip_list = FNV_skip_list + FO4_skip_list + SSE_skip_list
 
 
 # Make sure Mod Organizer 2 is not already running.
-def check_process_mo2():
-    mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if 'modorganizer' in proc.info['name'].lower()]  # type: ignore
+def check_process_mo2() -> None:
+    mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if 'modorganizer' in proc.info['name'].lower()] # type: ignore
     for proc in mo2_procs:
-        if proc.info['name'] == "ModOrganizer.exe":  # type: ignore
-            print("\n❌ ERROR : CANNOT START PACT IF MOD ORGANIZER 2 IS ALREADY RUNNING!")
-            print("\n❌ PLEASE CLOSE MOD ORGANIZER 2 AND RUN PACT AGAIN! (DO NOT RUN PACT IN MO2)")
-            os.system("pause")
-            sys.exit()
-
+        if proc.info['name'] == "ModOrganizer.exe": # type: ignore
+            raise Exception("\n❌ ERROR: CANNOT START PACT IF MOD ORGANIZER 2 IS ALREADY RUNNING!\n\n"
+                            "❌ PLEASE CLOSE MOD ORGANIZER 2 AND RUN PACT AGAIN! (DO NOT RUN PACT IN MO2)")
 
 # Make sure required file and folder paths exist.
-def check_settings_paths():
-    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
-    if os.path.exists(info.LOAD_ORDER_PATH) and os.path.exists(info.XEDIT_PATH):
-        print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF YOUR INI SETUP IS CORRECT...")
-    else:
-        print(Warn_Invalid_INI_Path)
-        os.system("pause")
-        sys.exit()
+def check_settings_paths(pact_config) -> None:
+    try:
+        xedit_path = pact_config["MAIN"]["XEDIT EXE"]
+        load_order_path = pact_config["MAIN"]["LoadOrder TXT"]
+        if os.path.exists(xedit_path) and os.path.exists(load_order_path):
+            info.XEDIT_PATH = xedit_path
+            info.LOAD_ORDER_PATH = load_order_path
+            print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF YOUR INI SETUP IS CORRECT...")
+        else:
+            raise Exception(Warn_Invalid_INI_Path)
+    except (KeyError, FileNotFoundError):
+        raise Exception(Warn_Invalid_INI_Path)
+
 
 
 # Make sure right XEdit version is running for the right game.
@@ -508,7 +514,7 @@ def clean_plugins():
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
     pact_update_settings()
     check_process_mo2()
-    check_settings_paths()
+    check_settings_paths(Globals.PACT_config)
     check_settings_integrity()
     clean_plugins()
     os.system("pause")

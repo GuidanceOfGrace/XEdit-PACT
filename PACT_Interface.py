@@ -37,6 +37,7 @@ def update_file_button(filepath: str, button: QtWidgets.QPushButton, valid_text:
         return False
 
 
+
 class UiPACTMainWin(object):
     def __init__(self):
         super().__init__()  # Allow subclasses to inherit & extend behavior of parent class.
@@ -344,7 +345,6 @@ class UiPACTMainWin(object):
             self.RegBT_Browse_XEDIT.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             self.disable_config_xedit()
         update_file_button(XEDIT_EXE, self.RegBT_Browse_XEDIT, "✔️ XEDIT EXECUTABLE SET", "❌ WRONG XEDIT EXE")  # type: ignore
-
 
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI

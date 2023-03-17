@@ -1,40 +1,15 @@
-from contextlib import contextmanager
 import os
 import sys
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QUrl, QTimer, QThread
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFileDialog
-from PACT_Start import (Globals, pact_ini_update, pact_update_check, check_process_mo2, check_settings_paths, check_settings_integrity, clean_plugins)
+from PACT_Start import (PACT_config, PACT_Current, pact_ini_update, pact_update_check, check_process_mo2, check_settings_paths, check_settings_integrity, clean_plugins)
 
 '''TEMPLATES
 QMessageBox.NoIcon | Question | Information | Warning | Critical
 '''
 
-
-def enable_button_if_configured(func):
-    def wrapper(self, *args, **kwargs):
-        func(self, *args, **kwargs)
-        self.RegBT_CLEAN_PLUGINS.setEnabled(self.configured_LO and self.configured_XEDIT)
-    return wrapper
-
-
-@contextmanager
-def button_enabled(button, enabled=True):
-    button.setEnabled(enabled)
-    yield
-    button.setEnabled(not enabled)
-
-
-def update_file_button(filepath: str, button: QtWidgets.QPushButton, valid_text: str, invalid_text: str):
-    if os.path.exists(filepath):
-        button.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
-        button.setText(valid_text)
-        return True
-    else:
-        button.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")
-        button.setText(invalid_text)
-        return False
 
 class UiPACTMainWin(object):
     def __init__(self):
@@ -66,7 +41,7 @@ class UiPACTMainWin(object):
     def setup_ui(self, PACT_MainWin):
         # MAIN WINDOW
         PACT_MainWin.setObjectName("PACT_MainWin")
-        PACT_MainWin.setWindowTitle(f"Plugin Auto Cleaning Tool {Globals.PACT_Current[-4:]}")
+        PACT_MainWin.setWindowTitle(f"Plugin Auto Cleaning Tool {PACT_Current[-4:]}")
         PACT_MainWin.resize(640, 640)
         PACT_MainWin.setMinimumSize(QtCore.QSize(640, 320))
         PACT_MainWin.setMaximumSize(QtCore.QSize(640, 320))
@@ -82,7 +57,7 @@ class UiPACTMainWin(object):
         self.RegBT_Browse_LO.setText("SET LOAD ORDER FILE")
         self.RegBT_Browse_LO.setStyleSheet("background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
         self.RegBT_Browse_LO.clicked.connect(self.select_file_lo)  # type: ignore
-        if "loadorder" in Globals.PACT_config["MAIN"]["LoadOrder TXT"] or "plugins" in Globals.PACT_config["MAIN"]["LoadOrder TXT"]:
+        if "loadorder" in PACT_config["MAIN"]["LoadOrder TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder TXT"]:
             self.RegBT_Browse_LO.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_Browse_LO.setText("✔️ LOAD ORDER FILE SET")
             self.configured_LO = True
@@ -94,7 +69,7 @@ class UiPACTMainWin(object):
         self.RegBT_Browse_MO2.setText("SET MO2 EXECUTABLE")
         self.RegBT_Browse_MO2.setStyleSheet("background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
         self.RegBT_Browse_MO2.clicked.connect(self.select_file_mo2)  # type: ignore
-        if "ModOrganizer" in Globals.PACT_config["MAIN"]["MO2 EXE"]:
+        if "ModOrganizer" in PACT_config["MAIN"]["MO2 EXE"]:
             self.RegBT_Browse_MO2.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_Browse_MO2.setText("✔️ MO2 EXECUTABLE SET")
             self.configured_MO2 = True
@@ -106,7 +81,7 @@ class UiPACTMainWin(object):
         self.RegBT_Browse_XEDIT.setText("SET XEDIT EXECUTABLE")
         self.RegBT_Browse_XEDIT.setStyleSheet("background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
         self.RegBT_Browse_XEDIT.clicked.connect(self.select_file_xedit)  # type: ignore
-        if "Edit" in Globals.PACT_config["MAIN"]["XEDIT EXE"]:
+        if "Edit" in PACT_config["MAIN"]["XEDIT EXE"]:
             self.RegBT_Browse_XEDIT.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_Browse_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
             self.configured_XEDIT = True
@@ -175,121 +150,93 @@ class UiPACTMainWin(object):
         self.RegBT_Exit.setToolTip("Exit PACT GUI")
         self.RegBT_Exit.clicked.connect(PACT_MainWin.close)  # type: ignore
 
-        # Add progress bar
-        self.progress = QtWidgets.QProgressBar(PACT_MainWin)
-        self.progress.setGeometry(QtCore.QRect(20, 240, 600, 24))
-        self.progress.setObjectName("progress")
-        self.progress.setValue(0)
-        self.progress.hide()
-        self.progress.setFormat("CLEANING PLUGINS... PLEASE WAIT %v/%m")
-
     # ============== CLEAN PLUGINS BUTTON STATES ================
 
     def start_cleaning(self):
-        if self.thread is None:
+        if self.thread is not None:
+            pass
+        else:
             self.thread = PactThread()
             self.thread.start()
-            with button_enabled(self.RegBT_CLEAN_PLUGINS):
-                self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING") # type: ignore
-                self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: pink; border-radius: 5px; border: 1px solid gray;") # type: ignore
-                self.RegBT_CLEAN_PLUGINS.clicked.disconnect() # type: ignore
-                self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning) # type: ignore
-            with button_enabled(self.RegBT_Exit, enabled=False):
-                pass
+            self.RegBT_CLEAN_PLUGINS.setEnabled(True)  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: pink; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)  # type: ignore
+            self.RegBT_Exit.setEnabled(False)  # type: ignore
 
-
-    def stop_delay_style(self):
-        with button_enabled(self.RegBT_CLEAN_PLUGINS):
-            self.RegBT_CLEAN_PLUGINS.setText("START CLEANING") # type: ignore
-            self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: lightblue; border-radius: 5px; border: 1px solid gray;") # type: ignore
-            self.RegBT_CLEAN_PLUGINS.clicked.disconnect() # type: ignore
-            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning) # type: ignore
-        with button_enabled(self.RegBT_Exit):
-            pass
-
+    def stop_delay_style(self):  # Cannot use time.sleep() to delay button change, must use QTimer.
+        self.RegBT_CLEAN_PLUGINS.setEnabled(True)  # type: ignore
+        self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")  # type: ignore
+        self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: lightblue; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+        self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore
+        self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)  # type: ignore
+        self.RegBT_Exit.setEnabled(True)  # type: ignore
 
     def stop_cleaning(self):
         if self.thread is not None:
             self.thread.terminate()
             self.thread.wait()
             self.thread = None
-            with button_enabled(self.RegBT_CLEAN_PLUGINS, enabled=False):
-                self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...") # type: ignore
-                self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;") # type: ignore
-                print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
-                QTimer.singleShot(5000, lambda: self.stop_delay_style())
-            with button_enabled(self.RegBT_Exit):
-                pass
+            self.RegBT_CLEAN_PLUGINS.setEnabled(False)  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
+            QTimer.singleShot(5000, self.stop_delay_style)  # Delay should match self.timer.start
 
     def check_config(self):
-        button_configs = {
-            (False, False): {
-                "enabled": False,
-                "text": "START CLEANING",
-                "style": "background-color: lightgray; border-radius: 5px; border: 1px solid gray;",
-                "clicked": self.start_cleaning,
-            },
-            (True, False): {
-                "enabled": False,
-                "text": "START CLEANING",
-                "style": "background-color: lightgray; border-radius: 5px; border: 1px solid gray;",
-                "clicked": self.start_cleaning,
-            },
-            (False, True): {
-                "enabled": False,
-                "text": "START CLEANING",
-                "style": "background-color: lightgray; border-radius: 5px; border: 1px solid gray;",
-                "clicked": self.start_cleaning,
-            },
-            (True, True): {
-                "enabled": True,
-                "text": "STOP CLEANING",
-                "style": "background-color: pink; border-radius: 5px; border: 1px solid gray;",
-                "clicked": self.stop_cleaning,
-            },
-        }
-    
-        config = (self.configured_LO, self.configured_XEDIT)
-        if config in button_configs:
-            button_config = button_configs[config]
-            self.RegBT_CLEAN_PLUGINS.setEnabled(button_config["enabled"]) # type: ignore
-            self.RegBT_CLEAN_PLUGINS.setText(button_config["text"]) # type: ignore
-            self.RegBT_CLEAN_PLUGINS.setStyleSheet(button_config["style"]) # type: ignore
-            self.RegBT_CLEAN_PLUGINS.clicked.disconnect() # type: ignore
-            self.RegBT_CLEAN_PLUGINS.clicked.connect(button_config["clicked"]) # type: ignore
-    
-        if self.thread is not None:
+        if not (self.configured_LO and self.configured_XEDIT):  # Incorrect settings, ignore MO2 for now.
+            self.RegBT_CLEAN_PLUGINS.setEnabled(False)  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: lightgray; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)  # type: ignore
+
+        elif self.configured_LO and self.configured_XEDIT and self.thread is None:  # Correct settings BUT nothing running.
+            self.RegBT_CLEAN_PLUGINS.setEnabled(True)  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: lightblue; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)  # type: ignore
+
+        elif self.configured_LO and self.configured_XEDIT and self.thread is not None:  # Correct settings AND thread running.
+            self.RegBT_CLEAN_PLUGINS.setEnabled(True)  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: pink; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)  # type: ignore
+
+        if self.thread is not None:  # Check if clean_plugins() is still running.
             thread = PactThread()
             if thread.cleaning_done is True:
-                thread.finished_signal.connect(thread.quit) # type: ignore
-                thread.finished_signal.connect(thread.wait) # type: ignore
-                self.thread = None
+                thread.finished_signal.connect(thread.quit)  # type: ignore
+                thread.finished_signal.connect(thread.wait)  # type: ignore
+                self.thread = None  # Switch to None thread since last one is still in memory.
                 QTimer.singleShot(5000, self.stop_delay_style)
-    
 
-    @enable_button_if_configured    
     def disable_config_lo(self):
         self.configured_LO = False
-    
-    @enable_button_if_configured
+        self.RegBT_CLEAN_PLUGINS.setEnabled(self.configured_LO and self.configured_XEDIT)  # type: ignore
+
     def enable_config_lo(self):
         self.configured_LO = True
-    
-    @enable_button_if_configured
+        self.RegBT_CLEAN_PLUGINS.setEnabled(self.configured_LO and self.configured_XEDIT)  # type: ignore
+
     def disable_config_mo2(self):
         self.configured_MO2 = False
-    
-    @enable_button_if_configured
+        self.RegBT_CLEAN_PLUGINS.setEnabled(self.configured_LO and self.configured_XEDIT)  # type: ignore
+
     def enable_config_mo2(self):
         self.configured_MO2 = True
-    
-    @enable_button_if_configured
+        self.RegBT_CLEAN_PLUGINS.setEnabled(self.configured_LO and self.configured_XEDIT)  # type: ignore
+
     def disable_config_xedit(self):
         self.configured_XEDIT = False
-    
-    @enable_button_if_configured
+        self.RegBT_CLEAN_PLUGINS.setEnabled(self.configured_LO and self.configured_XEDIT)  # type: ignore
+
     def enable_config_xedit(self):
         self.configured_XEDIT = True
+        self.RegBT_CLEAN_PLUGINS.setEnabled(self.configured_LO and self.configured_XEDIT)  # type: ignore
 
     # ================== POP-UPS / WARNINGS =====================
     # @staticmethod recommended for func that don't call "self".
@@ -310,7 +257,7 @@ class UiPACTMainWin(object):
 
     @staticmethod
     def update_popup():
-        if pact_update_check(Globals.PACT_Current):
+        if pact_update_check():
             QtWidgets.QMessageBox.information(PACT_MainWin, "PACT Update", "You have the latest version of PACT!")
         else:
             QtWidgets.QMessageBox.warning(PACT_MainWin, "PACT Update", "New PACT version is available!\nPress OK to open the PACT Nexus Page.")
@@ -319,35 +266,43 @@ class UiPACTMainWin(object):
     # ================= MAIN BUTTON FUNCTIONS ===================
 
     def select_file_lo(self):
-        LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt") # type: ignore
-        if "loadorder" in LO_file or "plugins" in LO_file:
-            QtWidgets.QMessageBox.information(PACT_MainWin, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")
+        LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")  # type: ignore
+        if os.path.exists(LO_file) and ("loadorder" in LO_file or "plugins" in LO_file):
+            QtWidgets.QMessageBox.information(PACT_MainWin, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")  # type: ignore
             pact_ini_update("LoadOrder TXT", LO_file)
+            self.RegBT_Browse_LO.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_Browse_LO.setText("✔️ LOAD ORDER FILE SET")  # type: ignore
             self.enable_config_lo()
-        else:
+        elif os.path.exists(LO_file) and "loadorder" not in LO_file and "plugins" not in LO_file:
+            self.RegBT_Browse_LO.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_Browse_LO.setText("❌ WRONG LO FILE")  # type: ignore
             self.disable_config_lo()
-        update_file_button(LO_file, self.RegBT_Browse_LO, "✔️ LOAD ORDER FILE SET", "❌ WRONG LO FILE") # type: ignore
-    
+
     def select_file_mo2(self):
-        MO2_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe") # type: ignore
-        if "ModOrganizer" in MO2_EXE:
-            QtWidgets.QMessageBox.information(PACT_MainWin, "New MO2 Executable Set", "You have set MO2 to: \n" + MO2_EXE)
+        MO2_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
+        if os.path.exists(MO2_EXE) and "ModOrganizer" in MO2_EXE:
+            QtWidgets.QMessageBox.information(PACT_MainWin, "New MO2 Executable Set", "You have set MO2 to: \n" + MO2_EXE)  # type: ignore
             pact_ini_update("MO2 EXE", MO2_EXE)
+            self.RegBT_Browse_MO2.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_Browse_MO2.setText("✔️ MO2 EXECUTABLE SET")  # type: ignore
             self.enable_config_mo2()
-        else:
+        elif os.path.exists(MO2_EXE) and "ModOrganizer" not in MO2_EXE:
+            self.RegBT_Browse_MO2.setText("❌ WRONG MO2 EXE")  # type: ignore
+            self.RegBT_Browse_MO2.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             self.disable_config_mo2()
-        update_file_button(MO2_EXE, self.RegBT_Browse_MO2, "✔️ MO2 EXECUTABLE SET", "❌ WRONG MO2 EXE") # type: ignore
-    
+
     def select_file_xedit(self):
-        XEDIT_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe") # type: ignore
-        if "Edit" in XEDIT_EXE:
-            QtWidgets.QMessageBox.information(PACT_MainWin, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)
+        XEDIT_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
+        if os.path.exists(XEDIT_EXE) and "Edit" in XEDIT_EXE:
+            QtWidgets.QMessageBox.information(PACT_MainWin, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)  # type: ignore
             pact_ini_update("XEDIT EXE", XEDIT_EXE)
+            self.RegBT_Browse_XEDIT.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_Browse_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")  # type: ignore
             self.enable_config_xedit()
-        else:
+        elif os.path.exists(XEDIT_EXE) and "Edit" not in XEDIT_EXE:
+            self.RegBT_Browse_XEDIT.setText("❌ WRONG XEDIT EXE")  # type: ignore
+            self.RegBT_Browse_XEDIT.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             self.disable_config_xedit()
-        update_file_button(XEDIT_EXE, self.RegBT_Browse_XEDIT, "✔️ XEDIT EXECUTABLE SET", "❌ WRONG XEDIT EXE") # type: ignore
-    
 
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI
@@ -359,7 +314,7 @@ class PactThread(QThread):
     def run(self):  # def Plugins_CLEAN():
         check_process_mo2()
         while not self.cleaning_done:
-            check_settings_paths(Globals.PACT_config)
+            check_settings_paths()
             check_settings_integrity()
             self.cleaning_done = clean_plugins()
             self.msleep(1000)

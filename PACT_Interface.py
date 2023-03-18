@@ -177,14 +177,6 @@ class UiPACTMainWin(object):
         self.RegBT_Exit.setToolTip("Exit PACT GUI")
         self.RegBT_Exit.clicked.connect(PACT_MainWin.close)  # type: ignore
 
-        # Add progress bar - Future Project
-        # self.progress = QtWidgets.QProgressBar(PACT_MainWin)
-        # self.progress.setGeometry(QtCore.QRect(20, 240, 600, 24))
-        # self.progress.setObjectName("progress")
-        # self.progress.setValue(0)
-        # self.progress.hide()
-        # self.progress.setFormat("CLEANING PLUGINS... PLEASE WAIT %v/%m")
-
     # ============== CLEAN PLUGINS BUTTON STATES ================
 
     def start_cleaning(self):

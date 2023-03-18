@@ -61,12 +61,10 @@ def pact_ini_create():
 
 pact_ini_create()
 # Use optionxform = str to preserve INI formatting. | Set comment_prefixes to unused char to keep INI comments.
-PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
-PACT_config.optionxform = str  # type: ignore
-PACT_config.read("PACT Settings.ini")
+Globals.PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
+Globals.PACT_config.optionxform = str  # type: ignore
+Globals.PACT_config.read("PACT Settings.ini")
 PACT_Date = "110323"  # DDMMYY
-PACT_Current = "PACT v1.60"
-PACT_Updated = False
 
 
 def pact_ini_update(section: str, value: str) -> None:
@@ -141,7 +139,7 @@ def pact_update_run() -> None:
 
 
 # =================== TERMINAL OUTPUT START ====================
-print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| FNV, FO4, SSE")
+print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", Globals.PACT_Current[-4:], "| FNV, FO4, SSE")
 print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING PLUGINS")
 print("===============================================================================")
 

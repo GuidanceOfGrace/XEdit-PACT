@@ -190,8 +190,7 @@ class UiPACTMainWin(object):
                 self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: pink; border-radius: 5px; border: 1px solid gray;")  # type: ignore
                 self.RegBT_CLEAN_PLUGINS.clicked.disconnect()  # type: ignore
                 self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)  # type: ignore
-            with button_enabled(self.RegBT_Exit, enabled=False):
-                pass
+                self.RegBT_Exit.setEnabled(False)  # type: ignore
 
     def stop_delay_style(self):
         with button_enabled(self.RegBT_CLEAN_PLUGINS, enabled=True):
@@ -211,8 +210,6 @@ class UiPACTMainWin(object):
                 self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
                 print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
                 QTimer.singleShot(5000, lambda: self.stop_delay_style())
-            with button_enabled(self.RegBT_Exit):
-                pass
 
     def check_config(self):
         if not (self.configured_LO and self.configured_XEDIT):  # Incorrect settings, ignore MO2 for now.

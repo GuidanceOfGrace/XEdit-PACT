@@ -306,7 +306,7 @@ class UiPACTMainWin(object):
 
     def select_file_lo(self):
         LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")  # type: ignore
-        if "loadorder" in LO_file or "plugins" in LO_file:
+        if os.path.exists(LO_file) and "loadorder" in LO_file or "plugins" in LO_file:
             QtWidgets.QMessageBox.information(PACT_MainWin, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")
             pact_ini_update("LoadOrder TXT", LO_file)
             self.RegBT_Browse_LO.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
@@ -320,7 +320,7 @@ class UiPACTMainWin(object):
 
     def select_file_mo2(self):
         MO2_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
-        if "ModOrganizer" in MO2_EXE:
+        if os.path.exists(MO2_EXE) and "ModOrganizer" in MO2_EXE:
             QtWidgets.QMessageBox.information(PACT_MainWin, "New MO2 Executable Set", "You have set MO2 to: \n" + MO2_EXE)
             pact_ini_update("MO2 EXE", MO2_EXE)
             self.RegBT_Browse_MO2.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
@@ -334,7 +334,7 @@ class UiPACTMainWin(object):
 
     def select_file_xedit(self):
         XEDIT_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
-        if "Edit" in XEDIT_EXE:
+        if os.path.exists(XEDIT_EXE) and "Edit" in XEDIT_EXE:
             QtWidgets.QMessageBox.information(PACT_MainWin, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)
             pact_ini_update("XEDIT EXE", XEDIT_EXE)
             self.RegBT_Browse_XEDIT.setStyleSheet("background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore

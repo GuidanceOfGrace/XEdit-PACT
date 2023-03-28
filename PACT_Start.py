@@ -67,9 +67,9 @@ def pact_ini_update(section: str, value: str):  # Convenience function for check
 
 def pact_log_update(log_message):
     # Delete journal if older than set amount of days.
-    script_path = os.path.dirname(os.path.abspath(__file__))
+    PACT_folder = os.getcwd()
     journal_name = "PACT Journal.log"
-    journal_path = os.path.join(script_path, journal_name)
+    journal_path = os.path.join(PACT_folder, journal_name)
     journal_age = time.time() - os.path.getmtime(journal_path)
     journal_age_days = journal_age / (24 * 3600)
     if journal_age_days > info.Journal_Expiration:
@@ -258,20 +258,15 @@ def clear_xedit_logs():
         sys.exit()
 
 
-# Make sure that required XEDIT and LOAD ORDER files exist.
-def check_settings_paths():
+# Make sure right XEDIT is running for the right game.
+def check_settings_integrity():
     pact_update_settings()
     if os.path.exists(info.LOAD_ORDER_PATH) and os.path.exists(info.XEDIT_PATH):
-        print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF YOUR INI SETUP IS CORRECT...")
+        print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF INI SETTINGS ARE CORRECT...")
     else:
         print(Warn_Invalid_INI_Path)
         os.system("pause")
         sys.exit()
-
-
-# Make sure right XEDIT is running for the right game.
-def check_settings_integrity():
-    pact_update_settings()
 
     if os.path.exists(info.MO2_PATH):
         info.MO2Mode = True
@@ -517,7 +512,6 @@ def clean_plugins():
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
     pact_update_settings()
     check_process_mo2()
-    check_settings_paths()
     check_settings_integrity()
     clean_plugins()
     os.system("pause")

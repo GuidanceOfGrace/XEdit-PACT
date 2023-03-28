@@ -1,5 +1,25 @@
 ===========================================================================
 # CHANGELOG #
+
+1.70
+- Increased internal timer values to prevent rare cases where PACT would skip all plugins.
+- Additional optimizations to prevent more errors and ensure successful plugin cleaning.
+- PACT will now disable most buttons during plugin cleaning to prevent rogue input.
+- PACT will now wait for xedit to close before you can start cleaning again.
+- You can now adjust *Journal Expiration* in the GUI or *PACT Settings.ini*
+- You can now adjust *Cleaning Timeout* in the GUI or *PACT Settings.ini*
+- Added support for *FO4VREdit.exe* and *TES5VREdit.exe*.
+- Removed specific name requirements for MO2 executable.
+- Dark mode / window style is now enabled by default.
+
+1.60
+- Several bugfixes and optimizations thanks to [evildarkarchon] on GitHub.
+- PACT should now skip disabled plugins or if xedit CPU usage is 0% for too long.
+- PACT should now automatically skip ghosted plugins (.ghost in plugin name).
+- Fixed *Fallout New Vegas* support and added support for *xFOEdit.exe*.
+- Streamlined most of the settings checks to prevent some issues.
+- Added some additional error checks for specific situations.
+
 1.55
 - General code optimization and bug fixing, this should also resolve *UnboundLocalError*
 - Fully switched cleaning process to internal commands instead of creating batch files.

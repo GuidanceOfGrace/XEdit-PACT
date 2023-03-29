@@ -50,8 +50,8 @@ pact_ini_create()
 PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
 PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Settings.ini")
-PACT_Date = "270323"  # DDMMYY
-PACT_Current = "PACT v1.70"
+PACT_Date = "290323"  # DDMMYY
+PACT_Current = "PACT v1.75"
 PACT_Updated = False
 
 
@@ -66,6 +66,9 @@ def pact_ini_update(section: str, value: str):  # Convenience function for check
 
 
 def pact_log_update(log_message):
+    with open("PACT Journal.log", "a", encoding="utf-8", errors="ignore") as LOG_PACT:
+        LOG_PACT.write(log_message)
+
     # Delete journal if older than set amount of days.
     PACT_folder = os.getcwd()
     journal_name = "PACT Journal.log"
@@ -74,9 +77,6 @@ def pact_log_update(log_message):
     journal_age_days = journal_age / (24 * 3600)
     if journal_age_days > info.Journal_Expiration:
         os.remove(journal_path)
-
-    with open("PACT Journal.log", "a", encoding="utf-8", errors="ignore") as LOG_PACT:
-        LOG_PACT.write(log_message)
 
 
 # =================== WARNING MESSAGES ==================
@@ -290,7 +290,7 @@ def check_settings_integrity():
                 print(Warn_Invalid_INI_Setup)
                 os.system("pause")
                 sys.exit()
-    elif "loadorder" in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
+    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
         print(Err_Invalid_LO_File)
         os.system("pause")
         sys.exit()

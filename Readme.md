@@ -120,13 +120,7 @@ IF IT STARTS SPAMMING MULTIPLE XEDIT WINDOWS, IMMEDIATELY CLOSE PACT AND REPORT 
 ===========================================================================
 # LATEST CHANGES #
 
-1.70
-- Increased internal timer values to prevent rare cases where PACT would skip all plugins.
-- Additional optimizations to prevent more errors and ensure successful plugin cleaning.
-- PACT will now disable most buttons during plugin cleaning to prevent rogue input.
-- PACT will now wait for xedit to close before you can start cleaning again.
-- You can now adjust *Journal Expiration* in the GUI or *PACT Settings.ini*
-- You can now adjust *Cleaning Timeout* in the GUI or *PACT Settings.ini*
-- Added support for *FO4VREdit.exe* and *TES5VREdit.exe*.
-- Removed specific name requirements for MO2 executable.
-- Dark mode / window style is now enabled by default.
+1.75
+- Fixed an issue where PACT would sometimes refuse to start if *loadorder.txt* was set.
+- Fixed an issue where PACT would error out if *PACT Journal.log* didn't already exist.
+- Updated PACT Readme with some more details.

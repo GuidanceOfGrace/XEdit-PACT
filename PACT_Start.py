@@ -56,10 +56,7 @@ PACT_Current = "PACT v1.75"
 
 
 def pact_ini_update(section: str, value: str):  # Convenience function for checking & writing to INI.
-    if isinstance(section, str) and isinstance(value, str):
-        PACT_config["MAIN"][section] = value
-    else:
-        PACT_config["MAIN"][str(section)] = str(value)
+    PACT_config["MAIN"][section] = value
 
     with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
         PACT_config.write(INI_PACT)

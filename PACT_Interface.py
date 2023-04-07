@@ -1,16 +1,23 @@
 import os
 import sys
+
 import psutil
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QUrl, QTimer, QThread
+from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QLineEdit, QPushButton, QStyleFactory
-from PACT_Start import (info, PACT_config, PACT_Current, pact_ini_update, pact_update_check, pact_update_settings, check_process_mo2, check_settings_integrity, clean_plugins)
+from PySide6.QtWidgets import (QApplication, QFileDialog, QLabel, QLineEdit,
+                               QPushButton, QStyleFactory)
+
+from PACT_Start import (PACT_config, PACT_Current, check_process_mo2,
+                        check_settings_integrity, clean_plugins, info,
+                        pact_ini_update, pact_update_check,
+                        pact_update_settings)
 
 '''TEMPLATES
 QMessageBox.NoIcon | Question | Information | Warning | Critical
 '''
 sys.argv += ['-platform', 'windows:darkmode=2']
+
 
 class UiPACTMainWin(object):
     def __init__(self):
@@ -20,7 +27,7 @@ class UiPACTMainWin(object):
         self.configured_MO2 = False
         self.configured_XEDIT = False
 
-        self.ChkBT_UPDATE = None
+        """self.ChkBT_UPDATE = None
         self.ChkBT_STATS = None
         self.LINE_SEPARATOR1 = None
         self.LBL_SETTINGS1 = None
@@ -33,8 +40,7 @@ class UiPACTMainWin(object):
 
         self.RegBT_HELP = None
         self.RegBT_EXIT = None
-        self.RegBT_CHECKUPDATES = None
-
+        self.RegBT_CHECKUPDATES = None"""
         self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
         self.timer.timeout.connect(self.timed_states)  # type: ignore
         self.timer.start(3000)  # In ms, will override QTimer.singleShot
@@ -181,13 +187,13 @@ class UiPACTMainWin(object):
     # ============== CLEAN PLUGINS BUTTON STATES ================
 
     def timed_states(self):
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
         xedit_running = False
         for proc in xedit_procs:
-            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower():
+            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower():  # type: ignore
                 xedit_running = True
 
-        if self.thread is None:
+        if not self.thread:
             self.RegBT_BROWSE_LO.setEnabled(True)
             self.RegBT_BROWSE_MO2.setEnabled(True)
             self.RegBT_BROWSE_XEDIT.setEnabled(True)
@@ -205,8 +211,8 @@ class UiPACTMainWin(object):
             self.RegBT_EXIT.setEnabled(False)
             thread = PactThread()
             if thread.cleaning_done is True:
-                thread.finished_signal.connect(thread.quit)
-                thread.finished_signal.connect(thread.wait)
+                thread.finished_signal.connect(thread.quit)  # type: ignore
+                thread.finished_signal.connect(thread.wait)  # type: ignore
                 self.thread = None
             if "STOP CLEANING" not in self.RegBT_CLEAN_PLUGINS.text() and xedit_running is False:
                 self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")
@@ -250,7 +256,7 @@ class UiPACTMainWin(object):
 
     @staticmethod
     def update_popup():
-        if pact_update_check():
+        if pact_update_check(PACT_config, PACT_Current):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Update", "You have the latest version of PACT!")
         else:
             QtWidgets.QMessageBox.warning(PACT_WINDOW, "PACT Update", "New PACT version is available!\nPress OK to open the PACT Nexus Page.")
@@ -262,8 +268,8 @@ class UiPACTMainWin(object):
         pact_update_settings()
         value_CT = int(self.InputField_CT.text())
         value_JE = int(self.InputField_JE.text())
-        pact_ini_update("Cleaning Timeout", value_CT)
-        pact_ini_update("Journal Expiration", value_JE)
+        pact_ini_update("Cleaning Timeout", str(value_CT))
+        pact_ini_update("Journal Expiration", str(value_JE))
 
     def select_file_lo(self):
         LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")  # type: ignore

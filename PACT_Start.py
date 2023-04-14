@@ -225,8 +225,12 @@ def pact_update_settings():
 
 
 pact_update_settings()
-XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+def get_log_filename(xedit_exe_path, suffix):
+    return str(xedit_exe_path.with_name(f"{xedit_exe_path.stem}{suffix}"))
+
+xedit_exe_path = Path(info.XEDIT_PATH)
+XEDIT_LOG_TXT = get_log_filename(xedit_exe_path, "_log.txt")
+XEDIT_EXC_LOG = get_log_filename(xedit_exe_path, "Exception.log")
 
 
 # Make sure Mod Organizer 2 is not already running.
@@ -244,18 +248,20 @@ def check_process_mo2():
 
 # Clear xedit log files to check them for each plugin separately.
 def clear_xedit_logs():
-    global XEDIT_LOG_TXT
-    global XEDIT_EXC_LOG
-    try:
-        if os.path.exists(XEDIT_LOG_TXT):
-            os.remove(XEDIT_LOG_TXT)
-        if os.path.exists(XEDIT_EXC_LOG):
-            os.remove(XEDIT_EXC_LOG)
-    except PermissionError:
-        print("❌ ERROR : CANNOT CLEAR XEDIT LOGS. Try running PACT in Admin Mode.")
-        print("   If problems continue, please report this to the PACT Nexus page.")
-        os.system("pause")
-        sys.exit()
+    global XEDIT_LOG_TXT, XEDIT_EXC_LOG
+
+    def remove_log(log_path, log_name):
+        try:
+            if os.path.exists(log_path):
+                os.remove(log_path)
+        except PermissionError:
+            print(f"❌ ERROR: CANNOT CLEAR {log_name} LOG. Try running PACT in Admin Mode.")
+            print("   If problems continue, please report this to the PACT Nexus page.")
+            os.system("pause")
+            sys.exit()
+
+    remove_log(XEDIT_LOG_TXT, str(Path(XEDIT_LOG_TXT).name))
+    remove_log(XEDIT_EXC_LOG, str(Path(XEDIT_EXC_LOG).name))
 
 
 # Make sure right XEDIT is running for the right game.

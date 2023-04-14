@@ -261,36 +261,31 @@ def clear_xedit_logs():
 # Make sure right XEDIT is running for the right game.
 def check_settings_integrity():
     pact_update_settings()
-    if os.path.exists(info.LOAD_ORDER_PATH) and os.path.exists(info.XEDIT_PATH):
-        print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF INI SETTINGS ARE CORRECT...")
-    else:
+
+    if not (os.path.exists(info.LOAD_ORDER_PATH) and os.path.exists(info.XEDIT_PATH)):
         print(Warn_Invalid_INI_Path)
         os.system("pause")
         sys.exit()
 
-    if os.path.exists(info.MO2_PATH):
-        info.MO2Mode = True
-    else:
-        info.MO2Mode = False
+    info.MO2Mode = os.path.exists(info.MO2_PATH)
 
-    if str(info.XEDIT_EXE).lower() not in info.xedit_list_universal:
+    xedit_exe_lower = str(info.XEDIT_EXE).lower()
+
+    if xedit_exe_lower not in info.xedit_list_universal:
+        game_modes = {'FalloutNV.esm': info.xedit_list_newvegas,
+                      'Fallout4.esm': info.xedit_list_fallout4,
+                      'Skyrim.esm': info.xedit_list_skyrimse}
+
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             LO_Plugins = LO_Check.read()
-            if "FalloutNV.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in info.xedit_list_newvegas:
-                print(Warn_Invalid_INI_Setup)
-                os.system("pause")
-                sys.exit()
 
-            elif "Fallout4.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in info.xedit_list_fallout4:
-                print(Warn_Invalid_INI_Setup)
-                os.system("pause")
-                sys.exit()
+            for esm, xedit_list in game_modes.items():
+                if esm in LO_Plugins and xedit_exe_lower not in xedit_list:
+                    print(Warn_Invalid_INI_Setup)
+                    os.system("pause")
+                    sys.exit()
 
-            elif "Skyrim.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in info.xedit_list_skyrimse:
-                print(Warn_Invalid_INI_Setup)
-                os.system("pause")
-                sys.exit()
-    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
+    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and xedit_exe_lower in info.xedit_list_universal:
         print(Err_Invalid_LO_File)
         os.system("pause")
         sys.exit()

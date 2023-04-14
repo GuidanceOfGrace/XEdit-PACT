@@ -9,7 +9,7 @@ import sys
 import time
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Union, Any
+from typing import Union, Any, List
 
 '''AUTHOR NOTES (POET)
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
@@ -161,32 +161,42 @@ class Info:
     xedit_list_universal = ("xedit.exe", "xedit64.exe", "xfoedit.exe", "xfoedit64.exe")
     xedit_list_specific = xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
 
-    clean_results_UDR = []  # Undisabled References
-    clean_results_ITM = []  # Identical To Master
-    clean_results_NVM = []  # Deleted Navmeshes
-    clean_failed_list = []  # Cleaning Failed
+    clean_results_UDR: List[str] = field(default_factory=list)
+    clean_results_ITM: List[str] = field(default_factory=list)
+    clean_results_NVM: List[str] = field(default_factory=list)
+    clean_failed_list: List[str] = field(default_factory=list)
     plugins_processed = 0
     plugins_cleaned = 0
 
-    LCL_skip_list = []
-    if not os.path.exists("PACT Ignore.txt"):  # Local plugin skip / ignore list.
-        with open("PACT Ignore.txt", "w+", encoding="utf-8", errors="ignore") as PACT_Ignore:
-            PACT_Ignore.write("Write plugin names you want PACT to ignore here. (ONE PLUGIN PER LINE)\n")
-    else:
-        with open("PACT Ignore.txt", "r+", encoding="utf-8", errors="ignore") as PACT_Ignore:
-            LCL_skip_list = [line.strip() for line in PACT_Ignore.readlines()[1:]]
+    LCL_skip_list: List[str] = field(default_factory=list)
 
-    # HARD EXCLUDE PLUGINS PER GAME HERE
-    FNV_skip_list = ["", "FalloutNV.esm", "DeadMoney.esm", "OldWorldBlues.esm", "HonestHearts.esm", "LonesomeRoad.esm", "TribalPack.esm", "MercenaryPack.esm",
-                     "ClassicPack.esm", "CaravanPack.esm", "GunRunnersArsenal.esm", "Unofficial Patch NVSE Plus.esp"]
+    FNV_skip_list: List[str] = field(init=False)
+    FO4_skip_list: List[str] = field(init=False)
+    SSE_skip_list: List[str] = field(init=False)
+    VIP_skip_list: List[str] = field(init=False)
 
-    FO4_skip_list = ["", "Fallout4.esm", "DLCCoast.esm", "DLCNukaWorld.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCworkshop02.esm", "DLCworkshop03.esm",
-                     "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm"]
+    def __post_init__(self):
+        self.init_skip_list()
+        self.init_game_skip_lists()
 
-    SSE_skip_list = ["", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm", "Unofficial Skyrim Special Edition Patch.esp"]
+    def init_skip_list(self):
+        if not os.path.exists("PACT Ignore.txt"):
+            with open("PACT Ignore.txt", "w+", encoding="utf-8", errors="ignore") as PACT_Ignore:
+                PACT_Ignore.write("Write plugin names you want PACT to ignore here. (ONE PLUGIN PER LINE)\n")
+        else:
+            with open("PACT Ignore.txt", "r+", encoding="utf-8", errors="ignore") as PACT_Ignore:
+                self.LCL_skip_list = [line.strip() for line in PACT_Ignore.readlines()[1:]]
 
-    VIP_skip_list = FNV_skip_list + FO4_skip_list + SSE_skip_list
+    def init_game_skip_lists(self):
+        self.FNV_skip_list = ["", "FalloutNV.esm", "DeadMoney.esm", "OldWorldBlues.esm", "HonestHearts.esm", "LonesomeRoad.esm", "TribalPack.esm", "MercenaryPack.esm",
+                              "ClassicPack.esm", "CaravanPack.esm", "GunRunnersArsenal.esm", "Unofficial Patch NVSE Plus.esp"]
 
+        self.FO4_skip_list = ["", "Fallout4.esm", "DLCCoast.esm", "DLCNukaWorld.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCworkshop02.esm", "DLCworkshop03.esm",
+                               "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm"]
+
+        self.SSE_skip_list = ["", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm", "Unofficial Skyrim Special Edition Patch.esp"]
+
+        self.VIP_skip_list = self.FNV_skip_list + self.FO4_skip_list + self.SSE_skip_list
 
 info = Info()
 

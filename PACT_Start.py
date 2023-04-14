@@ -382,14 +382,18 @@ def run_auto_cleaning(plugin_name):
                     pass
 
             if proc.info['name'] == str(info.XEDIT_EXE):  # type: ignore
-                create_time = proc.info['create_time']  # type: ignore
-                if (time.time() - create_time) > info.Cleaning_Timeout:
-                    print("❌ ERROR : XEDIT TIMED OUT (CLEANING PROCESS TOOK TOO LONG)! KILLING XEDIT...")
-                    info.clean_failed_list.append(plugin_name)
-                    info.plugins_processed -= 1
-                    proc.kill()
-                    time.sleep(1)
-                    clear_xedit_logs()
+                try:
+                    create_time = proc.info['create_time']  # type: ignore
+                    if (time.time() - create_time) > info.Cleaning_Timeout:
+                        print("❌ ERROR : XEDIT TIMED OUT (CLEANING PROCESS TOOK TOO LONG)! KILLING XEDIT...")
+                        info.clean_failed_list.append(plugin_name)
+                        info.plugins_processed -= 1
+                        proc.kill()
+                        time.sleep(1)
+                        clear_xedit_logs()
+                        break
+                except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
+                    print("❌ ERROR : COULD NOT KILL XEDIT PROCESS PLEASE RESTART THE CLEANING PROCESS...") # Placeholder for now.
                     break
 
             if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(XEDIT_EXC_LOG):  # Check if xedit cannot clean. # type: ignore
@@ -443,70 +447,79 @@ def check_cleaning_results(plugin_name):
 
 
 def clean_plugins():
-    ALL_skip_list = info.VIP_skip_list + info.LCL_skip_list
-
+    all_skip_list = info.VIP_skip_list + info.LCL_skip_list
     pact_update_settings()
 
-    if info.MO2Mode:  # Change mod manager modes and check ignore list.
+    if info.MO2Mode:
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")
     else:
         print("❌ MO2 EXECUTABLE NOT SET OR FOUND. SWITCHING TO VORTEX MODE...")
 
-    # Add plugins from loadorder or plugins file to separate plugin list.
-    with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_File:
-        LO_File.seek(0)  # Return line pointer to first line.
-        LO_Plugin_List = []
-        LO_List = LO_File.readlines()[1:]
-        if "plugins.txt" in info.LOAD_ORDER_PATH:
-            for line in LO_List:
-                if "*" in line:
-                    line = line.strip()
-                    line = line.replace("*", "")
-                    LO_Plugin_List.append(line)
-        else:
-            for line in LO_List:
-                line = line.strip()
-                if ".ghost" not in line:
-                    LO_Plugin_List.append(line)
+    load_order_plugin_list = get_load_order_plugin_list(info.LOAD_ORDER_PATH)
 
-    # Start cleaning process if everything is OK.
-    count_plugins = len(set(LO_Plugin_List) - set(ALL_skip_list))
+    count_plugins = len(set(load_order_plugin_list) - set(all_skip_list))
     print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {count_plugins} )")
     log_start = time.perf_counter()
     log_time = datetime.datetime.now()
     pact_log_update(f"\nSTARTED CLEANING PROCESS AT : {log_time}")
+
     count_cleaned = 0
-    for plugin in LO_Plugin_List:  # Run XEdit and log checks for each valid plugin in loadorder.txt file.
-        if not any(plugin in elem for elem in ALL_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
+    for plugin in load_order_plugin_list:
+        if not any(plugin in elem for elem in all_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
             count_cleaned += 1
             run_auto_cleaning(plugin)
             check_cleaning_results(plugin)
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {count_plugins})")
 
-    # Show stats once cleaning is complete.
-    pact_log_update(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in {(str(time.perf_counter() - log_start)[:3])} seconds.")
-    pact_log_update(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")
+    show_cleaning_stats(log_start, count_cleaned, count_plugins)
+    show_cleaning_results()
+    return True  # Required for running function check in PACT_Interface.
 
-    print(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in", (str(time.perf_counter() - log_start)[:3]), "seconds.")
+def get_load_order_plugin_list(load_order_path):
+    with open(load_order_path, "r", encoding="utf-8", errors="ignore") as LO_File:
+        LO_File.seek(0)
+        load_order_plugin_list = []
+        load_order_list = LO_File.readlines()[1:]
+        
+        if "plugins.txt" in str(load_order_path):
+            for line in load_order_list:
+                if "*" in line:
+                    line = line.strip().replace("*", "")
+                    load_order_plugin_list.append(line)
+        else:
+            for line in load_order_list:
+                line = line.strip()
+                if ".ghost" not in line:
+                    load_order_plugin_list.append(line)
+
+    return load_order_plugin_list
+
+def show_cleaning_stats(log_start, count_cleaned, count_plugins):
+    elapsed_time = time.perf_counter() - log_start
+    print(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in {elapsed_time:.3f} seconds.")
     print(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")
+
+def show_cleaning_results():
     if len(info.clean_failed_list) > 1:
         print(f"\n❌ {str(info.XEDIT_EXE).upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {info.XEDIT_EXE} Timed Out):")
         for elem in info.clean_failed_list:
             print(elem)
+            
     if len(info.clean_results_UDR) > 1:
         print(f"\n✔️ The following plugins had Undisabled Records and {info.XEDIT_EXE} properly disabled them:")
         for elem in info.clean_results_UDR:
             print(elem)
+            
     if len(info.clean_results_ITM) > 1:
         print(f"\n✔️ The following plugins had Identical To Master Records and {info.XEDIT_EXE} successfully cleaned them:")
         for elem in info.clean_results_ITM:
             print(elem)
+            
     if len(info.clean_results_NVM) > 1:
         print("\n❌ CAUTION : The following plugins contain Deleted Navmeshes!")
         print("   Such plugins may cause navmesh related problems or crashes.")
         for elem in info.clean_results_NVM:
             print(elem)
-    return True  # Required for running function check in PACT_Interface.
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.

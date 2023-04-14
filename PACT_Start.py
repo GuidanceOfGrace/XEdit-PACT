@@ -52,7 +52,6 @@ PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Settings.ini")
 PACT_Date = "290323"  # DDMMYY
 PACT_Current = "PACT v1.75"
-PACT_Updated = False
 
 
 def pact_ini_update(section: str, value: str):  # Convenience function for checking & writing to INI.
@@ -111,31 +110,25 @@ Err_Invalid_LO_File = """
 # =================== UPDATE FUNCTION ===================
 def pact_update_check():
     global PACT_Current
-    global PACT_Updated
-    print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
-    print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
-    response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
-    PACT_Received = response.json()["name"]
-    if PACT_Received == PACT_Current:
-        PACT_Updated = True
-        print("\n✔️ You have the latest version of PACT!")
-    else:
-        print(Warn_Outdated_PACT)
-        print("===============================================================================")
-    return PACT_Updated
-
-
-def pact_update_run():
-    if PACT_config.getboolean("MAIN", "Update Check") is True:
+    PACT_Updated = False
+    if PACT_config.getboolean("MAIN", "Update Check"):
+        print("\n❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
+        print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
         try:
-            pact_update_check()
+            response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
+            PACT_Received = response.json()["name"]
+            PACT_Updated = PACT_Received == PACT_Current
+            if PACT_Updated:
+                print("\n✔️ You have the latest version of PACT!")
+            else:
+                print(Warn_Outdated_PACT)
             print("===============================================================================")
         except (OSError, requests.exceptions.RequestException):
             print(Warn_PACT_Update_Failed)
             print("===============================================================================")
-    elif PACT_config.getboolean("MAIN", "Update Check") is False:
+    else:
         print("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
-
+    return PACT_Updated
 
 # =================== TERMINAL OUTPUT START ====================
 print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| FNV, FO4, SSE")

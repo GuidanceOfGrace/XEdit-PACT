@@ -420,29 +420,31 @@ def check_cleaning_results(plugin_name):
     global XEDIT_LOG_TXT
     global XEDIT_EXC_LOG
     time.sleep(1)  # Wait to make sure xedit generates the logs.
+
     if os.path.exists(XEDIT_LOG_TXT):
         cleaned_something = False
+        results = {'UDRs': 'Undeleting:', 'ITMs': 'Removing:', 'NVMs': 'Skipping:'}
+        categories = {'UDRs': info.clean_results_UDR, 'ITMs': info.clean_results_ITM, 'NVMs': info.clean_results_NVM}
+
         with open(XEDIT_LOG_TXT, "r", encoding="utf-8", errors="ignore") as XE_Check:
             Cleaning_Check = XE_Check.read()
-            if "Undeleting:" in Cleaning_Check:
-                pact_log_update(f"\n{plugin_name} -> Cleaned UDRs")
-                info.clean_results_UDR.append(plugin_name)
-                cleaned_something = True
-            if "Removing:" in Cleaning_Check:
-                pact_log_update(f"\n{plugin_name} -> Cleaned ITMs")
-                info.clean_results_ITM.append(plugin_name)
-                cleaned_something = True
-            if "Skipping:" in Cleaning_Check:
-                pact_log_update(f"\n{plugin_name} -> Found Deleted Navmeshes")
-                info.clean_results_NVM.append(plugin_name)
-            if cleaned_something is True:
+
+            for result_type, keyword in results.items():
+                if keyword in Cleaning_Check:
+                    pact_log_update(f"\n{plugin_name} -> Cleaned {result_type}")
+                    categories[result_type].append(plugin_name)
+                    cleaned_something = True
+
+            if cleaned_something:
                 info.plugins_cleaned += 1
             else:
                 pact_log_update(f"\n{plugin_name} -> NOTHING TO CLEAN")
                 print("NOTHING TO CLEAN ! Adding plugin to PACT Ignore file...")
+
                 with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
                     PACT_IGNORE.write(f"\n{plugin_name}")
                     info.LCL_skip_list.append(plugin_name)
+
         clear_xedit_logs()
 
 

@@ -130,6 +130,7 @@ def pact_update_check():
         print("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
     return PACT_Updated
 
+
 # =================== TERMINAL OUTPUT START ====================
 print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| FNV, FO4, SSE")
 print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING PLUGINS")
@@ -185,11 +186,12 @@ class Info:
                               "ClassicPack.esm", "CaravanPack.esm", "GunRunnersArsenal.esm", "Unofficial Patch NVSE Plus.esp"]
 
         self.FO4_skip_list = ["", "Fallout4.esm", "DLCCoast.esm", "DLCNukaWorld.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCworkshop02.esm", "DLCworkshop03.esm",
-                               "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm"]
+                              "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm"]
 
         self.SSE_skip_list = ["", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm", "Unofficial Skyrim Special Edition Patch.esp"]
 
         self.VIP_skip_list = self.FNV_skip_list + self.FO4_skip_list + self.SSE_skip_list
+
 
 info = Info()
 
@@ -228,8 +230,11 @@ def pact_update_settings():
 
 
 pact_update_settings()
-def get_log_filename(xedit_exe_path, suffix):
+
+
+def get_log_filename(xedit_exe_path: Path, suffix: str):
     return str(xedit_exe_path.with_name(f"{xedit_exe_path.stem}{suffix}"))
+
 
 xedit_exe_path = Path(info.XEDIT_PATH)
 XEDIT_LOG_TXT = get_log_filename(xedit_exe_path, "_log.txt")
@@ -300,7 +305,7 @@ def check_settings_integrity():
         sys.exit()
 
 
-def gen_bat_command(plugin_name):
+def gen_bat_command(plugin_name: str):
     global XEDIT_LOG_TXT
 
     bat_command = ""
@@ -350,7 +355,7 @@ def gen_bat_command(plugin_name):
     return bat_command
 
 
-def run_auto_cleaning(plugin_name):
+def run_auto_cleaning(plugin_name: str):
     global XEDIT_LOG_TXT
     global XEDIT_EXC_LOG
 
@@ -360,28 +365,30 @@ def run_auto_cleaning(plugin_name):
     print(f"\nCURRENTLY RUNNING : {bat_command}")
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
-    while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
+
+    while bat_process.poll() is None:
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
+
         for proc in xedit_procs:
-            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower():  # type: ignore
+            xedit_exe = str(info.XEDIT_EXE).lower()
+            xedit_proc_lower = proc.info['name'].lower()  # type: ignore
+            if xedit_proc_lower == xedit_exe:  # type: ignore
                 time.sleep(5)
-                try:  # Note that xedit can stop at any moment and checking CPU usage on a dead process will crash.
-                    if proc.is_running():  # Check CPU usage if xedit does nothing or gets interrupted by error.
-                        cpu_percent = proc.cpu_percent()
-                        if cpu_percent < 1:
-                            proc.kill()
-                            time.sleep(1)
-                            clear_xedit_logs()
-                            info.plugins_processed -= 1
-                            info.clean_failed_list.append(plugin_name)
-                            print("❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
-                            with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
-                                PACT_IGNORE.write(f"\n{plugin_name}\n")
-                            break
+                try:
+                    if proc.is_running() and proc.cpu_percent() < 1:
+                        proc.kill()
+                        time.sleep(1)
+                        clear_xedit_logs()
+                        info.plugins_processed -= 1
+                        info.clean_failed_list.append(plugin_name)
+                        print("❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                        with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                            PACT_IGNORE.write(f"\n{plugin_name}\n")
+                        break
                 except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
                     pass
 
-            if proc.info['name'] == str(info.XEDIT_EXE):  # type: ignore
+            if xedit_proc_lower == xedit_exe:  # type: ignore
                 try:
                     create_time = proc.info['create_time']  # type: ignore
                     if (time.time() - create_time) > info.Cleaning_Timeout:
@@ -393,14 +400,14 @@ def run_auto_cleaning(plugin_name):
                         clear_xedit_logs()
                         break
                 except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
-                    print("❌ ERROR : COULD NOT KILL XEDIT PROCESS PLEASE RESTART THE CLEANING PROCESS...")  # Placeholder for now.
-                    break
+                    print("❌ ERROR : COULD NOT KILL XEDIT PROCESS PLEASE RESTART THE CLEANING PROCESS...")
 
-            if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(XEDIT_EXC_LOG):  # Check if xedit cannot clean. # type: ignore
+            if xedit_proc_lower == xedit_exe and os.path.exists(XEDIT_EXC_LOG):  # type: ignore
                 try:
                     xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {XEDIT_EXC_LOG}'])
-                    Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
-                    if "which can not be found" in Exception_Check or "which it does not have" in Exception_Check:
+                    exception_check = xedit_exc_out.decode()
+
+                    if "which can not be found" in exception_check or "which it does not have" in exception_check:
                         print("❌ ERROR : PLUGIN IS EMPTY OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
                         with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
                             PACT_IGNORE.write(f"\n{plugin_name}\n")
@@ -412,11 +419,13 @@ def run_auto_cleaning(plugin_name):
                         break
                 except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
                     pass
+
         time.sleep(3)
+
     info.plugins_processed += 1
 
 
-def check_cleaning_results(plugin_name):
+def check_cleaning_results(plugin_name: str):
     global XEDIT_LOG_TXT
     global XEDIT_EXC_LOG
     time.sleep(1)  # Wait to make sure xedit generates the logs.
@@ -473,7 +482,7 @@ def clean_plugins():
             check_cleaning_results(plugin)
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {count_plugins})")
 
-    show_cleaning_stats(log_start, count_cleaned, count_plugins)
+    show_cleaning_stats(log_start)
     show_cleaning_results()
     return True  # Required for running function check in PACT_Interface.
 
@@ -498,7 +507,7 @@ def get_load_order_plugin_list(load_order_path):
     return load_order_plugin_list
 
 
-def show_cleaning_stats(log_start, count_cleaned, count_plugins):
+def show_cleaning_stats(log_start):
     elapsed_time = time.perf_counter() - log_start
     print(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in {elapsed_time:.3f} seconds.")
     print(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")

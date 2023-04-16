@@ -7,9 +7,9 @@ import requests
 import subprocess
 import sys
 import time
+from typing import Union
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Union, Any
 
 '''AUTHOR NOTES (POET)
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
@@ -41,7 +41,7 @@ def pact_ini_create():
                         "# Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below. \n",
                         "# Required if MO2 is your main mod manager. Otherwise, leave this blank. \n",
                         "MO2 EXE = "]
-        with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
+        with open("PACT Settings.ini", "a", encoding="utf-8", errors="ignore") as INI_PACT:
             INI_PACT.writelines(INI_Settings)
 
 
@@ -50,8 +50,8 @@ pact_ini_create()
 PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
 PACT_config.optionxform = str  # type: ignore
 PACT_config.read("PACT Settings.ini")
-PACT_Date = "290323"  # DDMMYY
-PACT_Current = "PACT v1.75"
+PACT_Date = "140423"  # DDMMYY
+PACT_Current = "PACT v1.80"
 PACT_Updated = False
 
 
@@ -102,39 +102,38 @@ Warn_Invalid_INI_Setup = """
     Check your EXE or PACT Settings.ini settings and try again.
 """
 Err_Invalid_LO_File = """
-❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!")
-   You have to set your load order file path to loadorder.txt and NOT plugins.txt")
-   This is so PACT can detect the right game. Change the load order file path and try again.")
+❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!
+   You have to set your load order file path to loadorder.txt and NOT plugins.txt
+   This is so PACT can detect the right game. Change the load order file path and try again.
+"""
+Err_Invalid_XEDIT_File = """
+❌ ERROR : CANNOT DETERMINE THE SET XEDIT EXECUTABLE FROM PACT SETTINGS!
+   Make sure that you have set XEDIT EXE path to a valid .exe file!
+   OR try changing XEDIT EXE path to a different XEdit version.
 """
 
 
 # =================== UPDATE FUNCTION ===================
 def pact_update_check():
-    global PACT_Current
-    global PACT_Updated
-    print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
-    print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
-    response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
-    PACT_Received = response.json()["name"]
-    if PACT_Received == PACT_Current:
-        PACT_Updated = True
-        print("\n✔️ You have the latest version of PACT!")
-    else:
-        print(Warn_Outdated_PACT)
-        print("===============================================================================")
-    return PACT_Updated
-
-
-def pact_update_run():
     if PACT_config.getboolean("MAIN", "Update Check") is True:
+        print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
+        print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
         try:
-            pact_update_check()
-            print("===============================================================================")
+            response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
+            PACT_Received = response.json()["name"]
+            if PACT_Received == PACT_Current:
+                print("\n✔️ You have the latest version of PACT!")
+                return True
+            else:
+                print(Warn_Outdated_PACT)
+                print("===============================================================================")
         except (OSError, requests.exceptions.RequestException):
             print(Warn_PACT_Update_Failed)
             print("===============================================================================")
-    elif PACT_config.getboolean("MAIN", "Update Check") is False:
-        print("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
+    else:
+        print("\n ❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
+        print("===============================================================================")
+    return False
 
 
 # =================== TERMINAL OUTPUT START ====================
@@ -154,7 +153,7 @@ class Info:
     Journal_Expiration = 7
     Cleaning_Timeout = 300
 
-    MO2Mode = FNVMode = FO4Mode = SSEMode = False
+    MO2Mode = False
     xedit_list_newvegas = ("fnvedit.exe", "fnvedit64.exe")
     xedit_list_fallout4 = ("fo4edit.exe", "fo4edit64.exe", "fo4vredit.exe")
     xedit_list_skyrimse = ("sseedit.exe", "sseedit64.exe", "tes5vredit.exe")
@@ -170,10 +169,10 @@ class Info:
 
     LCL_skip_list = []
     if not os.path.exists("PACT Ignore.txt"):  # Local plugin skip / ignore list.
-        with open("PACT Ignore.txt", "w+", encoding="utf-8", errors="ignore") as PACT_Ignore:
+        with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_Ignore:
             PACT_Ignore.write("Write plugin names you want PACT to ignore here. (ONE PLUGIN PER LINE)\n")
     else:
-        with open("PACT Ignore.txt", "r+", encoding="utf-8", errors="ignore") as PACT_Ignore:
+        with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as PACT_Ignore:
             LCL_skip_list = [line.strip() for line in PACT_Ignore.readlines()[1:]]
 
     # HARD EXCLUDE PLUGINS PER GAME HERE
@@ -195,11 +194,25 @@ def pact_update_settings():
     info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
     info.LOAD_ORDER_TXT = os.path.basename(info.LOAD_ORDER_PATH)
     info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
-    info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
     info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
-    info.MO2_EXE = os.path.basename(info.MO2_PATH)
     info.Cleaning_Timeout = int(PACT_config["MAIN"]["Cleaning Timeout"])  # type: ignore
     info.Journal_Expiration = int(PACT_config["MAIN"]["Journal Expiration"])  # type: ignore
+
+    if ".exe" in info.XEDIT_PATH:
+        info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
+    else:
+        for file in os.listdir(info.XEDIT_PATH):
+            if file.endswith(".exe") and "edit" in str(file).lower():
+                info.XEDIT_PATH = os.path.join(info.XEDIT_PATH, file)
+                info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
+
+    if ".exe" in info.MO2_PATH:
+        info.MO2_EXE = os.path.basename(info.MO2_PATH)
+    elif os.path.exists(info.MO2_PATH):
+        for file in os.listdir(info.MO2_PATH):
+            if file.endswith(".exe") and ("mod" in str(file).lower() or "mo2" in str(file).lower()):
+                info.MO2_PATH = os.path.join(info.MO2_PATH, file)
+                info.MO2_EXE = os.path.basename(info.MO2_PATH)
 
     if not isinstance(info.Cleaning_Timeout, int):
         print("❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS NOT VALID.")
@@ -225,8 +238,15 @@ def pact_update_settings():
 
 
 pact_update_settings()
-XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+XEDIT_LOG_TXT = ""
+XEDIT_EXC_LOG = ""
+if ".exe" in info.XEDIT_PATH:
+    XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
+    XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+else:
+    print(Err_Invalid_XEDIT_File)
+    os.system("pause")
+    sys.exit()
 
 
 # Make sure Mod Organizer 2 is not already running.
@@ -251,7 +271,7 @@ def clear_xedit_logs():
             os.remove(XEDIT_LOG_TXT)
         if os.path.exists(XEDIT_EXC_LOG):
             os.remove(XEDIT_EXC_LOG)
-    except PermissionError:
+    except (PermissionError, OSError):
         print("❌ ERROR : CANNOT CLEAR XEDIT LOGS. Try running PACT in Admin Mode.")
         print("   If problems continue, please report this to the PACT Nexus page.")
         os.system("pause")
@@ -311,37 +331,20 @@ def run_auto_cleaning(plugin_name):
 
     # If universal xedit (xedit.exe) executable is set.
     if "loadorder" in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
+        game_mode = ""
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
-            for elem in LO_Check.readlines():
-                if "Skyrim.esm" in elem:
-                    info.SSEMode = True
-                    break
-                elif "FalloutNV.esm" in elem:
-                    info.FNVMode = True
-                    break
-                elif "Fallout4.esm" in elem:
-                    info.FO4Mode = True
-                    break
-            if info.FNVMode:
-                XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FNVEdit_log.txt')
-                if info.MO2Mode:
-                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fnv -QAC -autoexit -autoload \\"{plugin_name}\\""'
-                else:
-                    bat_command = f'"{info.XEDIT_PATH}" -a -fnv -QAC -autoexit -autoload "{plugin_name}"'
+            mode_check = LO_Check.read()
+            if "Skyrim.esm" in mode_check:
+                game_mode = "-sse"
+            elif "FalloutNV.esm" in mode_check:
+                game_mode = "-fnv"
+            elif "Fallout4.esm" in mode_check:
+                game_mode = "-fo4"
 
-            elif info.FO4Mode:
-                XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'FO4Edit_log.txt')
-                if info.MO2Mode:
-                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-fo4 -QAC -autoexit -autoload \\"{plugin_name}\\""'
-                else:
-                    bat_command = f'"{info.XEDIT_PATH}" -a -fo4 -QAC -autoexit -autoload "{plugin_name}"'
-
-            elif info.SSEMode:
-                XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('xEdit.exe', 'SSEEdit_log.txt')
-                if info.MO2Mode:
-                    bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-sse -QAC -autoexit -autoload \\"{plugin_name}\\""'
-                else:
-                    bat_command = f'"{info.XEDIT_PATH}" -a -sse -QAC -autoexit -autoload "{plugin_name}"'
+        if info.MO2Mode:
+            bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
+        else:
+            bat_command = f'"{info.XEDIT_PATH}" -a {game_mode} -QAC -autoexit -autoload "{plugin_name}"'
 
     elif "loadorder" not in str(info.LOAD_ORDER_PATH).lower() and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
         print(Err_Invalid_LO_File)
@@ -360,6 +363,7 @@ def run_auto_cleaning(plugin_name):
     print(f"\nCURRENTLY RUNNING : {bat_command}")
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
+
     while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
         for proc in xedit_procs:
@@ -445,7 +449,9 @@ def check_cleaning_results(plugin_name):
 def clean_plugins():
     ALL_skip_list = info.VIP_skip_list + info.LCL_skip_list
 
-    pact_update_settings()
+    print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")
+    print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")
+    print(f"❓ MO2 EXE is set to : {info.MO2_PATH}")
 
     if info.MO2Mode:  # Change mod manager modes and check ignore list.
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")

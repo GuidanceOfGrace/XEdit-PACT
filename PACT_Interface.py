@@ -73,6 +73,7 @@ def create_button_input(parent, geometry, object_name, text, style_sheet, font, 
     button.clicked.connect(callback)
     return button
 
+
 def create_simple_button(parent, geometry, object_name, text, tooltip, callback):
     button = QtWidgets.QPushButton(parent)
     button.setGeometry(geometry)
@@ -81,6 +82,7 @@ def create_simple_button(parent, geometry, object_name, text, tooltip, callback)
     button.setToolTip(tooltip)
     button.clicked.connect(callback)
     return button
+
 
 class UiPACTMainWin(object):
     def __init__(self):

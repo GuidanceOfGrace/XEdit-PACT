@@ -373,7 +373,7 @@ def run_auto_cleaning(plugin_name: str):
             xedit_exe = str(info.XEDIT_EXE).lower()
             xedit_proc_lower = proc.info['name'].lower()  # type: ignore
             if xedit_proc_lower == xedit_exe:  # type: ignore
-                time.sleep(5)
+                time.sleep(10)
                 try:
                     if proc.is_running() and proc.cpu_percent() < 1:
                         proc.kill()

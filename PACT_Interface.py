@@ -98,23 +98,23 @@ class UiPACTMainWin(object):
         self.configured_MO2 = False
         self.configured_XEDIT = False
 
-        """self.ChkBT_UPDATE: QtWidgets.QCheckBox
-        self.ChkBT_STATS: QtWidgets.QCheckBox"""  # Not used.
-        self.LINE_SEPARATOR1: QtWidgets.QFrame
-        self.LBL_SETTINGS1: QtWidgets.QLabel
-        self.LBL_SETTINGS2: QtWidgets.QLabel
-        self.RegBT_BROWSE_LO: QtWidgets.QPushButton
-        self.RegBT_BROWSE_MO2: QtWidgets.QPushButton
-        self.RegBT_BROWSE_XEDIT: QtWidgets.QPushButton
-        self.RegBT_CHECKUPDATES: QtWidgets.QPushButton
-        self.RegBT_CLEAN_PLUGINS: QtWidgets.QPushButton
+        self.ChkBT_UPDATE = None
+        self.ChkBT_STATS = None
+        self.LINE_SEPARATOR1 = None
+        self.LBL_SETTINGS1 = None
+        self.LBL_SETTINGS2 = None
+        self.RegBT_BROWSE_LO = None
+        self.RegBT_BROWSE_MO2 = None
+        self.RegBT_BROWSE_XEDIT = None
+        self.RegBT_CHECKUPDATES = None
+        self.RegBT_CLEAN_PLUGINS = None
 
-        self.RegBT_HELP: QtWidgets.QPushButton
-        self.RegBT_EXIT: QtWidgets.QPushButton
-        self.RegBT_CHECKUPDATES: QtWidgets.QPushButton
+        self.RegBT_HELP = None
+        self.RegBT_EXIT = None
+        self.RegBT_CHECKUPDATES = None
 
         self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
-        self.timer.timeout.connect(self.timed_states)
+        self.timer.timeout.connect(self.timed_states)  # type: ignore
         self.timer.start(3000)  # In ms, will override QTimer.singleShot
         self.thread = None
 
@@ -259,14 +259,14 @@ class UiPACTMainWin(object):
         xedit_running = self.is_xedit_running()
         if self.thread is None:
             self._set_button_state(self.RegBT_CLEAN_PLUGINS, self.configured_LO and self.configured_XEDIT and not xedit_running, "START CLEANING", "lightblue")
-            self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
-            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)
+            self.RegBT_CLEAN_PLUGINS.clicked.disconnect() # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning) # type: ignore
 
             for button in [self.RegBT_BROWSE_LO, self.RegBT_BROWSE_MO2, self.RegBT_BROWSE_XEDIT, self.RegBT_EXIT]:
-                button.setEnabled(True)
+                button.setEnabled(True) # type: ignore
         else:
             for button in [self.RegBT_BROWSE_LO, self.RegBT_BROWSE_MO2, self.RegBT_BROWSE_XEDIT, self.RegBT_EXIT]:
-                button.setEnabled(False)
+                button.setEnabled(False) # type: ignore
 
             if self.thread.cleaning_done:
                 self.thread.finished_signal.connect(self.thread.quit)  # type: ignore
@@ -280,8 +280,8 @@ class UiPACTMainWin(object):
             self.thread = PactThread()
             self.thread.start()
             self._set_button_state(self.RegBT_CLEAN_PLUGINS, True, "STOP CLEANING", "pink")
-            self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
-            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)
+            self.RegBT_CLEAN_PLUGINS.clicked.disconnect() # type: ignore
+            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning) # type: ignore
 
     def stop_cleaning(self):
         if self.thread is not None:

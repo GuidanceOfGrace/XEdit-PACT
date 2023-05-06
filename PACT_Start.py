@@ -2,14 +2,15 @@
 import configparser
 import datetime
 import os
-import psutil
-import requests
 import subprocess
 import sys
 import time
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Union, Any, List
+from pathlib import Path
+from typing import Any, List, Union
+
+import psutil
+import requests
 
 '''AUTHOR NOTES (POET)
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.

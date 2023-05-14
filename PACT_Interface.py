@@ -140,7 +140,7 @@ class UiPACTMainWin(object):
             "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
             self.select_file_lo,
             "loadorder",
-            "LoadOrder TXT",
+            "LoadOrder_TXT",
             "✔️ LOAD ORDER FILE SET"
         )
         self.configured_LO = "loadorder" in PACT_config["LoadOrder_TXT"] or "plugins" in PACT_config["LoadOrder_TXT"]
@@ -154,7 +154,7 @@ class UiPACTMainWin(object):
             "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
             self.select_file_mo2,
             "ModOrganizer",
-            "MO2 EXE",
+            "MO2_EXE",
             "✔️ MO2 EXECUTABLE SET"
         )
         self.configured_MO2 = "ModOrganizer" in PACT_config["MO2_EXE"]
@@ -168,7 +168,7 @@ class UiPACTMainWin(object):
             "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
             self.select_file_xedit,
             "Edit",
-            "XEDIT EXE",
+            "XEDIT_EXE",
             "✔️ XEDIT EXECUTABLE SET"
         )
         self.configured_XEDIT = "Edit" in PACT_config["XEDIT_EXE"]
@@ -344,16 +344,16 @@ class UiPACTMainWin(object):
         def check_fn(file_path):
             return "loadorder" in file_path or "plugins" in file_path
 
-        self.configured_LO = self._select_file("*.txt", self.RegBT_BROWSE_LO, "LoadOrder TXT", "✔️ LOAD ORDER FILE SET", "❌ WRONG LO FILE", check_fn)
+        self.configured_LO = self._select_file("*.txt", self.RegBT_BROWSE_LO, "LoadOrder_TXT", "✔️ LOAD ORDER FILE SET", "❌ WRONG LO FILE", check_fn)
 
     def select_file_mo2(self):
-        self.configured_MO2 = self._select_file("*.exe", self.RegBT_BROWSE_MO2, "MO2 EXE", "✔️ MO2 EXECUTABLE SET", "❌ WRONG MO2 EXE")
+        self.configured_MO2 = self._select_file("*.exe", self.RegBT_BROWSE_MO2, "MO2_EXE", "✔️ MO2 EXECUTABLE SET", "❌ WRONG MO2 EXE")
 
     def select_file_xedit(self):
         def check_fn(file_path):
             return "edit" in file_path.lower()
 
-        self.configured_XEDIT = self._select_file("*.exe", self.RegBT_BROWSE_XEDIT, "XEDIT EXE", "✔️ XEDIT EXECUTABLE SET", "❌ WRONG XEDIT EXE", check_fn)
+        self.configured_XEDIT = self._select_file("*.exe", self.RegBT_BROWSE_XEDIT, "XEDIT_EXE", "✔️ XEDIT EXECUTABLE SET", "❌ WRONG XEDIT EXE", check_fn)
 
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI

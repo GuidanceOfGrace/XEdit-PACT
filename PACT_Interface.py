@@ -27,7 +27,7 @@ def create_button_lo(parent, geometry, object_name, text, style_sheet, callback,
     button.setStyleSheet(style_sheet)
     button.clicked.connect(callback)
 
-    if config_check in PACT_config["MAIN"][config_key]:
+    if config_check in PACT_config[config_key]:
         button.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
         button.setText(success_text)
 
@@ -143,7 +143,7 @@ class UiPACTMainWin(object):
             "LoadOrder TXT",
             "✔️ LOAD ORDER FILE SET"
         )
-        self.configured_LO = "loadorder" in PACT_config["MAIN"]["LoadOrder TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder TXT"]
+        self.configured_LO = "loadorder" in PACT_config["LoadOrder_TXT"] or "plugins" in PACT_config["LoadOrder_TXT"]
 
         # Button - Browse MO2 EXE
         self.RegBT_BROWSE_MO2 = create_button_lo(
@@ -157,7 +157,7 @@ class UiPACTMainWin(object):
             "MO2 EXE",
             "✔️ MO2 EXECUTABLE SET"
         )
-        self.configured_MO2 = "ModOrganizer" in PACT_config["MAIN"]["MO2 EXE"]
+        self.configured_MO2 = "ModOrganizer" in PACT_config["MO2_EXE"]
 
         # Button - Browse XEDIT EXE
         self.RegBT_BROWSE_XEDIT = create_button_lo(
@@ -171,7 +171,7 @@ class UiPACTMainWin(object):
             "XEDIT EXE",
             "✔️ XEDIT EXECUTABLE SET"
         )
-        self.configured_XEDIT = "Edit" in PACT_config["MAIN"]["XEDIT EXE"]
+        self.configured_XEDIT = "Edit" in PACT_config["XEDIT_EXE"]
 
        # Separator 1
         self.LINE_SEPARATOR1 = create_separator(PACT_WINDOW, QtCore.QRect(80, 100, 480, 20), "LINE_SEPARATOR1")

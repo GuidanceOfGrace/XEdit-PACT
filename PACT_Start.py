@@ -8,6 +8,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, List, Union
+import tomlkit
 
 import psutil
 import requests
@@ -21,48 +22,52 @@ import requests
 # =================== PACT INI FILE ===================
 def pact_ini_create():
     if not os.path.exists("PACT Settings.ini"):
-        INI_Settings = ["[MAIN]\n",
-                        "# This file contains settings for both source scripts and Plugin Auto Cleaning Tool.exe \n",
-                        "# Set to true if you want PACT to check that you have the latest version of PACT. \n",
-                        "Update Check = true\n \n",
-                        "# Set to true if you want PACT to show extra stats about cleaned plugins in the command line window. \n",
-                        "Stat Logging = true\n \n",
-                        "# In seconds, set below how long should PACT wait for xedit to clean any plugin. \n",
-                        "# If it takes longer than the set amount, the plugin will be immediately skipped. \n",
-                        "Cleaning Timeout = 300\n \n",
-                        "# In days, set below how long should PACT wait until the logging journal is cleared. \n",
-                        "# If PACT Journal.txt is older than the set amount, it is immediately deleted. \n",
-                        "Journal Expiration = 7\n \n",
-                        "# Set or copy-paste your load order (loadorder.txt / plugins.txt) file path below. \n",
-                        "# See the PACT Nexus Page for instructions on where you can find these files. \n",
-                        "LoadOrder TXT = \n \n",
-                        "# Set or copy-paste your XEdit (FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below. \n",
-                        "# xEdit.exe is also supported, but requires that you set LoadOrder TXT path to loadorder.txt only. \n",
-                        "XEDIT EXE = \n \n",
-                        "# Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below. \n",
-                        "# Required if MO2 is your main mod manager. Otherwise, leave this blank. \n",
-                        "MO2 EXE = "]
-        with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
-            INI_PACT.writelines(INI_Settings)
+        TOML_Settings = """[MAIN]
+# This file contains settings for both source scripts and Plugin Auto Cleaning Tool.exe
+# Set to true if you want PACT to check that you have the latest version of PACT.
+Update_Check = true
+
+# Set to true if you want PACT to show extra stats about cleaned plugins in the command line window.
+Stat_Logging = true
+
+# In seconds, set below how long should PACT wait for xedit to clean any plugin.
+# If it takes longer than the set amount, the plugin will be immediately skipped.
+Cleaning_Timeout = 300
+
+# In days, set below how long should PACT wait until the logging journal is cleared.
+# If PACT Journal.txt is older than the set amount, it is immediately deleted.
+Journal_Expiration = 7
+
+# Set or copy-paste your load order (loadorder.txt / plugins.txt) file path below.
+# See the PACT Nexus Page for instructions on where you can find these files.
+LoadOrder_TXT = ""
+
+# Set or copy-paste your XEdit (FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below.
+# xEdit.exe is also supported, but requires that you set LoadOrder TXT path to loadorder.txt only.
+XEDIT_EXE = ""
+
+# Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below.
+# Required if MO2 is your main mod manager. Otherwise, leave this blank.
+MO2_EXE = ""
+"""
+        toml_data = tomlkit.parse(TOML_Settings)
+        with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as TOML_PACT:
+            TOML_PACT.write(toml_data.as_string())
 
 
 pact_ini_create()
-# Use optionxform = str to preserve INI formatting. | Set comment_prefixes to unused char to keep INI comments.
-PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
-PACT_config.optionxform = str  # type: ignore
-PACT_config.read("PACT Settings.ini")
+with open("PACT Settings.ini", "r", encoding="utf-8", errors="ignore") as TOML_PACT:
+    PACT_TOML: tomlkit.TOMLDocument = tomlkit.parse(TOML_PACT.read())
+PACT_config: tomlkit.items.Table = PACT_TOML["MAIN"] # type: ignore
 PACT_Date = "290323"  # DDMMYY
 PACT_Current = "PACT v1.75"
 
 
 def pact_ini_update(section: str, value: str):  # Convenience function for checking & writing to INI.
-    if isinstance(section, str) and isinstance(value, str):
-        PACT_config["MAIN"][section] = value
-    else:
-        PACT_config["MAIN"][str(section)] = str(value)
+    PACT_config[section] = value
 
-    with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
-        PACT_config.write(INI_PACT)
+    with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as TOML_PACT:
+        TOML_PACT.write(PACT_TOML.as_string())
 
 
 def pact_log_update(log_message):
@@ -112,7 +117,7 @@ Err_Invalid_LO_File = """
 def pact_update_check():
     global PACT_Current
     PACT_Updated = False
-    if PACT_config.getboolean("MAIN", "Update Check"):
+    if PACT_config["Update_Check"]:
         print("\n❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
         print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
         try:
@@ -198,14 +203,14 @@ info = Info()
 
 
 def pact_update_settings():
-    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder TXT"]  # type: ignore
+    info.LOAD_ORDER_PATH = PACT_config["LoadOrder_TXT"]  # type: ignore
     info.LOAD_ORDER_TXT = os.path.basename(info.LOAD_ORDER_PATH)
-    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT EXE"]  # type: ignore
+    info.XEDIT_PATH = PACT_config["XEDIT_EXE"]  # type: ignore
     info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
-    info.MO2_PATH = PACT_config["MAIN"]["MO2 EXE"]  # type: ignore
+    info.MO2_PATH = PACT_config["MO2_EXE"]  # type: ignore
     info.MO2_EXE = os.path.basename(info.MO2_PATH)
-    info.Cleaning_Timeout = int(PACT_config["MAIN"]["Cleaning Timeout"])  # type: ignore
-    info.Journal_Expiration = int(PACT_config["MAIN"]["Journal Expiration"])  # type: ignore
+    info.Cleaning_Timeout = int(PACT_config["Cleaning_Timeout"])  # type: ignore
+    info.Journal_Expiration = int(PACT_config["Journal_Expiration"])  # type: ignore
 
     if not isinstance(info.Cleaning_Timeout, int):
         print("❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS NOT VALID.")

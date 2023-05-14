@@ -51,12 +51,12 @@ XEDIT_EXE = ""
 MO2_EXE = ""
 """
         toml_data = tomlkit.parse(TOML_Settings)
-        with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as TOML_PACT:
+        with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as TOML_PACT:
             TOML_PACT.write(toml_data.as_string())
 
 
 pact_ini_create()
-with open("PACT Settings.ini", "r", encoding="utf-8", errors="ignore") as TOML_PACT:
+with open("PACT Settings.toml", "r", encoding="utf-8", errors="ignore") as TOML_PACT:
     PACT_TOML: tomlkit.TOMLDocument = tomlkit.parse(TOML_PACT.read())
 PACT_config: tomlkit.items.Table = PACT_TOML["MAIN"] # type: ignore
 PACT_Date = "290323"  # DDMMYY
@@ -66,7 +66,7 @@ PACT_Current = "PACT v1.75"
 def pact_ini_update(section: str, value: str):  # Convenience function for checking & writing to INI.
     PACT_config[section] = value
 
-    with open("PACT Settings.ini", "w+", encoding="utf-8", errors="ignore") as TOML_PACT:
+    with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as TOML_PACT:
         TOML_PACT.write(PACT_TOML.as_string())
 
 
@@ -98,13 +98,13 @@ Warn_Outdated_PACT = """
 """
 Warn_Invalid_INI_Path = """
 ❌  WARNING : YOUR PACT INI PATHS ARE INCORRECT!
-    Please run the PACT program or open PACT Settings.ini
+    Please run the PACT program or open PACT Settings.toml
     And make sure that file / folder paths are correctly set!
 """
 Warn_Invalid_INI_Setup = """
 ❌  WARNING : YOUR PACT INI SETUP IS INCORRECT!
     You likely set the wrong XEdit version for your game.
-    Check your EXE or PACT Settings.ini settings and try again.
+    Check your EXE or PACT Settings.toml settings and try again.
 """
 Err_Invalid_LO_File = """
 ❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!")

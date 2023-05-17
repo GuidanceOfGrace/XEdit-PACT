@@ -21,7 +21,7 @@ import requests
 
 # =================== PACT INI FILE ===================
 def pact_ini_create():
-    if not os.path.exists("PACT Settings.ini"):
+    if not os.path.exists("PACT Settings.toml"):
         TOML_Settings = """[MAIN]
 # This file contains settings for both source scripts and Plugin Auto Cleaning Tool.exe
 # Set to true if you want PACT to check that you have the latest version of PACT.
@@ -63,7 +63,7 @@ PACT_Date = "290323"  # DDMMYY
 PACT_Current = "PACT v1.75"
 
 
-def pact_ini_update(section: str, value: str):  # Convenience function for checking & writing to INI.
+def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Convenience function for checking & writing to INI.
     PACT_config[section] = value
 
     with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as TOML_PACT:

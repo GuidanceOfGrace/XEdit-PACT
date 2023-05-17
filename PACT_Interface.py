@@ -337,8 +337,8 @@ class UiPACTMainWin(object):
         pact_update_settings()
         value_CT = int(self.InputField_CT.text())
         value_JE = int(self.InputField_JE.text())
-        pact_ini_update("Cleaning Timeout", str(value_CT))
-        pact_ini_update("Journal Expiration", str(value_JE))
+        pact_ini_update("Cleaning Timeout", value_CT)
+        pact_ini_update("Journal Expiration", value_JE)
 
     def select_file_lo(self):
         def check_fn(file_path):

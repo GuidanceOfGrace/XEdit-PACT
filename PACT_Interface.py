@@ -96,7 +96,7 @@ class UiPACTMainWin(object):
         self.RegBT_BROWSE_LO.setText("SET LOAD ORDER FILE")
         self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
         self.RegBT_BROWSE_LO.clicked.connect(self.select_file_lo)  # type: ignore
-        if "loadorder" in PACT_config["MAIN"]["LoadOrder TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder TXT"]:
+        if "loadorder" in PACT_config["MAIN"]["LoadOrder_TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder_TXT"]: # type: ignore
             self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
             self.configured_LO = True
@@ -108,7 +108,7 @@ class UiPACTMainWin(object):
         self.RegBT_BROWSE_MO2.setText("SET MO2 EXECUTABLE")
         self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
         self.RegBT_BROWSE_MO2.clicked.connect(self.select_file_mo2)  # type: ignore
-        if "ModOrganizer" in PACT_config["MAIN"]["MO2 EXE"]:
+        if "ModOrganizer" in PACT_config["MAIN"]["MO2_EXE"]: # type: ignore
             self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
             self.configured_MO2 = True
@@ -120,7 +120,7 @@ class UiPACTMainWin(object):
         self.RegBT_BROWSE_XEDIT.setText("SET XEDIT EXECUTABLE")
         self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
         self.RegBT_BROWSE_XEDIT.clicked.connect(self.select_file_xedit)  # type: ignore
-        if "Edit" in PACT_config["MAIN"]["XEDIT EXE"]:
+        if "Edit" in PACT_config["MAIN"]["XEDIT_EXE"]: # type: ignore
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
             self.configured_XEDIT = True

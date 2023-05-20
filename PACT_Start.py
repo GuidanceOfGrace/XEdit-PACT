@@ -81,7 +81,9 @@ def pact_log_update(log_message):
 
 def pact_ignore_update(plugin, numnewlines = 2):
     with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as IGNORE_PACT:
-        if numnewlines == 1:
+        if numnewlines == 0:
+            IGNORE_PACT.write(plugin)
+        elif numnewlines == 1:
             IGNORE_PACT.write(plugin + "\n")
         elif numnewlines == 2:
             IGNORE_PACT.write("\n" + plugin + "\n")
@@ -457,7 +459,7 @@ def check_cleaning_results(plugin_name):
             else:
                 pact_log_update(f"\n{plugin_name} -> NOTHING TO CLEAN")
                 print("NOTHING TO CLEAN ! Adding plugin to PACT Ignore file...")
-                pact_ignore_update(plugin_name)
+                pact_ignore_update(f"\n{plugin_name}", numnewlines=0)
                 info.LCL_skip_list.append(plugin_name)
         clear_xedit_logs()
 

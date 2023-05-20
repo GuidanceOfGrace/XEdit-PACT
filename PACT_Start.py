@@ -240,7 +240,7 @@ def pact_update_settings():
 pact_update_settings()
 XEDIT_LOG_TXT = ""
 XEDIT_EXC_LOG = ""
-if ".exe" in info.XEDIT_PATH:
+if ".exe" in info.XEDIT_PATH: # type: ignore
     XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
     XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
 else:
@@ -336,10 +336,16 @@ def run_auto_cleaning(plugin_name):
             mode_check = LO_Check.read()
             if "Skyrim.esm" in mode_check:
                 game_mode = "-sse"
+                XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("SSEEdit_log.txt"))
+                XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("SSEEditException.log"))
             elif "FalloutNV.esm" in mode_check:
                 game_mode = "-fnv"
+                XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("FNVEdit_log.txt"))
+                XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("FNVEditException.log"))
             elif "Fallout4.esm" in mode_check:
                 game_mode = "-fo4"
+                XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("FO4Edit_log.txt"))
+                XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("FO4EditException.log"))
 
         if info.MO2Mode:
             bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
@@ -373,15 +379,19 @@ def run_auto_cleaning(plugin_name):
                     if proc.is_running():  # Check CPU usage if xedit does nothing or gets interrupted by error.
                         cpu_percent = proc.cpu_percent()
                         if cpu_percent < 1:
-                            proc.kill()
-                            time.sleep(1)
-                            clear_xedit_logs()
-                            info.plugins_processed -= 1
-                            info.clean_failed_list.append(plugin_name)
-                            print("❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
-                            with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
-                                PACT_IGNORE.write(f"\n{plugin_name}\n")
-                            break
+                            time.sleep(5)
+                            if proc.cpu_percent() >= 1:
+                                pass
+                            else:
+                                proc.kill()
+                                time.sleep(1)
+                                clear_xedit_logs()
+                                info.plugins_processed -= 1
+                                info.clean_failed_list.append(plugin_name)
+                                print("❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                                with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
+                                    PACT_IGNORE.write(f"\n{plugin_name}\n")
+                                break
                 except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
                     pass
 
@@ -463,7 +473,7 @@ def clean_plugins():
         LO_File.seek(0)  # Return line pointer to first line.
         LO_Plugin_List = []
         LO_List = LO_File.readlines()[1:]
-        if "plugins.txt" in info.LOAD_ORDER_PATH:
+        if "plugins.txt" in info.LOAD_ORDER_PATH: # type: ignore
             for line in LO_List:
                 if "*" in line:
                     line = line.strip()

@@ -1,16 +1,21 @@
-import os
-import sys
-import psutil
-import shutil
-import hashlib
 import datetime
-from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QUrl, QTimer, QThread
-from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QLineEdit, QPushButton, QStyleFactory
-from PACT_Start import (info, PACT_config, PACT_Current, pact_ini_update, pact_update_check, pact_update_settings, check_process_mo2, check_settings_integrity, clean_plugins)
-
+import hashlib
+import os
 import platform
+import shutil
+import sys
+
+import psutil
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import Qt, QThread, QTimer, QUrl
+from PySide6.QtGui import QDesktopServices
+from PySide6.QtWidgets import (QApplication, QFileDialog, QLabel, QLineEdit,
+                               QPushButton, QStyleFactory)
+
+from PACT_Start import (PACT_config, PACT_Current, check_process_mo2,
+                        check_settings_integrity, clean_plugins, info,
+                        pact_ini_update, pact_update_check,
+                        pact_update_settings)
 
 current_platform = platform.system()
 if current_platform == 'Windows':

@@ -2,14 +2,15 @@
 import configparser
 import datetime
 import os
-import psutil
-import requests
 import subprocess
 import sys
 import time
-from typing import Union
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Union
+
+import psutil
+import requests
 
 '''AUTHOR NOTES (POET)
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
@@ -78,7 +79,7 @@ def pact_log_update(log_message):
     if journal_age_days > info.Journal_Expiration:
         os.remove(journal_path)
 
-def pact_ignore_update(plugin, numnewlines = 1):
+def pact_ignore_update(plugin, numnewlines = 2):
     with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as IGNORE_PACT:
         if numnewlines == 1:
             IGNORE_PACT.write(plugin + "\n")

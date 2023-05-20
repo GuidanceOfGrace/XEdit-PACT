@@ -6,6 +6,7 @@ import shutil
 import sys
 
 import psutil
+from typing import Optional, Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
@@ -32,31 +33,27 @@ class UiPACTMainWin(object):
     def __init__(self):
         super().__init__()  # Allow subclasses to inherit & extend behavior of parent class.
         QApplication.setStyle(QStyleFactory.create("Fusion"))
-        self.InputField_JE = None
-        self.InputLabel_JE = None
-        self.InputField_CT = None
-        self.InputLabel_CT = None
-        self.configured_LO = False
-        self.configured_MO2 = False
-        self.configured_XEDIT = False
-
-        self.ChkBT_UPDATE = None
-        self.ChkBT_STATS = None
-        self.LINE_SEPARATOR1 = None
-        self.LBL_SETTINGS1 = None
-        self.LBL_SETTINGS2 = None
-        self.RegBT_BROWSE_LO = None
-        self.RegBT_BROWSE_MO2 = None
-        self.RegBT_BROWSE_XEDIT = None
-        self.RegBT_CHECK_UPDATES = None
-        self.RegBT_CLEAN_PLUGINS = None
-        self.RegBT_RESTORE_BACKUP = None
-        self.RegBT_BACKUP_PLUGINS = None
-        self.RegBT_UPDATE_SETTINGS = None
-
-        self.RegBT_HELP = None
-        self.RegBT_EXIT = None
-        self.RegBT_CHECK_UPDATES = None
+        self.InputField_JE: Optional[Union[QLabel, QLineEdit]] = None
+        self.InputField_CT: Optional[Union[QLabel, QLineEdit]] = None
+        self.configured_LO: bool = False
+        self.configured_MO2: bool = False
+        self.configured_XEDIT: bool = False
+        # self.ChkBT_UPDATE: Optional[QWidget] = None # These don't seem to be used.
+        # self.ChkBT_STATS: Optional[QWidget] = None
+        self.LINE_SEPARATOR1: Optional[QtWidgets.QFrame] = None
+        self.LBL_SETTINGS1: Optional[QtWidgets.QLabel] = None
+        self.LBL_SETTINGS2: Optional[QtWidgets.QLabel] = None
+        self.RegBT_BROWSE_LO: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_BROWSE_MO2: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_BROWSE_XEDIT: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_CLEAN_PLUGINS: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_RESTORE_BACKUP: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_BACKUP_PLUGINS: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_UPDATE_SETTINGS: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_HELP: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_EXIT: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None
 
         self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
         self.timer.timeout.connect(self.timed_states)  # type: ignore

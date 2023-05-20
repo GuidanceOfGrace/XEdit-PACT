@@ -207,8 +207,8 @@ class Info:
 
     VIP_skip_list = FNV_skip_list + FO4_skip_list + SSE_skip_list
 
-    XEDIT_LOG_TXT: str = ""
-    XEDIT_EXC_LOG: str = ""
+    XEDIT_LOG_TXT: str = field(default_factory=str)
+    XEDIT_EXC_LOG: str = field(default_factory=str)
 
 
 info = Info()

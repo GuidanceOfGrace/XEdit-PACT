@@ -324,12 +324,10 @@ def check_settings_integrity():
         os.system("pause")
         sys.exit()
 
-
-def run_auto_cleaning(plugin_name):
-    global XEDIT_LOG_TXT
+def create_bat_command(info, plugin_name):
     global XEDIT_EXC_LOG
-
-    bat_command = ""  # Write proper bat command depending on XEDIT and MO2 selections.
+    global XEDIT_LOG_TXT
+    bat_command = ""
     if str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
         XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
         XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
@@ -368,13 +366,21 @@ def run_auto_cleaning(plugin_name):
         os.system("pause")
         sys.exit()
 
-    if bat_command == "":
+    if not bat_command:
         print("\n❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?")
         print("   If you're seeing this, make sure that your load order / xedit paths are correct.")
         print("   If problems continue, try a different load order file or xedit executable.")
         print("   If nothing works, please report this error to the PACT Nexus page.")
         os.system("pause")
         sys.exit()
+
+    return bat_command
+
+def run_auto_cleaning(plugin_name):
+    global XEDIT_LOG_TXT
+    global XEDIT_EXC_LOG
+
+    bat_command = create_bat_command(info, plugin_name)  # Write proper bat command depending on XEDIT and MO2 selections.
 
     clear_xedit_logs()
     print(f"\nCURRENTLY RUNNING : {bat_command}")

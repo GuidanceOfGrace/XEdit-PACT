@@ -79,7 +79,8 @@ def pact_log_update(log_message):
     if journal_age_days > info.Journal_Expiration:
         os.remove(journal_path)
 
-def pact_ignore_update(plugin, numnewlines = 2):
+
+def pact_ignore_update(plugin, numnewlines=2):
     with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as IGNORE_PACT:
         if numnewlines == 0:
             IGNORE_PACT.write(plugin)
@@ -91,6 +92,7 @@ def pact_ignore_update(plugin, numnewlines = 2):
             raise ValueError("Invalid number of newlines for PACT Ignore.txt")
 # =================== WARNING MESSAGES ==================
 # Can change first line to """\ to remove the spacing.
+
 
 Warn_PACT_Update_Failed = """
 ❌  WARNING : PACT WAS UNABLE TO CHECK FOR UPDATES, BUT WILL CONTINUE RUNNING
@@ -250,10 +252,10 @@ def pact_update_settings():
 
 
 pact_update_settings()
-if ".exe" in info.XEDIT_PATH: # type: ignore
+if ".exe" in info.XEDIT_PATH:  # type: ignore
     info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
     info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
-elif info.XEDIT_PATH and not ".exe" in info.XEDIT_PATH: # type: ignore
+elif info.XEDIT_PATH and not ".exe" in info.XEDIT_PATH:  # type: ignore
     print(Err_Invalid_XEDIT_File)
     os.system("pause")
     sys.exit()
@@ -323,6 +325,7 @@ def check_settings_integrity():
         os.system("pause")
         sys.exit()
 
+
 def create_bat_command(info, plugin_name):
     bat_command = ""
     if str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
@@ -373,6 +376,7 @@ def create_bat_command(info, plugin_name):
 
     return bat_command
 
+
 def check_cpu_usage(proc):
     """
     Checks the CPU usage of a process.
@@ -395,6 +399,7 @@ def check_cpu_usage(proc):
         pass
     return False
 
+
 def check_process_timeout(proc, info):
     """
     Checks if a process has run longer than a specified timeout.
@@ -410,6 +415,7 @@ def check_process_timeout(proc, info):
     if (time.time() - create_time) > info.Cleaning_Timeout:
         return True
     return False
+
 
 def check_process_exceptions(info):
     """
@@ -430,6 +436,7 @@ def check_process_exceptions(info):
         except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
             pass
     return False
+
 
 def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
     """
@@ -452,6 +459,7 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
     if add_ignore:
         pact_ignore_update(plugin_name)
 
+
 def run_auto_cleaning(plugin_name):
     """
     Runs the automatic cleaning process.
@@ -470,9 +478,9 @@ def run_auto_cleaning(plugin_name):
 
     # Check subprocess for errors until it finishes
     while bat_process.poll() is None:
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()] # type: ignore
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
         for proc in xedit_procs:
-            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower(): # type: ignore
+            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower():  # type: ignore
                 # Check for low CPU usage (indicative of an error)
                 if check_cpu_usage(proc):
                     handle_error(proc, plugin_name, info, "❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
@@ -534,7 +542,7 @@ def clean_plugins():
         LO_File.seek(0)  # Return line pointer to first line.
         LO_Plugin_List = []
         LO_List = LO_File.readlines()[1:]
-        if "plugins.txt" in info.LOAD_ORDER_PATH: # type: ignore
+        if "plugins.txt" in info.LOAD_ORDER_PATH:  # type: ignore
             for line in LO_List:
                 if "*" in line:
                     line = line.strip()

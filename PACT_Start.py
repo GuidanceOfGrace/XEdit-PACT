@@ -78,7 +78,7 @@ def pact_log_update(log_message):
     if journal_age_days > info.Journal_Expiration:
         os.remove(journal_path)
 
-def pact_ignore_update(plugin, numnewlines = 2):
+def pact_ignore_update(plugin, numnewlines = 1):
     with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as IGNORE_PACT:
         if numnewlines == 1:
             IGNORE_PACT.write(plugin + "\n")

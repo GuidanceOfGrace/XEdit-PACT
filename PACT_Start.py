@@ -70,6 +70,9 @@ def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Conve
     if " " in section:
         raise ValueError
     
+    if isinstance(value, Path):
+        value = str(value)
+    
     PACT_config["MAIN"][section] = value # type: ignore
 
     with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as INI_PACT:

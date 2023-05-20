@@ -330,19 +330,19 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
                                 with open(plugin_current, 'rb') as plugin1, open(plugin_backup, 'rb') as plugin2:
                                     hash1 = hashlib.sha256(plugin1.read()).hexdigest()
                                     hash2 = hashlib.sha256(plugin2.read()).hexdigest()
-                                    if hash1 != hash2:  # Compare hashes between current and backup plugins.
-                                        current_date = datetime.date.today().strftime('%y-%m-%d')
-                                        dated_backup = os.path.join("PACT BACKUP", f"BACKUP {current_date}")
-                                        if not os.path.exists(dated_backup):
-                                            os.makedirs(dated_backup, exist_ok=True)
-                                        shutil.copy2(plugin_current, dated_backup)
-                                        # Remove plugin name from PACT Ignore list if hashes are different.
-                                        with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as Ignore_List:
-                                            Ignore_Check = Ignore_List.read()
-                                            if str(file) in Ignore_Check:
-                                                Ignore_Check = Ignore_Check.replace(str(file), "")
-                                        with open("PACT Ignore.txt", "w", encoding="utf-8", errors="ignore") as Ignore_List:
-                                            Ignore_List.write(Ignore_Check)
+                                if hash1 != hash2:  # Compare hashes between current and backup plugins.
+                                    current_date = datetime.date.today().strftime('%y-%m-%d')
+                                    dated_backup = os.path.join("PACT BACKUP", f"BACKUP {current_date}")
+                                    if not os.path.exists(dated_backup):
+                                        os.makedirs(dated_backup, exist_ok=True)
+                                    shutil.copy2(plugin_current, dated_backup)
+                                    # Remove plugin name from PACT Ignore list if hashes are different.
+                                    with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as Ignore_List:
+                                        Ignore_Check = Ignore_List.read()
+                                        if str(file) in Ignore_Check:
+                                            Ignore_Check = Ignore_Check.replace(str(file), "")
+                                    with open("PACT Ignore.txt", "w", encoding="utf-8", errors="ignore") as Ignore_List:
+                                        Ignore_List.write(Ignore_Check)
                             else:  # Create plugin backup if not already in Primary Backup.
                                 current_date = datetime.date.today().strftime('%y-%m-%d')
                                 dated_backup = os.path.join("PACT BACKUP", f"BACKUP {current_date}")

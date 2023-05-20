@@ -195,6 +195,9 @@ class Info:
 
     VIP_skip_list = FNV_skip_list + FO4_skip_list + SSE_skip_list
 
+    XEDIT_LOG_TXT: str = ""
+    XEDIT_EXC_LOG: str = ""
+
 
 info = Info()
 
@@ -247,11 +250,9 @@ def pact_update_settings():
 
 
 pact_update_settings()
-XEDIT_LOG_TXT = ""
-XEDIT_EXC_LOG = ""
 if ".exe" in info.XEDIT_PATH: # type: ignore
-    XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-    XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+    info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
+    info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
 elif info.XEDIT_PATH and not ".exe" in info.XEDIT_PATH: # type: ignore
     print(Err_Invalid_XEDIT_File)
     os.system("pause")
@@ -273,13 +274,11 @@ def check_process_mo2():
 
 # Clear xedit log files to check them for each plugin separately.
 def clear_xedit_logs():
-    global XEDIT_LOG_TXT
-    global XEDIT_EXC_LOG
     try:
-        if os.path.exists(XEDIT_LOG_TXT):
-            os.remove(XEDIT_LOG_TXT)
-        if os.path.exists(XEDIT_EXC_LOG):
-            os.remove(XEDIT_EXC_LOG)
+        if os.path.exists(info.XEDIT_LOG_TXT):
+            os.remove(info.XEDIT_LOG_TXT)
+        if os.path.exists(info.XEDIT_EXC_LOG):
+            os.remove(info.XEDIT_EXC_LOG)
     except (PermissionError, OSError):
         print("❌ ERROR : CANNOT CLEAR XEDIT LOGS. Try running PACT in Admin Mode.")
         print("   If problems continue, please report this to the PACT Nexus page.")
@@ -325,12 +324,10 @@ def check_settings_integrity():
         sys.exit()
 
 def create_bat_command(info, plugin_name):
-    global XEDIT_EXC_LOG
-    global XEDIT_LOG_TXT
     bat_command = ""
     if str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
-        XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-        XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
+        info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
+        info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
     # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
     if info.MO2Mode and str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
         bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
@@ -345,16 +342,16 @@ def create_bat_command(info, plugin_name):
             mode_check = LO_Check.read()
             if "Skyrim.esm" in mode_check:
                 game_mode = "-sse"
-                XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("SSEEdit_log.txt"))
-                XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("SSEEditException.log"))
+                info.XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("SSEEdit_log.txt"))
+                info.XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("SSEEditException.log"))
             elif "FalloutNV.esm" in mode_check:
                 game_mode = "-fnv"
-                XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("FNVEdit_log.txt"))
-                XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("FNVEditException.log"))
+                info.XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("FNVEdit_log.txt"))
+                info.XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("FNVEditException.log"))
             elif "Fallout4.esm" in mode_check:
                 game_mode = "-fo4"
-                XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("FO4Edit_log.txt"))
-                XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("FO4EditException.log"))
+                info.XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("FO4Edit_log.txt"))
+                info.XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("FO4EditException.log"))
 
         if info.MO2Mode:
             bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
@@ -376,78 +373,128 @@ def create_bat_command(info, plugin_name):
 
     return bat_command
 
+def check_cpu_usage(proc):
+    """
+    Checks the CPU usage of a process.
+
+    If CPU usage is below 1% for 10 seconds, returns True, indicating a likely error. 
+
+    Args:
+        proc (psutil.Process): The process to check.
+
+    Returns:
+        bool: True if CPU usage is low, False otherwise.
+    """
+    time.sleep(5)
+    try:
+        if proc.is_running() and proc.cpu_percent() < 1:
+            time.sleep(5)
+            if proc.cpu_percent() < 1:
+                return True
+    except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
+        pass
+    return False
+
+def check_process_timeout(proc, info):
+    """
+    Checks if a process has run longer than a specified timeout.
+
+    Args:
+        proc (psutil.Process): The process to check.
+        info (Info): An object containing the timeout value.
+
+    Returns:
+        bool: True if the process has run longer than the timeout, False otherwise.
+    """
+    create_time = proc.info['create_time']
+    if (time.time() - create_time) > info.Cleaning_Timeout:
+        return True
+    return False
+
+def check_process_exceptions(info):
+    """
+    Checks a process for exceptions.
+
+    Args:
+        info (Info): An object containing the path to the exception log.
+
+    Returns:
+        bool: True if exceptions were found, False otherwise.
+    """
+    if os.path.exists(info.XEDIT_EXC_LOG):
+        try:
+            xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {info.XEDIT_EXC_LOG}'])
+            Exception_Check = xedit_exc_out.decode()
+            if "which can not be found" in Exception_Check or "which it does not have" in Exception_Check:
+                return True
+        except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
+            pass
+    return False
+
+def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
+    """
+    Handles an error case.
+
+    Kills the process, clears logs, and updates relevant info.
+
+    Args:
+        proc (psutil.Process): The process to kill.
+        plugin_name (str): The name of the plugin being processed.
+        info (Info): An object containing relevant information.
+        error_message (str): The error message to print.
+    """
+    proc.kill()
+    time.sleep(1)
+    clear_xedit_logs()
+    info.plugins_processed -= 1
+    info.clean_failed_list.append(plugin_name)
+    print(error_message)
+    if add_ignore:
+        pact_ignore_update(plugin_name)
+
 def run_auto_cleaning(plugin_name):
-    global XEDIT_LOG_TXT
-    global XEDIT_EXC_LOG
+    """
+    Runs the automatic cleaning process.
 
-    bat_command = create_bat_command(info, plugin_name)  # Write proper bat command depending on XEDIT and MO2 selections.
+    Args:
+        plugin_name (str): The name of the plugin to clean.
+    """
+    # Create command to run in subprocess
+    bat_command = create_bat_command(info, plugin_name)
 
+    # Clear logs and start subprocess
     clear_xedit_logs()
     print(f"\nCURRENTLY RUNNING : {bat_command}")
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
 
-    while bat_process.poll() is None:  # Check if xedit timed out or encountered errors while above subprocess.Popen() is running.
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
+    # Check subprocess for errors until it finishes
+    while bat_process.poll() is None:
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()] # type: ignore
         for proc in xedit_procs:
-            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower():  # type: ignore
-                time.sleep(5)
-                try:  # Note that xedit can stop at any moment and checking CPU usage on a dead process will crash.
-                    if proc.is_running():  # Check CPU usage if xedit does nothing or gets interrupted by error.
-                        cpu_percent = proc.cpu_percent()
-                        if cpu_percent < 1:
-                            time.sleep(5)
-                            if proc.cpu_percent() >= 1:
-                                pass
-                            else:
-                                proc.kill()
-                                time.sleep(1)
-                                clear_xedit_logs()
-                                info.plugins_processed -= 1
-                                info.clean_failed_list.append(plugin_name)
-                                print("❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
-                                pact_ignore_update(plugin_name)
-                                break
-                except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
-                    pass
-
-            if proc.info['name'] == str(info.XEDIT_EXE):  # type: ignore
-                create_time = proc.info['create_time']  # type: ignore
-                if (time.time() - create_time) > info.Cleaning_Timeout:
-                    print("❌ ERROR : XEDIT TIMED OUT (CLEANING PROCESS TOOK TOO LONG)! KILLING XEDIT...")
-                    info.clean_failed_list.append(plugin_name)
-                    info.plugins_processed -= 1
-                    proc.kill()
-                    time.sleep(1)
-                    clear_xedit_logs()
+            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower(): # type: ignore
+                # Check for low CPU usage (indicative of an error)
+                if check_cpu_usage(proc):
+                    handle_error(proc, plugin_name, info, "❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
                     break
-
-            if proc.info['name'] == str(info.XEDIT_EXE) and os.path.exists(XEDIT_EXC_LOG):  # Check if xedit cannot clean. # type: ignore
-                try:
-                    xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {XEDIT_EXC_LOG}'])
-                    Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
-                    if "which can not be found" in Exception_Check or "which it does not have" in Exception_Check:
-                        print("❌ ERROR : PLUGIN IS EMPTY OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
-                        pact_ignore_update(plugin_name)
-                        info.clean_failed_list.append(plugin_name)
-                        info.plugins_processed -= 1
-                        proc.kill()
-                        time.sleep(1)
-                        clear_xedit_logs()
-                        break
-                except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
-                    pass
+                # Check for process running longer than specified timeout
+                if check_process_timeout(proc, info):
+                    handle_error(proc, plugin_name, info, "❌ ERROR : XEDIT TIMED OUT (CLEANING PROCESS TOOK TOO LONG)! KILLING XEDIT...", add_ignore=False)
+                    break
+                # Check for exceptions in process
+                if check_process_exceptions(info):
+                    handle_error(proc, plugin_name, info, "❌ ERROR : PLUGIN IS EMPTY OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                    break
         time.sleep(3)
+    # Increment processed plugins count
     info.plugins_processed += 1
 
 
 def check_cleaning_results(plugin_name):
-    global XEDIT_LOG_TXT
-    global XEDIT_EXC_LOG
     time.sleep(1)  # Wait to make sure xedit generates the logs.
-    if os.path.exists(XEDIT_LOG_TXT):
+    if os.path.exists(info.XEDIT_LOG_TXT):
         cleaned_something = False
-        with open(XEDIT_LOG_TXT, "r", encoding="utf-8", errors="ignore") as XE_Check:
+        with open(info.XEDIT_LOG_TXT, "r", encoding="utf-8", errors="ignore") as XE_Check:
             Cleaning_Check = XE_Check.read()
             if "Undeleting:" in Cleaning_Check:
                 pact_log_update(f"\n{plugin_name} -> Cleaned UDRs")

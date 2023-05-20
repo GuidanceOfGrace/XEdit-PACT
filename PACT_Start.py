@@ -321,7 +321,9 @@ def run_auto_cleaning(plugin_name):
     global XEDIT_EXC_LOG
 
     bat_command = ""  # Write proper bat command depending on XEDIT and MO2 selections.
-
+    if str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
+        XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
+        XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
     # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
     if info.MO2Mode and str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
         bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'

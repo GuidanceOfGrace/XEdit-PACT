@@ -408,15 +408,15 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         pact_update_settings()
         value_CT = self.InputField_CT.text()
         value_JE = self.InputField_JE.text()
-        pact_ini_update("Cleaning Timeout", value_CT)
-        pact_ini_update("Journal Expiration", value_JE)
+        pact_ini_update("Cleaning_Timeout", value_CT)
+        pact_ini_update("Journal_Expiration", value_JE)
         QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Settings", "All PACT settings have been updated and refreshed!")
 
     def select_file_lo(self):
         LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")  # type: ignore
         if os.path.exists(LO_file) and ("loadorder" in LO_file or "plugins" in LO_file):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")  # type: ignore
-            pact_ini_update("LoadOrder TXT", LO_file)
+            pact_ini_update("LoadOrder_TXT", LO_file)
             self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")  # type: ignore
             self.configured_LO = True
@@ -428,7 +428,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         MO2_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
         if os.path.exists(MO2_EXE):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set MO2 to: \n" + MO2_EXE)  # type: ignore
-            pact_ini_update("MO2 EXE", MO2_EXE)
+            pact_ini_update("MO2_EXE", MO2_EXE)
             self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")  # type: ignore
             self.configured_MO2 = True
@@ -437,7 +437,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         XEDIT_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
         if os.path.exists(XEDIT_EXE) and "edit" in XEDIT_EXE.lower():
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)  # type: ignore
-            pact_ini_update("XEDIT EXE", XEDIT_EXE)
+            pact_ini_update("XEDIT_EXE", XEDIT_EXE)
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
             self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")  # type: ignore
             self.configured_XEDIT = True

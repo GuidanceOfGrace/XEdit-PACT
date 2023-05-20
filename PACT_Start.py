@@ -40,15 +40,15 @@ Journal_Expiration = 7
 
 # Set or copy-paste your load order (loadorder.txt / plugins.txt) file path below. 
 # See the PACT Nexus Page for instructions on where you can find these files. 
-LoadOrder_TXT = 
+LoadOrder_TXT = ""
 
 # Set or copy-paste your XEdit (FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below. 
 # xEdit.exe is also supported, but requires that you set LoadOrder TXT path to loadorder.txt only. 
-XEDIT_EXE = 
+XEDIT_EXE = ""
 
 # Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below. 
 # Required if MO2 is your main mod manager. Otherwise, leave this blank. 
-MO2_EXE = 
+MO2_EXE = ""
 """
         with open("PACT Settings.toml", "w", encoding="utf-8", errors="ignore") as INI_PACT:
             INI_PACT.write(INI_Settings)
@@ -67,6 +67,9 @@ PACT_Updated = False
 
 
 def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Convenience function for checking & writing to INI.
+    if " " in section:
+        raise ValueError
+    
     PACT_config["MAIN"][section] = value # type: ignore
 
     with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as INI_PACT:

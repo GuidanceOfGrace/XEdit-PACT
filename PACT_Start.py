@@ -198,9 +198,9 @@ def pact_update_settings():
     info.Cleaning_Timeout = int(PACT_config["MAIN"]["Cleaning Timeout"])  # type: ignore
     info.Journal_Expiration = int(PACT_config["MAIN"]["Journal Expiration"])  # type: ignore
 
-    if ".exe" in info.XEDIT_PATH:
+    if info.XEDIT_PATH and ".exe" in info.XEDIT_PATH:
         info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
-    else:
+    elif info.XEDIT_PATH and os.path.exists(info.XEDIT_PATH):
         for file in os.listdir(info.XEDIT_PATH):
             if file.endswith(".exe") and "edit" in str(file).lower():
                 info.XEDIT_PATH = os.path.join(info.XEDIT_PATH, file)
@@ -243,7 +243,7 @@ XEDIT_EXC_LOG = ""
 if ".exe" in info.XEDIT_PATH: # type: ignore
     XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
     XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
-else:
+elif info.XEDIT_PATH and not ".exe" in info.XEDIT_PATH: # type: ignore
     print(Err_Invalid_XEDIT_File)
     os.system("pause")
     sys.exit()

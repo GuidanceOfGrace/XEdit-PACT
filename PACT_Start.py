@@ -78,7 +78,14 @@ def pact_log_update(log_message):
     if journal_age_days > info.Journal_Expiration:
         os.remove(journal_path)
 
-
+def pact_ignore_update(plugin, numnewlines = 2):
+    with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as IGNORE_PACT:
+        if numnewlines == 1:
+            IGNORE_PACT.write(plugin + "\n")
+        elif numnewlines == 2:
+            IGNORE_PACT.write("\n" + plugin + "\n")
+        else:
+            raise ValueError("Invalid number of newlines for PACT Ignore.txt")
 # =================== WARNING MESSAGES ==================
 # Can change first line to """\ to remove the spacing.
 
@@ -169,8 +176,7 @@ class Info:
 
     LCL_skip_list = []
     if not os.path.exists("PACT Ignore.txt"):  # Local plugin skip / ignore list.
-        with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_Ignore:
-            PACT_Ignore.write("Write plugin names you want PACT to ignore here. (ONE PLUGIN PER LINE)\n")
+        pact_ignore_update("Write plugin names you want PACT to ignore here. (ONE PLUGIN PER LINE)", numnewlines=1)
     else:
         with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as PACT_Ignore:
             LCL_skip_list = [line.strip() for line in PACT_Ignore.readlines()[1:]]
@@ -391,8 +397,7 @@ def run_auto_cleaning(plugin_name):
                                 info.plugins_processed -= 1
                                 info.clean_failed_list.append(plugin_name)
                                 print("❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
-                                with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
-                                    PACT_IGNORE.write(f"\n{plugin_name}\n")
+                                pact_ignore_update(plugin_name)
                                 break
                 except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
                     pass
@@ -414,9 +419,8 @@ def run_auto_cleaning(plugin_name):
                     Exception_Check = xedit_exc_out.decode()  # Use this method since xedit is actively writing to it.
                     if "which can not be found" in Exception_Check or "which it does not have" in Exception_Check:
                         print("❌ ERROR : PLUGIN IS EMPTY OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
-                        with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
-                            PACT_IGNORE.write(f"\n{plugin_name}\n")
-                            info.clean_failed_list.append(plugin_name)
+                        pact_ignore_update(plugin_name)
+                        info.clean_failed_list.append(plugin_name)
                         info.plugins_processed -= 1
                         proc.kill()
                         time.sleep(1)
@@ -452,9 +456,8 @@ def check_cleaning_results(plugin_name):
             else:
                 pact_log_update(f"\n{plugin_name} -> NOTHING TO CLEAN")
                 print("NOTHING TO CLEAN ! Adding plugin to PACT Ignore file...")
-                with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as PACT_IGNORE:
-                    PACT_IGNORE.write(f"\n{plugin_name}")
-                    info.LCL_skip_list.append(plugin_name)
+                pact_ignore_update(plugin_name)
+                info.LCL_skip_list.append(plugin_name)
         clear_xedit_logs()
 
 

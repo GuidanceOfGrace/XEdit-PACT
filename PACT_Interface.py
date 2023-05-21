@@ -129,7 +129,7 @@ class UiPACTMainWin(object):
         # Button - Browse Load Order
         self.RegBT_BROWSE_LO = create_button("SET LOAD ORDER FILE",
                                              PACT_WINDOW,
-                                             QtCore.QRect(80, 100, 150, 32),
+                                             QtCore.QRect(70, 100, 165, 32),
                                              "RegBT_BROWSE_LO",
                                              "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
                                              self.select_file_lo
@@ -142,7 +142,7 @@ class UiPACTMainWin(object):
         # Button - Browse MO2 EXE
         self.RegBT_BROWSE_MO2 = create_button("SET MO2 EXECUTABLE",
                                               PACT_WINDOW,
-                                              QtCore.QRect(245, 100, 150, 32),
+                                              QtCore.QRect(245, 100, 165, 32),
                                               "RegBT_BROWSE_MO2",
                                               "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
                                               self.select_file_mo2
@@ -155,7 +155,7 @@ class UiPACTMainWin(object):
         # Button - Browse XEDIT EXE
         self.RegBT_BROWSE_XEDIT = create_button("SET XEDIT EXECUTABLE",
                                                 PACT_WINDOW,
-                                                QtCore.QRect(410, 100, 150, 32),
+                                                QtCore.QRect(420, 100, 165, 32),
                                                 "RegBT_BROWSE_XEDIT",
                                                 "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
                                                 self.select_file_xedit

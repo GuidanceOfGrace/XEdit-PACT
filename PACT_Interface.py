@@ -455,7 +455,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
     # ================= MAIN BUTTON FUNCTIONS ===================
 
     def update_settings(self):
-        pact_update_settings()
+        pact_update_settings(info, PACT_config)
         value_CT = self.InputField_CT.text()
         value_JE = self.InputField_JE.text()
         pact_ini_update("Cleaning_Timeout", value_CT)

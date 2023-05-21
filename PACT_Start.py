@@ -2,6 +2,7 @@
 import configparser
 import datetime
 import os
+import re
 import subprocess
 import sys
 import time
@@ -69,11 +70,11 @@ PACT_Updated = False
 def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Convenience function for checking & writing to INI.
     if " " in section:
         raise ValueError
-    
+
     if isinstance(value, Path):
         value = str(value)
-    
-    PACT_config["MAIN"][section] = value # type: ignore
+
+    PACT_config["MAIN"][section] = value  # type: ignore
 
     with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
         tomlkit.dump(PACT_config, INI_PACT)
@@ -140,7 +141,7 @@ Err_Invalid_XEDIT_File = """
 
 # =================== UPDATE FUNCTION ===================
 def pact_update_check():
-    if PACT_config["MAIN"]["Update_Check"] is True: # type: ignore
+    if PACT_config["MAIN"]["Update_Check"] is True:  # type: ignore
         print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
         print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
         try:
@@ -221,6 +222,7 @@ def update_load_order_path(info, load_order_path):
     info.LOAD_ORDER_PATH = load_order_path
     info.LOAD_ORDER_TXT = os.path.basename(load_order_path)
 
+
 def update_xedit_path(info, xedit_path):
     info.XEDIT_PATH = xedit_path
     if ".exe" in xedit_path:
@@ -231,6 +233,7 @@ def update_xedit_path(info, xedit_path):
                 info.XEDIT_PATH = os.path.join(xedit_path, file)
                 info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
 
+
 def update_mo2_path(info, mo2_path):
     info.MO2_PATH = mo2_path
     if ".exe" in mo2_path:
@@ -240,6 +243,7 @@ def update_mo2_path(info, mo2_path):
             if file.endswith(".exe") and ("mod" in str(file).lower() or "mo2" in str(file).lower()):
                 info.MO2_PATH = os.path.join(mo2_path, file)
                 info.MO2_EXE = os.path.basename(info.MO2_PATH)
+
 
 def pact_update_settings(info, pact_config):
     update_load_order_path(info, pact_config["MAIN"]["LoadOrder_TXT"])
@@ -323,20 +327,16 @@ def check_settings_integrity():
     else:
         info.MO2Mode = False
 
+    valid_xedit_executables = {
+        "FalloutNV.esm": info.xedit_list_newvegas,
+        "Fallout4.esm": info.xedit_list_fallout4,
+        "Skyrim.esm": info.xedit_list_skyrimse
+    }
+
     if str(info.XEDIT_EXE).lower() not in info.xedit_list_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             LO_Plugins = LO_Check.read()
-            if "FalloutNV.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in info.xedit_list_newvegas:
-                print(Warn_Invalid_INI_Setup)
-                os.system("pause")
-                sys.exit()
-
-            elif "Fallout4.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in info.xedit_list_fallout4:
-                print(Warn_Invalid_INI_Setup)
-                os.system("pause")
-                sys.exit()
-
-            elif "Skyrim.esm" in LO_Plugins and str(info.XEDIT_EXE).lower() not in info.xedit_list_skyrimse:
+            if not any(game in LO_Plugins and str(info.XEDIT_EXE).lower() in executables for game, executables in valid_xedit_executables.items()):
                 print(Warn_Invalid_INI_Setup)
                 os.system("pause")
                 sys.exit()
@@ -524,15 +524,18 @@ def check_cleaning_results(plugin_name):
         cleaned_something = False
         with open(info.XEDIT_LOG_TXT, "r", encoding="utf-8", errors="ignore") as XE_Check:
             Cleaning_Check = XE_Check.read()
-            if "Undeleting:" in Cleaning_Check:
+            udr_pattern = re.compile(r"Undeleting:\s*(.*)")
+            itm_pattern = re.compile(r"Removing:\s*(.*)")
+            nvm_pattern = re.compile(r"Skipping:\s*(.*)")
+            if udr_pattern.search(Cleaning_Check):
                 pact_log_update(f"\n{plugin_name} -> Cleaned UDRs")
                 info.clean_results_UDR.append(plugin_name)
                 cleaned_something = True
-            if "Removing:" in Cleaning_Check:
+            if itm_pattern.search(Cleaning_Check):
                 pact_log_update(f"\n{plugin_name} -> Cleaned ITMs")
                 info.clean_results_ITM.append(plugin_name)
                 cleaned_something = True
-            if "Skipping:" in Cleaning_Check:
+            if nvm_pattern.search(Cleaning_Check):
                 pact_log_update(f"\n{plugin_name} -> Found Deleted Navmeshes")
                 info.clean_results_NVM.append(plugin_name)
             if cleaned_something is True:
@@ -545,6 +548,29 @@ def check_cleaning_results(plugin_name):
         clear_xedit_logs()
 
 
+def get_plugin_list(load_order_path):
+    with open(load_order_path, "r", encoding="utf-8", errors="ignore") as lo_file:
+        lo_file.seek(0)
+        plugin_list = []
+        lo_list = lo_file.readlines()[1:]
+        if "plugins.txt" in load_order_path:
+            for line in lo_list:
+                if "*" in line:
+                    line = line.strip().replace("*", "")
+                    plugin_list.append(line)
+        else:
+            for line in lo_list:
+                line = line.strip()
+                if ".ghost" not in line:
+                    plugin_list.append(line)
+        return plugin_list
+
+
+def clean_plugin(plugin):
+    run_auto_cleaning(plugin)
+    check_cleaning_results(plugin)
+
+
 def clean_plugins():
     ALL_skip_list = info.VIP_skip_list + info.LCL_skip_list
 
@@ -552,65 +578,40 @@ def clean_plugins():
     print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")
     print(f"❓ MO2 EXE is set to : {info.MO2_PATH}")
 
-    if info.MO2Mode:  # Change mod manager modes and check ignore list.
+    if info.MO2Mode:
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")
     else:
         print("❌ MO2 EXECUTABLE NOT SET OR FOUND. SWITCHING TO VORTEX MODE...")
 
-    # Add plugins from loadorder or plugins file to separate plugin list.
-    with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_File:
-        LO_File.seek(0)  # Return line pointer to first line.
-        LO_Plugin_List = []
-        LO_List = LO_File.readlines()[1:]
-        if "plugins.txt" in info.LOAD_ORDER_PATH:  # type: ignore
-            for line in LO_List:
-                if "*" in line:
-                    line = line.strip()
-                    line = line.replace("*", "")
-                    LO_Plugin_List.append(line)
-        else:
-            for line in LO_List:
-                line = line.strip()
-                if ".ghost" not in line:
-                    LO_Plugin_List.append(line)
-
-    # Start cleaning process if everything is OK.
-    count_plugins = len(set(LO_Plugin_List) - set(ALL_skip_list))
+    plugin_list = get_plugin_list(info.LOAD_ORDER_PATH)
+    count_plugins = len(set(plugin_list) - set(ALL_skip_list))
     print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {count_plugins} )")
     log_start = time.perf_counter()
     log_time = datetime.datetime.now()
     pact_log_update(f"\nSTARTED CLEANING PROCESS AT : {log_time}")
     count_cleaned = 0
-    for plugin in LO_Plugin_List:  # Run XEdit and log checks for each valid plugin in loadorder.txt file.
+    
+    for plugin in plugin_list:
         if not any(plugin in elem for elem in ALL_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
             count_cleaned += 1
-            run_auto_cleaning(plugin)
-            check_cleaning_results(plugin)
+            clean_plugin(plugin)
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {count_plugins})")
 
-    # Show stats once cleaning is complete.
     pact_log_update(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in {(str(time.perf_counter() - log_start)[:3])} seconds.")
     pact_log_update(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")
 
     print(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in", (str(time.perf_counter() - log_start)[:3]), "seconds.")
     print(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")
-    if len(info.clean_failed_list) > 1:
-        print(f"\n❌ {str(info.XEDIT_EXE).upper()} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {info.XEDIT_EXE} Timed Out):")
-        for elem in info.clean_failed_list:
-            print(elem)
-    if len(info.clean_results_UDR) > 1:
-        print(f"\n✔️ The following plugins had Undisabled Records and {info.XEDIT_EXE} properly disabled them:")
-        for elem in info.clean_results_UDR:
-            print(elem)
-    if len(info.clean_results_ITM) > 1:
-        print(f"\n✔️ The following plugins had Identical To Master Records and {info.XEDIT_EXE} successfully cleaned them:")
-        for elem in info.clean_results_ITM:
-            print(elem)
-    if len(info.clean_results_NVM) > 1:
-        print("\n❌ CAUTION : The following plugins contain Deleted Navmeshes!")
-        print("   Such plugins may cause navmesh related problems or crashes.")
-        for elem in info.clean_results_NVM:
-            print(elem)
+    
+    for plugins, message in [(info.clean_failed_list, "❌ {0} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {0} Timed Out):"),
+                             (info.clean_results_UDR, "✔️ The following plugins had Undisabled Records and {0} properly disabled them:"),
+                             (info.clean_results_ITM, "✔️ The following plugins had Identical To Master Records and {0} successfully cleaned them:"),
+                             (info.clean_results_NVM, "❌ CAUTION : The following plugins contain Deleted Navmeshes!\n   Such plugins may cause navmesh related problems or crashes.")]:
+        if len(plugins) > 0:
+            print(f"\n{message.format(info.XEDIT_EXE)}")
+            for plugin in plugins:
+                print(plugin)
+    
     return True  # Required for running function check in PACT_Interface.
 
 

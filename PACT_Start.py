@@ -462,6 +462,7 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         plugin_name (str): The name of the plugin being processed.
         info (Info): An object containing relevant information.
         error_message (str): The error message to print.
+        add_ignore (bool, optional): Whether or not to add the plugin to the ignore list. Defaults to True.
     """
     try:
         proc.kill()

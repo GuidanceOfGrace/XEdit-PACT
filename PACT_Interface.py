@@ -55,7 +55,7 @@ class UiPACTMainWin(object):
         self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None"""
 
         self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
-        self.timer.timeout.connect(self.timed_states)  # type: ignore
+        self.timer.timeout.connect(self.timed_states)
         self.timer.start(3000)  # In ms, will override QTimer.singleShot
         self.thread = None
 
@@ -293,7 +293,7 @@ class UiPACTMainWin(object):
             self.thread = PactThread()
             self.thread.start()
             self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")
-            self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: pink; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: pink; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
             self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)
 
@@ -304,7 +304,7 @@ class UiPACTMainWin(object):
             self.thread = None
             self.RegBT_CLEAN_PLUGINS.setEnabled(False)
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
-            self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
             print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
 
     # ================== POP-UPS / WARNINGS =====================
@@ -463,35 +463,35 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
     def select_file_lo(self):
         LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")  # type: ignore
         if os.path.exists(LO_file) and ("loadorder" in LO_file or "plugins" in LO_file):
-            QtWidgets.QMessageBox.information(PACT_WINDOW, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")  # type: ignore
+            QtWidgets.QMessageBox.information(PACT_WINDOW, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")
             pact_ini_update("LoadOrder_TXT", LO_file)
-            self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
-            self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")  # type: ignore
+            self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
+            self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
             self.configured_LO = True
         elif os.path.exists(LO_file) and "loadorder" not in LO_file and "plugins" not in LO_file:
-            self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
-            self.RegBT_BROWSE_LO.setText("❌ WRONG LO FILE")  # type: ignore
+            self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
+            self.RegBT_BROWSE_LO.setText("❌ WRONG LO FILE")
 
     def select_file_mo2(self):
         MO2_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
         if os.path.exists(MO2_EXE):
-            QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set MO2 to: \n" + MO2_EXE)  # type: ignore
+            QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set MO2 to: \n" + MO2_EXE)
             pact_ini_update("MO2_EXE", MO2_EXE)
-            self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
-            self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")  # type: ignore
+            self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
+            self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
             self.configured_MO2 = True
 
     def select_file_xedit(self):
         XEDIT_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
         if os.path.exists(XEDIT_EXE) and "edit" in XEDIT_EXE.lower():
-            QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)  # type: ignore
+            QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)
             pact_ini_update("XEDIT_EXE", XEDIT_EXE)
-            self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")  # type: ignore
-            self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")  # type: ignore
+            self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
+            self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
             self.configured_XEDIT = True
         elif os.path.exists(XEDIT_EXE) and "edit" not in XEDIT_EXE.lower():
-            self.RegBT_BROWSE_XEDIT.setText("❌ WRONG XEDIT EXE")  # type: ignore
-            self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")  # type: ignore
+            self.RegBT_BROWSE_XEDIT.setText("❌ WRONG XEDIT EXE")
+            self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
 
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI

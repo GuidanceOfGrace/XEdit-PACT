@@ -170,7 +170,7 @@ class UiPACTMainWin(object):
             PACT_WINDOW,
             QtCore.QRect(80, 150, 480, 20),
             "LINE_SEPARATOR1"
-            )
+        )
 
         # SEPARATOR TEXT 1
         self.LBL_SETTINGS1 = create_label(
@@ -179,7 +179,7 @@ class UiPACTMainWin(object):
             QtCore.QRect(50, 175, 550, 24),
             font_bold,
             "LBL_NOTE_SET"
-            )
+        )
 
         # SEPARATOR TEXT 2
         self.LBL_SETTINGS2 = create_label("( MOD ORGANIZER 2 USERS ALSO NEED TO SET MO2 EXECUTABLE )",
@@ -196,7 +196,16 @@ class UiPACTMainWin(object):
                                                   PACT_WINDOW,
                                                   QtCore.QRect(80, 250, 230, 32),
                                                   "RegBT_BACKUP_PLUGINS",
-                                                  "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                                  """
+                                                  QPushButton {
+                                                    color: black; 
+                                                    background-color: lightyellow; 
+                                                    border-radius: 5px; 
+                                                    border: 1px solid gray;}
+                                                    QPushButton:hover {
+                                                        background-color: lightblue;
+                                                        }
+                                                    """,
                                                   self.backup_popup
                                                   )
 
@@ -205,7 +214,17 @@ class UiPACTMainWin(object):
                                                   PACT_WINDOW,
                                                   QtCore.QRect(330, 250, 230, 32),
                                                   "RegBT_RESTORE_BACKUP",
-                                                  "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                                  """
+                                                  QPushButton {
+                                                    color: black; 
+                                                    background-color: lightyellow; 
+                                                    border-radius: 5px; 
+                                                    border: 1px solid gray;
+                                                    }
+                                                    QPushButton:hover {
+                                                        background-color: lightblue;
+                                                        }
+                                                    """,
                                                   self.restore_popup
                                                   )
 
@@ -256,7 +275,7 @@ class UiPACTMainWin(object):
         self.RegBT_EXIT = create_button("EXIT",
                                         PACT_WINDOW,
                                         QtCore.QRect(510, 440, 110, 24),
-                                        "RegBT_EXIT", 
+                                        "RegBT_EXIT",
                                         """
                                         QPushButton {
                                             color: black; 

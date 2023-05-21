@@ -217,29 +217,36 @@ class Info:
 info = Info()
 
 
-def pact_update_settings():
-    info.LOAD_ORDER_PATH = PACT_config["MAIN"]["LoadOrder_TXT"]  # type: ignore
-    info.LOAD_ORDER_TXT = os.path.basename(info.LOAD_ORDER_PATH) # type: ignore
-    info.XEDIT_PATH = PACT_config["MAIN"]["XEDIT_EXE"]  # type: ignore
-    info.MO2_PATH = PACT_config["MAIN"]["MO2_EXE"]  # type: ignore
-    info.Cleaning_Timeout = int(PACT_config["MAIN"]["Cleaning_Timeout"])  # type: ignore
-    info.Journal_Expiration = int(PACT_config["MAIN"]["Journal_Expiration"])  # type: ignore
+def update_load_order_path(info, load_order_path):
+    info.LOAD_ORDER_PATH = load_order_path
+    info.LOAD_ORDER_TXT = os.path.basename(load_order_path)
 
-    if info.XEDIT_PATH and ".exe" in info.XEDIT_PATH: # type: ignore
-        info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH) # type: ignore
-    elif info.XEDIT_PATH and os.path.exists(info.XEDIT_PATH): # type: ignore
-        for file in os.listdir(info.XEDIT_PATH): # type: ignore
+def update_xedit_path(info, xedit_path):
+    info.XEDIT_PATH = xedit_path
+    if ".exe" in xedit_path:
+        info.XEDIT_EXE = os.path.basename(xedit_path)
+    elif os.path.exists(xedit_path):
+        for file in os.listdir(xedit_path):
             if file.endswith(".exe") and "edit" in str(file).lower():
-                info.XEDIT_PATH = os.path.join(info.XEDIT_PATH, file) # type: ignore
+                info.XEDIT_PATH = os.path.join(xedit_path, file)
                 info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
 
-    if ".exe" in info.MO2_PATH: # type: ignore
-        info.MO2_EXE = os.path.basename(info.MO2_PATH) # type: ignore
-    elif os.path.exists(info.MO2_PATH): # type: ignore
-        for file in os.listdir(info.MO2_PATH): # type: ignore
+def update_mo2_path(info, mo2_path):
+    info.MO2_PATH = mo2_path
+    if ".exe" in mo2_path:
+        info.MO2_EXE = os.path.basename(mo2_path)
+    elif os.path.exists(mo2_path):
+        for file in os.listdir(mo2_path):
             if file.endswith(".exe") and ("mod" in str(file).lower() or "mo2" in str(file).lower()):
-                info.MO2_PATH = os.path.join(info.MO2_PATH, file) # type: ignore
+                info.MO2_PATH = os.path.join(mo2_path, file)
                 info.MO2_EXE = os.path.basename(info.MO2_PATH)
+
+def pact_update_settings(info, pact_config):
+    update_load_order_path(info, pact_config["MAIN"]["LoadOrder_TXT"])
+    update_xedit_path(info, pact_config["MAIN"]["XEDIT_EXE"])
+    update_mo2_path(info, pact_config["MAIN"]["MO2_EXE"])
+    info.Cleaning_Timeout = int(pact_config["MAIN"]["Cleaning_Timeout"])
+    info.Journal_Expiration = int(pact_config["MAIN"]["Journal_Expiration"])
 
     if not isinstance(info.Cleaning_Timeout, int):
         print("❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS NOT VALID.")
@@ -264,7 +271,7 @@ def pact_update_settings():
         sys.exit()
 
 
-pact_update_settings()
+pact_update_settings(info, PACT_config)
 if ".exe" in info.XEDIT_PATH:  # type: ignore
     info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
     info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
@@ -276,7 +283,7 @@ elif info.XEDIT_PATH and not ".exe" in info.XEDIT_PATH:  # type: ignore
 
 # Make sure Mod Organizer 2 is not already running.
 def check_process_mo2():
-    pact_update_settings()
+    pact_update_settings(info, PACT_config)
     if os.path.exists(info.MO2_PATH):
         mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if str(info.MO2_EXE).lower() in proc.info['name'].lower()]  # type: ignore
         for proc in mo2_procs:
@@ -303,7 +310,7 @@ def clear_xedit_logs():
 
 # Make sure right XEDIT is running for the right game.
 def check_settings_integrity():
-    pact_update_settings()
+    pact_update_settings(info, PACT_config)
     if os.path.exists(info.LOAD_ORDER_PATH) and os.path.exists(info.XEDIT_PATH):
         print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF INI SETTINGS ARE CORRECT...")
     else:
@@ -608,7 +615,7 @@ def clean_plugins():
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
-    pact_update_settings()
+    pact_update_settings(info, PACT_config)
     check_process_mo2()
     check_settings_integrity()
     clean_plugins()

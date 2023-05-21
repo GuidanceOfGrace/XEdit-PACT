@@ -409,13 +409,10 @@ def check_cpu_usage(proc):
         bool: True if CPU usage is low, False otherwise.
     """
     time.sleep(5)
-    try:
+    if proc.is_running() and proc.cpu_percent() < 1:
+        time.sleep(5)  # Previous versions of this script were a bit trigger happy on the kill switch and I think the cpu usage code was the reason why.
         if proc.is_running() and proc.cpu_percent() < 1:
-            time.sleep(5)
-            if proc.cpu_percent() < 1:
-                return True
-    except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
-        pass
+            return True
     return False
 
 
@@ -447,13 +444,10 @@ def check_process_exceptions(info):
         bool: True if exceptions were found, False otherwise.
     """
     if os.path.exists(info.XEDIT_EXC_LOG):
-        try:
-            xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {info.XEDIT_EXC_LOG}'])
-            Exception_Check = xedit_exc_out.decode()
-            if "which can not be found" in Exception_Check or "which it does not have" in Exception_Check:
-                return True
-        except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
-            pass
+        xedit_exc_out = subprocess.check_output(['powershell', '-command', f'Get-Content {info.XEDIT_EXC_LOG}'])
+        Exception_Check = xedit_exc_out.decode()
+        if "which can not be found" in Exception_Check or "which it does not have" in Exception_Check:
+            return True
     return False
 
 
@@ -469,15 +463,17 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         info (Info): An object containing relevant information.
         error_message (str): The error message to print.
     """
-    proc.kill()
-    time.sleep(1)
-    clear_xedit_logs()
-    info.plugins_processed -= 1
-    info.clean_failed_list.append(plugin_name)
-    print(error_message)
-    if add_ignore:
-        pact_ignore_update(plugin_name)
-
+    try:
+        proc.kill()
+        time.sleep(1)
+        clear_xedit_logs()
+        info.plugins_processed -= 1
+        info.clean_failed_list.append(plugin_name)
+        print(error_message)
+        if add_ignore:
+            pact_ignore_update(plugin_name)
+    except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
+        pass
 
 def run_auto_cleaning(plugin_name):
     """

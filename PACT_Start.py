@@ -144,7 +144,7 @@ def pact_update_check():
         print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
         print("   (You can disable this check in the EXE or PACT Settings.ini) \n")
         try:
-            response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")  # type: ignore
+            response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")
             PACT_Received = response.json()["name"]
             if PACT_Received == PACT_Current:
                 print("\n✔️ You have the latest version of PACT!")
@@ -288,9 +288,9 @@ elif info.XEDIT_PATH and not ".exe" in info.XEDIT_PATH:  # type: ignore
 def check_process_mo2():
     pact_update_settings(info, PACT_config)
     if os.path.exists(info.MO2_PATH):
-        mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if str(info.MO2_EXE).lower() in proc.info['name'].lower()]  # type: ignore
+        mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if str(info.MO2_EXE).lower() in proc.name().lower()]
         for proc in mo2_procs:
-            if str(info.MO2_EXE).lower() in proc.info['name'].lower():  # type: ignore
+            if str(info.MO2_EXE).lower() in proc.name().lower():
                 print("\n❌ ERROR : CANNOT START PACT WHILE MOD ORGANIZER 2 IS ALREADY RUNNING!")
                 print("   PLEASE CLOSE MO2 AND RUN PACT AGAIN! (DO NOT RUN PACT THROUGH MO2)")
                 os.system("pause")
@@ -430,7 +430,7 @@ def check_process_timeout(proc, info):
     Returns:
         bool: True if the process has run longer than the timeout, False otherwise.
     """
-    create_time = proc.info['create_time']
+    create_time = proc.create_time()
     if (time.time() - create_time) > info.Cleaning_Timeout:
         return True
     return False
@@ -497,9 +497,9 @@ def run_auto_cleaning(plugin_name):
 
     # Check subprocess for errors until it finishes
     while bat_process.poll() is None:
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]  # type: ignore
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.name().lower()]
         for proc in xedit_procs:
-            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower():  # type: ignore
+            if proc.name().lower() == str(info.XEDIT_EXE).lower():
                 # Check for low CPU usage (indicative of an error)
                 if check_cpu_usage(proc):
                     handle_error(proc, plugin_name, info, "❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")

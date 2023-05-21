@@ -30,10 +30,10 @@ QMessageBox.NoIcon | Question | Information | Warning | Critical
 
 
 class UiPACTMainWin(object):
-    def __init__(self):
+    def __init__(self, PACT_WINDOW):
         super().__init__()  # Allow subclasses to inherit & extend behavior of parent class.
         QApplication.setStyle(QStyleFactory.create("Fusion"))
-        self.InputField_JE: Optional[Union[QLabel, QLineEdit]] = None
+        """self.InputField_JE: Optional[Union[QLabel, QLineEdit]] = None
         self.InputField_CT: Optional[Union[QLabel, QLineEdit]] = None
         self.configured_LO: bool = False
         self.configured_MO2: bool = False
@@ -53,14 +53,12 @@ class UiPACTMainWin(object):
         self.RegBT_UPDATE_SETTINGS: Optional[QtWidgets.QPushButton] = None
         self.RegBT_HELP: Optional[QtWidgets.QPushButton] = None
         self.RegBT_EXIT: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None
+        self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None"""
 
         self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
         self.timer.timeout.connect(self.timed_states)  # type: ignore
         self.timer.start(3000)  # In ms, will override QTimer.singleShot
         self.thread = None
-
-    def setup_ui(self, PACT_WINDOW):
 
         # MAIN WINDOW
         PACT_WINDOW.setObjectName("PACT_WINDOW")
@@ -259,10 +257,10 @@ class UiPACTMainWin(object):
     # ============== CLEAN PLUGINS BUTTON STATES ================
 
     def timed_states(self):
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.info['name'].lower()]
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.name().lower()]
         xedit_running = False
         for proc in xedit_procs:
-            if proc.info['name'].lower() == str(info.XEDIT_EXE).lower():
+            if proc.name().lower() == str(info.XEDIT_EXE).lower():
                 xedit_running = True
 
         if self.thread is None:
@@ -525,7 +523,6 @@ DON'T FORGET TO CHECK THE PACT README FOR MORE DETAILS AND INSTRUCTIONS
     print(gui_prompt)
     app = QtWidgets.QApplication(sys.argv)
     PACT_WINDOW = QtWidgets.QDialog()
-    ui = UiPACTMainWin()
-    ui.setup_ui(PACT_WINDOW)
+    ui = UiPACTMainWin(PACT_WINDOW)
     PACT_WINDOW.show()
     sys.exit(app.exec())

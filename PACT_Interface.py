@@ -454,8 +454,8 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
     def update_settings(self):
         pact_update_settings(info, PACT_config)
-        value_CT = self.InputField_CT.text()
-        value_JE = self.InputField_JE.text()
+        value_CT = int(self.InputField_CT.text())
+        value_JE = int(self.InputField_JE.text())
         pact_ini_update("Cleaning_Timeout", value_CT)
         pact_ini_update("Journal_Expiration", value_JE)
         QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Settings", "All PACT settings have been updated and refreshed!")

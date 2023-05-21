@@ -11,7 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QApplication, QFileDialog, QLabel, QLineEdit,
-                               QPushButton, QStyleFactory, QFrame)
+                               QPushButton, QStyleFactory, QFrame, QMessageBox)
 
 from PACT_Start import (PACT_config, PACT_Current, check_process_mo2,
                         check_settings_integrity, clean_plugins, info,
@@ -341,11 +341,11 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
     @staticmethod
     def backup_popup():
-        Box_Backup = QtWidgets.QMessageBox()
-        Box_Backup.setIcon(QtWidgets.QMessageBox.Question)  # type: ignore
+        Box_Backup = QMessageBox()
+        Box_Backup.setIcon(QMessageBox.Question)  # type: ignore
         Box_Backup.setWindowTitle("PACT Backup")
         Box_Backup.setText(UiPACTMainWin.backup_box_msg)  # RESERVED | Box_Backup.setInformativeText("...")
-        Box_Backup.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)  # type: ignore
+        Box_Backup.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # type: ignore
         if Box_Backup.exec() != QtWidgets.QMessageBox.Cancel:  # type: ignore
             UiPACTMainWin.pact_create_backup()
 

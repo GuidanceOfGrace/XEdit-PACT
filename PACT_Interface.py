@@ -242,7 +242,13 @@ class UiPACTMainWin(object):
                                         PACT_WINDOW,
                                         QtCore.QRect(20, 440, 110, 24),
                                         "RegBT_HELP",
-                                        "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                        """
+                                        QPushButton {color: black; 
+                                        background-color: lightgray; 
+                                        border-radius: 5px; 
+                                        border: 1px solid gray;}
+                                        QPushButton:hover {background-color: lightblue;}
+                                        """,
                                         self.help_popup
                                         )
 
@@ -250,7 +256,18 @@ class UiPACTMainWin(object):
         self.RegBT_EXIT = create_button("EXIT",
                                         PACT_WINDOW,
                                         QtCore.QRect(510, 440, 110, 24),
-                                        "RegBT_EXIT", "color: black; background-color: lightgray; border-radius: 5px; border: 1px solid gray;",
+                                        "RegBT_EXIT", 
+                                        """
+                                        QPushButton {
+                                            color: black; 
+                                            background-color: lightgray; 
+                                            border-radius: 5px; 
+                                            border: 1px solid gray;
+                                            }
+                                        QPushButton:hover {
+                                            background-color: lightblue;
+                                            }
+                                        """,
                                         PACT_WINDOW.close
                                         )
 

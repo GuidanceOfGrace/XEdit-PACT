@@ -1,5 +1,4 @@
 # PLUGIN AUTO CLEANING TOOL (PACT) | By Poet (The Sound Of Snow)
-import configparser
 import datetime
 import os
 import re

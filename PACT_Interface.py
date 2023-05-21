@@ -6,7 +6,6 @@ import shutil
 import sys
 
 import psutil
-from typing import Optional, Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
@@ -171,7 +170,7 @@ class UiPACTMainWin(object):
             PACT_WINDOW,
             QtCore.QRect(80, 150, 480, 20),
             "LINE_SEPARATOR1"
-        )
+            )
 
         # SEPARATOR TEXT 1
         self.LBL_SETTINGS1 = create_label(
@@ -180,7 +179,7 @@ class UiPACTMainWin(object):
             QtCore.QRect(50, 175, 550, 24),
             font_bold,
             "LBL_NOTE_SET"
-        )
+            )
 
         # SEPARATOR TEXT 2
         self.LBL_SETTINGS2 = create_label("( MOD ORGANIZER 2 USERS ALSO NEED TO SET MO2 EXECUTABLE )",
@@ -252,7 +251,8 @@ class UiPACTMainWin(object):
                                         PACT_WINDOW,
                                         QtCore.QRect(510, 440, 110, 24),
                                         "RegBT_EXIT", "color: black; background-color: lightgray; border-radius: 5px; border: 1px solid gray;",
-                                        PACT_WINDOW.close)
+                                        PACT_WINDOW.close
+                                        )
 
     # ============== CLEAN PLUGINS BUTTON STATES ================
 
@@ -401,12 +401,12 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
     @staticmethod
     def restore_popup():
-        Box_Restore = QtWidgets.QMessageBox()
-        Box_Restore.setIcon(QtWidgets.QMessageBox.Question)  # type: ignore
+        Box_Restore = QMessageBox()
+        Box_Restore.setIcon(QMessageBox.Question)  # type: ignore
         Box_Restore.setWindowTitle("PACT Restore")
         Box_Restore.setText(UiPACTMainWin.restore_box_msg)  # RESERVED | Box_Restore.setInformativeText("...")
-        Box_Restore.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)  # type: ignore
-        if Box_Restore.exec() != QtWidgets.QMessageBox.Cancel:  # type: ignore
+        Box_Restore.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # type: ignore
+        if Box_Restore.exec() != QMessageBox.Cancel:  # type: ignore
             UiPACTMainWin.pact_restore_backup()
 
     @staticmethod

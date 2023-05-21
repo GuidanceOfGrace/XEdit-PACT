@@ -11,7 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QApplication, QFileDialog, QLabel, QLineEdit,
-                               QPushButton, QStyleFactory)
+                               QPushButton, QStyleFactory, QFrame)
 
 from PACT_Start import (PACT_config, PACT_Current, check_process_mo2,
                         check_settings_integrity, clean_plugins, info,
@@ -61,6 +61,7 @@ class UiPACTMainWin(object):
         self.thread = None
 
     def setup_ui(self, PACT_WINDOW):
+
         # MAIN WINDOW
         PACT_WINDOW.setObjectName("PACT_WINDOW")
         PACT_WINDOW.setWindowTitle(f"Plugin Auto Cleaning Tool {PACT_Current[-4:]}")
@@ -77,134 +78,183 @@ class UiPACTMainWin(object):
         # TOP
 
         # Button - Check Updates
-        self.RegBT_CHECK_UPDATES = QtWidgets.QPushButton(PACT_WINDOW)
-        self.RegBT_CHECK_UPDATES.setGeometry(QtCore.QRect(80, 50, 230, 32))
-        self.RegBT_CHECK_UPDATES.setObjectName("RegBT_CHECK_UPDATES")
-        self.RegBT_CHECK_UPDATES.setText("CHECK FOR UPDATES")
-        self.RegBT_CHECK_UPDATES.clicked.connect(self.update_popup)
+        def create_button(text, parent, geometry, object_name, stylesheet=None, clicked=None, font=None):
+            button = QPushButton(text, parent)
+            button.setGeometry(geometry)
+            button.setObjectName(object_name)
+            if stylesheet:
+                button.setStyleSheet(stylesheet)
+            if clicked:
+                button.clicked.connect(clicked)
+            if font:
+                button.setFont(font)
+            return button
+
+        def create_labeled_input_field(label_text, parent, label_geometry, input_geometry, input_validator, input_text):
+            label = QLabel(label_text, parent)
+            label.setGeometry(label_geometry)
+            input_field = QLineEdit(parent)
+            input_field.setGeometry(input_geometry)
+            input_field.setValidator(input_validator)
+            input_field.setText(input_text)
+            return label, input_field
+
+        def create_label(text, parent, geometry, font, object_name):
+            label = QLabel(text, parent)
+            label.setGeometry(geometry)
+            label.setFont(font)
+            label.setObjectName(object_name)
+            return label
+
+        def create_horizontal_line_separator(parent, geometry, object_name):
+            separator = QFrame(parent)
+            separator.setGeometry(geometry)
+            separator.setFrameShape(QFrame.Shape.HLine)
+            separator.setFrameShadow(QFrame.Shadow.Sunken)
+            separator.setObjectName(object_name)
+            return separator
+
+        self.RegBT_CHECK_UPDATES = create_button("CHECK FOR UPDATES",
+                                                 PACT_WINDOW,
+                                                 QtCore.QRect(80, 50, 230, 32),
+                                                 "RegBT_CHECK_UPDATES",
+                                                 clicked=self.update_popup
+                                                 )
 
         # Button - Update Settings
-        self.RegBT_UPDATE_SETTINGS = QPushButton("UPDATE SETTINGS", PACT_WINDOW)
-        self.RegBT_UPDATE_SETTINGS.setGeometry(QtCore.QRect(330, 50, 230, 32))
-        self.RegBT_UPDATE_SETTINGS.setObjectName("RegBT_UPDATE_SETTINGS")
-        self.RegBT_UPDATE_SETTINGS.clicked.connect(self.update_settings)
+        self.RegBT_UPDATE_SETTINGS = create_button("UPDATE SETTINGS",
+                                                   PACT_WINDOW,
+                                                   QtCore.QRect(330, 50, 230, 32),
+                                                   "RegBT_UPDATE_SETTINGS",
+                                                   clicked=self.update_settings
+                                                   )
 
         # Button - Browse Load Order
-        self.RegBT_BROWSE_LO = QtWidgets.QPushButton(PACT_WINDOW)
-        self.RegBT_BROWSE_LO.setGeometry(QtCore.QRect(80, 100, 150, 32))
-        self.RegBT_BROWSE_LO.setObjectName("RegBT_BROWSE_LO")
-        self.RegBT_BROWSE_LO.setText("SET LOAD ORDER FILE")
-        self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
-        self.RegBT_BROWSE_LO.clicked.connect(self.select_file_lo)  # type: ignore
-        if "loadorder" in PACT_config["MAIN"]["LoadOrder_TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder_TXT"]: # type: ignore
+        self.RegBT_BROWSE_LO = create_button("SET LOAD ORDER FILE",
+                                             PACT_WINDOW,
+                                             QtCore.QRect(80, 100, 150, 32),
+                                             "RegBT_BROWSE_LO",
+                                             "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                             self.select_file_lo
+                                             )
+        if "loadorder" in PACT_config["MAIN"]["LoadOrder_TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder_TXT"]:  # type: ignore
             self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
             self.configured_LO = True
 
         # Button - Browse MO2 EXE
-        self.RegBT_BROWSE_MO2 = QtWidgets.QPushButton(PACT_WINDOW)
-        self.RegBT_BROWSE_MO2.setGeometry(QtCore.QRect(245, 100, 150, 32))
-        self.RegBT_BROWSE_MO2.setObjectName("RegBT_BROWSE_MO2")
-        self.RegBT_BROWSE_MO2.setText("SET MO2 EXECUTABLE")
-        self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
-        self.RegBT_BROWSE_MO2.clicked.connect(self.select_file_mo2)  # type: ignore
-        if "ModOrganizer" in PACT_config["MAIN"]["MO2_EXE"]: # type: ignore
+        self.RegBT_BROWSE_MO2 = create_button("SET MO2 EXECUTABLE",
+                                              PACT_WINDOW,
+                                              QtCore.QRect(245, 100, 150, 32),
+                                              "RegBT_BROWSE_MO2",
+                                              "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                              self.select_file_mo2
+                                              )
+        if "ModOrganizer" in PACT_config["MAIN"]["MO2_EXE"]:  # type: ignore
             self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
             self.configured_MO2 = True
 
         # Button - Browse XEDIT EXE
-        self.RegBT_BROWSE_XEDIT = QtWidgets.QPushButton(PACT_WINDOW)
-        self.RegBT_BROWSE_XEDIT.setGeometry(QtCore.QRect(410, 100, 150, 32))
-        self.RegBT_BROWSE_XEDIT.setObjectName("RegBT_BROWSE_XEDIT")
-        self.RegBT_BROWSE_XEDIT.setText("SET XEDIT EXECUTABLE")
-        self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
-        self.RegBT_BROWSE_XEDIT.clicked.connect(self.select_file_xedit)  # type: ignore
-        if "Edit" in PACT_config["MAIN"]["XEDIT_EXE"]: # type: ignore
+        self.RegBT_BROWSE_XEDIT = create_button("SET XEDIT EXECUTABLE",
+                                                PACT_WINDOW,
+                                                QtCore.QRect(410, 100, 150, 32),
+                                                "RegBT_BROWSE_XEDIT",
+                                                "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                                self.select_file_xedit
+                                                )
+        if "Edit" in PACT_config["MAIN"]["XEDIT_EXE"]:  # type: ignore
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
             self.configured_XEDIT = True
 
         # SEPARATOR LINE 1
-        self.LINE_SEPARATOR1 = QtWidgets.QFrame(PACT_WINDOW)
-        self.LINE_SEPARATOR1.setGeometry(QtCore.QRect(80, 150, 480, 20))
-        self.LINE_SEPARATOR1.setFrameShape(QtWidgets.QFrame.Shape.HLine)  # type: ignore
-        self.LINE_SEPARATOR1.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)  # type: ignore
-        self.LINE_SEPARATOR1.setObjectName("LINE_SEPARATOR1")
+        self.LINE_SEPARATOR1 = create_horizontal_line_separator(
+            PACT_WINDOW,
+            QtCore.QRect(80, 150, 480, 20),
+            "LINE_SEPARATOR1"
+        )
 
         # SEPARATOR TEXT 1
-        self.LBL_SETTINGS1 = QtWidgets.QLabel(PACT_WINDOW)
-        self.LBL_SETTINGS1.setGeometry(QtCore.QRect(50, 175, 550, 24))
-        self.LBL_SETTINGS1.setText("YOU NEED TO SET YOUR LOAD ORDER FILE AND XEDIT EXECUTABLE BEFORE CLEANING")
-        self.LBL_SETTINGS1.setFont(font_bold)
-        self.LBL_SETTINGS1.setObjectName("LBL_NOTE_SET")
+        self.LBL_SETTINGS1 = create_label(
+            "YOU NEED TO SET YOUR LOAD ORDER FILE AND XEDIT EXECUTABLE BEFORE CLEANING",
+            PACT_WINDOW,
+            QtCore.QRect(50, 175, 550, 24),
+            font_bold,
+            "LBL_NOTE_SET"
+        )
 
         # SEPARATOR TEXT 2
-        self.LBL_SETTINGS2 = QtWidgets.QLabel(PACT_WINDOW)
-        self.LBL_SETTINGS2.setGeometry(QtCore.QRect(120, 200, 550, 24))
-        self.LBL_SETTINGS2.setText("( MOD ORGANIZER 2 USERS ALSO NEED TO SET MO2 EXECUTABLE )")
-        self.LBL_SETTINGS2.setFont(font_bold)
-        self.LBL_SETTINGS2.setObjectName("LBL_NOTE_MO2")
+        self.LBL_SETTINGS2 = create_label("( MOD ORGANIZER 2 USERS ALSO NEED TO SET MO2 EXECUTABLE )",
+                                          PACT_WINDOW,
+                                          QtCore.QRect(120, 200, 550, 24),
+                                          font_bold,
+                                          "LBL_NOTE_MO2"
+                                          )
 
         # MAIN
 
         # Button - Backup Plugins
-        self.RegBT_BACKUP_PLUGINS = QPushButton("BACKUP PLUGINS", PACT_WINDOW)
-        self.RegBT_BACKUP_PLUGINS.setGeometry(QtCore.QRect(80, 250, 230, 32))
-        self.RegBT_BACKUP_PLUGINS.setObjectName("RegBT_BACKUP_PLUGINS")
-        self.RegBT_BACKUP_PLUGINS.clicked.connect(self.backup_popup)
-        self.RegBT_BACKUP_PLUGINS.setFont(font_bold)
+        self.RegBT_BACKUP_PLUGINS = create_button("BACKUP PLUGINS",
+                                                  PACT_WINDOW,
+                                                  QtCore.QRect(80, 250, 230, 32),
+                                                  "RegBT_BACKUP_PLUGINS",
+                                                  "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                                  self.backup_popup
+                                                  )
 
         # Button - Restore Backup
-        self.RegBT_RESTORE_BACKUP = QPushButton("RESTORE BACKUP", PACT_WINDOW)
-        self.RegBT_RESTORE_BACKUP.setGeometry(QtCore.QRect(330, 250, 230, 32))
-        self.RegBT_RESTORE_BACKUP.setObjectName("RegBT_RESTORE_BACKUP")
-        self.RegBT_RESTORE_BACKUP.clicked.connect(self.restore_popup)
-        self.RegBT_RESTORE_BACKUP.setFont(font_bold)
+        self.RegBT_RESTORE_BACKUP = create_button("RESTORE BACKUP",
+                                                  PACT_WINDOW,
+                                                  QtCore.QRect(330, 250, 230, 32),
+                                                  "RegBT_RESTORE_BACKUP",
+                                                  "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                                  self.restore_popup
+                                                  )
 
         # Input - Cleaning Timeout
-        self.InputLabel_CT = QLabel("Cleaning Timeout\n     (in seconds)", PACT_WINDOW)
-        self.InputLabel_CT.setGeometry(QtCore.QRect(105, 300, 100, 48))
-        self.InputField_CT = QLineEdit(PACT_WINDOW)
-        self.InputField_CT.setGeometry(QtCore.QRect(130, 350, 50, 24))
-        self.InputField_CT.setValidator(QtGui.QIntValidator())
-        self.InputField_CT.setText(str(info.Cleaning_Timeout))
+
+        self.InputLabel_CT, self.InputField_CT = create_labeled_input_field("Cleaning Timeout\n     (in seconds)",
+                                                                            PACT_WINDOW, QtCore.QRect(105, 300, 100, 48),
+                                                                            QtCore.QRect(130, 350, 50, 24),
+                                                                            QtGui.QIntValidator(),
+                                                                            str(info.Cleaning_Timeout)
+                                                                            )
 
         # Input - Journal Expiration
-        self.InputLabel_JE = QLabel("Journal Expiration\n         (in days)", PACT_WINDOW)
-        self.InputLabel_JE.setGeometry(QtCore.QRect(440, 300, 100, 48))
-        self.InputField_JE = QLineEdit(PACT_WINDOW)
-        self.InputField_JE.setGeometry(QtCore.QRect(465, 350, 50, 24))
-        self.InputField_JE.setValidator(QtGui.QIntValidator())
-        self.InputField_JE.setText(str(info.Journal_Expiration))
+        self.InputField_JE, self.InputField_JE = create_labeled_input_field("Journal Expiration\n         (in days)",
+                                                                            PACT_WINDOW,
+                                                                            QtCore.QRect(440, 300, 100, 48),
+                                                                            QtCore.QRect(465, 350, 50, 24),
+                                                                            QtGui.QIntValidator(),
+                                                                            str(info.Journal_Expiration)
+                                                                            )
 
         # Button - CLEAN PLUGINS
-        self.RegBT_CLEAN_PLUGINS = QtWidgets.QPushButton(PACT_WINDOW)
-        self.RegBT_CLEAN_PLUGINS.setGeometry(QtCore.QRect(245, 325, 150, 32))
-        self.RegBT_CLEAN_PLUGINS.setObjectName("RegBT_CLEAN_PLUGINS")
-        self.RegBT_CLEAN_PLUGINS.setFont(font_bold)
-        self.RegBT_CLEAN_PLUGINS.setEnabled(False)  # type: ignore
-        self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")
-        self.RegBT_CLEAN_PLUGINS.setStyleSheet("background-color: lightgray; border-radius: 5px; border: 1px solid gray;")  # type: ignore
-        self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)  # type: ignore
+        self.RegBT_CLEAN_PLUGINS = create_button("START CLEANING",
+                                                 PACT_WINDOW,
+                                                 QtCore.QRect(245, 325, 150, 32),
+                                                 "RegBT_CLEAN_PLUGINS", "color: black; background-color: lightgray; border-radius: 5px; border: 1px solid gray;",
+                                                 self.start_cleaning
+                                                 )
 
         # BOTTOM
 
         # Button - HELP
-        self.RegBT_HELP = QtWidgets.QPushButton(PACT_WINDOW)
-        self.RegBT_HELP.setGeometry(QtCore.QRect(20, 440, 110, 24))
-        self.RegBT_HELP.setObjectName("RegBT_HELP")
-        self.RegBT_HELP.setText("HELP")
-        self.RegBT_HELP.setToolTip("How To Use PACT GUI")
-        self.RegBT_HELP.clicked.connect(self.help_popup)  # type: ignore
+        self.RegBT_HELP = create_button("HELP",
+                                        PACT_WINDOW,
+                                        QtCore.QRect(20, 440, 110, 24),
+                                        "RegBT_HELP",
+                                        "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
+                                        self.help_popup
+                                        )
 
         # Button - EXIT
-        self.RegBT_EXIT = QtWidgets.QPushButton(PACT_WINDOW)
-        self.RegBT_EXIT.setGeometry(QtCore.QRect(510, 440, 110, 24))
-        self.RegBT_EXIT.setObjectName("RegBT_EXIT")
-        self.RegBT_EXIT.setText("EXIT")
-        self.RegBT_EXIT.setToolTip("Exit PACT GUI")
-        self.RegBT_EXIT.clicked.connect(PACT_WINDOW.close)  # type: ignore
+        self.RegBT_EXIT = create_button("EXIT",
+                                        PACT_WINDOW,
+                                        QtCore.QRect(510, 440, 110, 24),
+                                        "RegBT_EXIT", "color: black; background-color: lightgray; border-radius: 5px; border: 1px solid gray;",
+                                        PACT_WINDOW.close)
 
     # ============== CLEAN PLUGINS BUTTON STATES ================
 

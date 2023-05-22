@@ -194,12 +194,14 @@ class Info:
     plugins_processed = 0
     plugins_cleaned = 0
 
+    plugins_pattern = re.compile(r"(.+?)(\.(esp|esm|esl))$", re.IGNORECASE | re.MULTILINE)
     LCL_skip_list = []
     if not os.path.exists("PACT Ignore.txt"):  # Local plugin skip / ignore list.
-        pact_ignore_update("Write plugin names you want PACT to ignore here. (ONE PLUGIN PER LINE)", numnewlines=1)
+        with open("PACT Ignore.txt", "w", encoding="utf-8", errors="ignore") as PACT_Ignore:
+            PACT_Ignore.write("Write plugin names you want CLAS to ignore here. (ONE PLUGIN PER LINE)\n")
     else:
         with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as PACT_Ignore:
-            LCL_skip_list = [line.strip() for line in PACT_Ignore.readlines()[1:]]
+            LCL_skip_list = [line.group() for line in plugins_pattern.finditer(PACT_Ignore.read())]
 
     # HARD EXCLUDE PLUGINS PER GAME HERE
     FNV_skip_list = ["", "FalloutNV.esm", "DeadMoney.esm", "OldWorldBlues.esm", "HonestHearts.esm", "LonesomeRoad.esm", "TribalPack.esm", "MercenaryPack.esm",

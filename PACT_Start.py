@@ -488,7 +488,7 @@ def run_auto_cleaning(plugin_name):
 
     # Clear logs and start subprocess
     clear_xedit_logs()
-    print(f"\nCURRENTLY RUNNING : {bat_command}".replace("\\", ""))
+    print(f"\nCURRENTLY RUNNING : {bat_command}".replace("\\", "").replace('"', ""))
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
 

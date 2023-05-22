@@ -518,27 +518,30 @@ def run_auto_cleaning(plugin_name):
     info.plugins_processed += 1
 
 
+# Compile the patterns outside the function
+udr_pattern = re.compile(r"Undeleting:\s*(.*)")
+itm_pattern = re.compile(r"Removing:\s*(.*)")
+nvm_pattern = re.compile(r"Skipping:\s*(.*)")
+
+
 def check_cleaning_results(plugin_name):
     time.sleep(1)  # Wait to make sure xedit generates the logs.
     if os.path.exists(info.XEDIT_LOG_TXT):
         cleaned_something = False
         with open(info.XEDIT_LOG_TXT, "r", encoding="utf-8", errors="ignore") as XE_Check:
-            Cleaning_Check = XE_Check.read()
-            udr_pattern = re.compile(r"Undeleting:\s*(.*)")
-            itm_pattern = re.compile(r"Removing:\s*(.*)")
-            nvm_pattern = re.compile(r"Skipping:\s*(.*)")
-            if udr_pattern.search(Cleaning_Check):
-                pact_log_update(f"\n{plugin_name} -> Cleaned UDRs")
-                info.clean_results_UDR.append(plugin_name)
-                cleaned_something = True
-            if itm_pattern.search(Cleaning_Check):
-                pact_log_update(f"\n{plugin_name} -> Cleaned ITMs")
-                info.clean_results_ITM.append(plugin_name)
-                cleaned_something = True
-            if nvm_pattern.search(Cleaning_Check):
-                pact_log_update(f"\n{plugin_name} -> Found Deleted Navmeshes")
-                info.clean_results_NVM.append(plugin_name)
-            if cleaned_something is True:
+            # Define the patterns and associated actions
+            patterns = {
+                udr_pattern: ("Cleaned UDRs", info.clean_results_UDR),
+                itm_pattern: ("Cleaned ITMs", info.clean_results_ITM),
+                nvm_pattern: ("Found Deleted Navmeshes", info.clean_results_NVM),
+            }
+            for line in XE_Check:
+                for pattern, (message, results_list) in patterns.items():
+                    if pattern.search(line):
+                        pact_log_update(f"\n{plugin_name} -> {message}")
+                        results_list.append(plugin_name)
+                        cleaned_something = True
+            if cleaned_something:
                 info.plugins_cleaned += 1
             else:
                 pact_log_update(f"\n{plugin_name} -> NOTHING TO CLEAN")
@@ -550,20 +553,12 @@ def check_cleaning_results(plugin_name):
 
 def get_plugin_list(load_order_path):
     with open(load_order_path, "r", encoding="utf-8", errors="ignore") as lo_file:
-        lo_file.seek(0)
-        plugin_list = []
-        lo_list = lo_file.readlines()[1:]
+        next(lo_file)  # Skip the first line
         if "plugins.txt" in load_order_path:
-            for line in lo_list:
-                if "*" in line:
-                    line = line.strip().replace("*", "")
-                    plugin_list.append(line)
+            plugin_list = [line.strip().replace("*", "") for line in lo_file if "*" in line.strip()]
         else:
-            for line in lo_list:
-                line = line.strip()
-                if ".ghost" not in line:
-                    plugin_list.append(line)
-        return plugin_list
+            plugin_list = [line.strip() for line in lo_file if ".ghost" not in line]
+    return plugin_list
 
 
 def clean_plugin(plugin):

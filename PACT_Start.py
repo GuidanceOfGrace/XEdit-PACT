@@ -297,8 +297,6 @@ def check_process_mo2():
             if str(info.MO2_EXE).lower() in proc.name().lower():
                 print("\n❌ ERROR : CANNOT START PACT WHILE MOD ORGANIZER 2 IS ALREADY RUNNING!")
                 print("   PLEASE CLOSE MO2 AND RUN PACT AGAIN! (DO NOT RUN PACT THROUGH MO2)")
-                os.system("pause")
-                sys.exit()
 
 
 # Clear xedit log files to check them for each plugin separately.

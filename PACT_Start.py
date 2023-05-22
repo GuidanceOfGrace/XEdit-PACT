@@ -348,54 +348,67 @@ def check_settings_integrity():
 
 
 def create_bat_command(info, plugin_name):
-    bat_command = ""
-    if str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
-        info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
-        info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
-    # If specific xedit (fnvedit, fo4edit, sseedit) executable is set.
-    if info.MO2Mode and str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
-        bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
+    xedit_exe_lower = str(info.XEDIT_EXE).lower()
+    xedit_path_str = str(info.XEDIT_PATH)
+    log_txt_path = xedit_path_str.replace('.exe', '_log.txt')
+    exc_log_path = xedit_path_str.replace('.exe', 'Exception.log')
 
-    elif not info.MO2Mode and str(info.XEDIT_EXE).lower() in info.xedit_list_specific:
-        bat_command = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
+    if xedit_exe_lower in info.xedit_list_specific:
+        info.XEDIT_LOG_TXT = log_txt_path
+        info.XEDIT_EXC_LOG = exc_log_path
+        bat_command = create_specific_xedit_command(info, plugin_name)
+        if bat_command:
+            return bat_command
 
-    # If universal xedit (xedit.exe) executable is set.
-    if "loadorder" in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
-        game_mode = ""
-        with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
-            mode_check = LO_Check.read()
-            if "Skyrim.esm" in mode_check:
-                game_mode = "-sse"
-                info.XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("SSEEdit_log.txt"))
-                info.XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("SSEEditException.log"))
-            elif "FalloutNV.esm" in mode_check:
-                game_mode = "-fnv"
-                info.XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("FNVEdit_log.txt"))
-                info.XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("FNVEditException.log"))
-            elif "Fallout4.esm" in mode_check:
-                game_mode = "-fo4"
-                info.XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name("FO4Edit_log.txt"))
-                info.XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name("FO4EditException.log"))
+    if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.xedit_list_universal:
+        game_mode = get_game_mode(info)
+        if game_mode is None:
+            print(Err_Invalid_LO_File)
+            input("Press Enter to continue...")
+            raise Exception("Invalid load order file")
+        
+        info.XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name(f"{game_mode.upper()}Edit_log.txt"))
+        info.XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name(f"{game_mode.upper()}EditException.log"))
+        bat_command = create_universal_xedit_command(info, plugin_name, game_mode)
+        if bat_command:
+            return bat_command
 
-        if info.MO2Mode:
-            bat_command = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
-        else:
-            bat_command = f'"{info.XEDIT_PATH}" -a {game_mode} -QAC -autoexit -autoload "{plugin_name}"'
+    print("\n❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?")
+    print("   If you're seeing this, make sure that your load order / xedit paths are correct.")
+    print("   If problems continue, try a different load order file or xedit executable.")
+    print("   If nothing works, please report this error to the PACT Nexus page.")
+    input("Press Enter to continue...")
+    raise Exception("Unable to start the cleaning process")
 
-    elif "loadorder" not in str(info.LOAD_ORDER_PATH).lower() and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
-        print(Err_Invalid_LO_File)
-        os.system("pause")
-        sys.exit()
+    # Additional helper functions
+def create_specific_xedit_command(info, plugin_name):
+    # Similar to your existing code, but now in a separate function
+    xedit_exe_lower = str(info.XEDIT_EXE).lower()
+    if info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:
+        return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
+    elif not info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:
+        return f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
+    else:
+        return None
 
-    if not bat_command:
-        print("\n❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?")
-        print("   If you're seeing this, make sure that your load order / xedit paths are correct.")
-        print("   If problems continue, try a different load order file or xedit executable.")
-        print("   If nothing works, please report this error to the PACT Nexus page.")
-        os.system("pause")
-        sys.exit()
+def create_universal_xedit_command(info, plugin_name, game_mode):
+    # Similar to your existing code, but now in a separate function
+    if info.MO2Mode:
+        return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
+    else:
+        return f'"{info.XEDIT_PATH}" -a {game_mode} -QAC -autoexit -autoload "{plugin_name}"'
 
-    return bat_command
+def get_game_mode(info):
+    # Read the load order file line by line to determine the game mode
+    with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
+        for line in LO_Check:
+            if "Skyrim.esm" in line:
+                return "-sse"
+            elif "FalloutNV.esm" in line:
+                return "-fnv"
+            elif "Fallout4.esm" in line:
+                return "-fo4"
+    return None
 
 
 def check_cpu_usage(proc):

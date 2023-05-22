@@ -194,7 +194,7 @@ class Info:
     plugins_processed = 0
     plugins_cleaned = 0
 
-    plugins_pattern = re.compile(r"(.+?)(\.(esp|esm|esl))$", re.IGNORECASE | re.MULTILINE)
+    plugins_pattern = re.compile(r"(.+?)(\.[esp|esm|esl]+)$", re.IGNORECASE | re.MULTILINE)
     LCL_skip_list = []
     if not os.path.exists("PACT Ignore.txt"):  # Local plugin skip / ignore list.
         with open("PACT Ignore.txt", "w", encoding="utf-8", errors="ignore") as PACT_Ignore:

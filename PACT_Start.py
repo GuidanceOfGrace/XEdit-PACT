@@ -84,13 +84,15 @@ def pact_log_update(log_message):
         LOG_PACT.write(log_message)
 
     # Delete journal if older than set amount of days.
+
     PACT_folder = os.getcwd()
     journal_name = "PACT Journal.log"
     journal_path = os.path.join(PACT_folder, journal_name)
-    journal_age = time.time() - os.path.getmtime(journal_path)
-    journal_age_days = journal_age / (24 * 3600)
-    if journal_age_days > info.Journal_Expiration:
-        os.remove(journal_path)
+    if os.path.isfile(journal_path):
+        journal_age = datetime.datetime.now() - datetime.datetime.fromtimestamp(os.path.getmtime(journal_path))
+        journal_age_days = journal_age.days
+        if journal_age_days > info.Journal_Expiration:
+            os.remove(journal_path)
 
 
 def pact_ignore_update(plugin, numnewlines=2):
@@ -476,6 +478,7 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
     except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
         pass
 
+
 def run_auto_cleaning(plugin_name):
     """
     Runs the automatic cleaning process.
@@ -586,7 +589,7 @@ def clean_plugins():
     log_time = datetime.datetime.now()
     pact_log_update(f"\nSTARTED CLEANING PROCESS AT : {log_time}")
     count_cleaned = 0
-    
+
     for plugin in plugin_list:
         if not any(plugin in elem for elem in ALL_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
             count_cleaned += 1
@@ -598,7 +601,7 @@ def clean_plugins():
 
     print(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in", (str(time.perf_counter() - log_start)[:3]), "seconds.")
     print(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")
-    
+
     for plugins, message in [(info.clean_failed_list, "❌ {0} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {0} Timed Out):"),
                              (info.clean_results_UDR, "✔️ The following plugins had Undisabled Records and {0} properly disabled them:"),
                              (info.clean_results_ITM, "✔️ The following plugins had Identical To Master Records and {0} successfully cleaned them:"),
@@ -607,7 +610,7 @@ def clean_plugins():
             print(f"\n{message.format(info.XEDIT_EXE)}")
             for plugin in plugins:
                 print(plugin)
-    
+
     return True  # Required for running function check in PACT_Interface.
 
 

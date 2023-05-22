@@ -468,6 +468,9 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
     """
     try:
         proc.kill()
+    except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
+        pass
+    finally:
         time.sleep(1)
         clear_xedit_logs()
         info.plugins_processed -= 1
@@ -475,8 +478,6 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         print(error_message)
         if add_ignore:
             pact_ignore_update(plugin_name)
-    except (PermissionError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
-        pass
 
 
 def run_auto_cleaning(plugin_name):
@@ -591,7 +592,7 @@ def clean_plugins():
     count_cleaned = 0
 
     for plugin in plugin_list:
-        if not any(plugin in elem for elem in ALL_skip_list) and any(ext in plugin.lower() for ext in ['.esl', '.esm', '.esp']):
+        if not any(plugin in elem for elem in ALL_skip_list) and re.search(r"\.(esl|esm|esp)$", plugin, re.IGNORECASE):
             count_cleaned += 1
             clean_plugin(plugin)
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {count_plugins})")

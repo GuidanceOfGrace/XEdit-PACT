@@ -393,7 +393,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
                 print("CREATING PRIMARY BACKUP, PLEASE WAIT...")
                 for root, dirs, files in os.walk(plugins_folder):
                     for file in files:
-                        if file.endswith('.esm') or file.endswith('.esp') or file.endswith('.esl'):
+                        if info.plugins_pattern.search(file):
                             try:
                                 plugin_path = os.path.join(root, file)
                                 copy_path = os.path.join(primary_backup, file)
@@ -407,7 +407,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
                 print("PROCESSING ADDITIONAL BACKUP, PLEASE WAIT...")
                 for root, dirs, files in os.walk(plugins_folder):
                     for file in files:
-                        if file.endswith('.esm') or file.endswith('.esp') or file.endswith('.esl'):
+                        if info.plugins_pattern.search(file):
                             plugin_backup = os.path.join("PACT BACKUP", "Primary Backup", file)
                             plugin_current = os.path.join(root, file)
                             if os.path.exists(plugin_backup):
@@ -456,7 +456,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
                 print("RESTORING PRIMARY BACKUP, PLEASE WAIT...")
                 for root, dirs, files in os.walk(plugins_folder):
                     for file in files:
-                        if file.endswith('.esm') or file.endswith('.esp') or file.endswith('.esl'):
+                        if info.plugins_pattern.search(file):
                             plugin_backup = os.path.join("PACT BACKUP", "Primary Backup", file)
                             plugin_current = os.path.join(root, file)
                             if os.path.exists(plugin_backup):

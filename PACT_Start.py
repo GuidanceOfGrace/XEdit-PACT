@@ -56,10 +56,7 @@ MO2_EXE = ""
 
 
 pact_ini_create()
-# Use optionxform = str to preserve INI formatting. | Set comment_prefixes to unused char to keep INI comments.
-"""PACT_config = configparser.ConfigParser(allow_no_value=True, comment_prefixes="$")
-PACT_config.optionxform = str  # type: ignore
-PACT_config.read("PACT Settings.ini")"""
+
 with open("PACT Settings.toml", "r", encoding="utf-8", errors="ignore") as INI_PACT:
     PACT_config: tomlkit.TOMLDocument = tomlkit.parse(INI_PACT.read())  # type: ignore
 PACT_Date = "140423"  # DDMMYY

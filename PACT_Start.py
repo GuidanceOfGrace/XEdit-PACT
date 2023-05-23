@@ -255,7 +255,7 @@ def pact_update_settings(info, pact_config):
     info.Cleaning_Timeout = int(pact_config["MAIN"]["Cleaning_Timeout"])
     info.Journal_Expiration = int(pact_config["MAIN"]["Journal_Expiration"])
 
-    if not isinstance(info.Cleaning_Timeout, int):
+    if not isinstance(info.Cleaning_Timeout, int) or info.Cleaning_Timeout <= 0:
         print("❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS NOT VALID.")
         print("   Please change Cleaning Timeout to a valid positive number.")
         os.system("pause")
@@ -266,7 +266,7 @@ def pact_update_settings(info, pact_config):
         os.system("pause")
         sys.exit()
 
-    if not isinstance(info.Journal_Expiration, int):
+    if not isinstance(info.Journal_Expiration, int) or info.Journal_Expiration <= 0:
         print("❌ ERROR : JOURNAL EXPIRATION VALUE IN PACT SETTINGS IS NOT VALID.")
         print("   Please change Journal Expiration to a valid positive number.")
         os.system("pause")
@@ -279,10 +279,10 @@ def pact_update_settings(info, pact_config):
 
 
 pact_update_settings(info, PACT_config)
-if ".exe" in info.XEDIT_PATH:  # type: ignore
+if ".exe" in str(info.XEDIT_PATH) and info.XEDIT_EXE in info.xedit_list_specific:
     info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
     info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
-elif info.XEDIT_PATH and not ".exe" in info.XEDIT_PATH:  # type: ignore
+elif info.XEDIT_PATH and not ".exe" in str(info.XEDIT_PATH):
     print(Err_Invalid_XEDIT_File)
     os.system("pause")
     sys.exit()
@@ -394,20 +394,20 @@ def create_specific_xedit_command(info, plugin_name):
 def create_universal_xedit_command(info, plugin_name, game_mode):
     # Similar to your existing code, but now in a separate function
     if info.MO2Mode:
-        return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
+        return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
     else:
-        return f'"{info.XEDIT_PATH}" -a {game_mode} -QAC -autoexit -autoload "{plugin_name}"'
+        return f'"{info.XEDIT_PATH}" -a -{game_mode} -QAC -autoexit -autoload "{plugin_name}"'
 
 def get_game_mode(info):
     # Read the load order file line by line to determine the game mode
     with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
         for line in LO_Check:
             if "Skyrim.esm" in line:
-                return "-sse"
+                return "sse"
             elif "FalloutNV.esm" in line:
-                return "-fnv"
+                return "fnv"
             elif "Fallout4.esm" in line:
-                return "-fo4"
+                return "fo4"
     return None
 
 

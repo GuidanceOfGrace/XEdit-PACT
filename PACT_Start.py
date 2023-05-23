@@ -50,8 +50,9 @@ XEDIT_EXE = ""
 # Required if MO2 is your main mod manager. Otherwise, leave this blank. 
 MO2_EXE = ""
 """
+        toml_tmp = tomlkit.parse(INI_Settings)  # Do it the same way it is done in CLAS.
         with open("PACT Settings.toml", "w", encoding="utf-8", errors="ignore") as INI_PACT:
-            INI_PACT.write(INI_Settings)
+            INI_PACT.write(toml_tmp.as_string())
 
 
 pact_ini_create()

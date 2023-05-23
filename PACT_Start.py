@@ -599,7 +599,7 @@ def clean_plugins():
     count_cleaned = 0
 
     for plugin in plugin_list:
-        if not any(plugin in elem for elem in ALL_skip_list) and re.search(r"\.(esl|esm|esp)$", plugin, re.IGNORECASE):
+        if not any(plugin in elem for elem in ALL_skip_list) and re.search(r"(.+?)(\.(esl|esm|esp)+)$", plugin, re.IGNORECASE):
             count_cleaned += 1
             clean_plugin(plugin)
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {count_plugins})")

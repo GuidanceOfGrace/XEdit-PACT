@@ -93,16 +93,9 @@ def pact_log_update(log_message):
             os.remove(journal_path)
 
 
-def pact_ignore_update(plugin, numnewlines=2):
+def pact_ignore_update(plugin, numnewlinesbefore=1, numnewlinesafter=1):
     with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as IGNORE_PACT:
-        if numnewlines == 0:
-            IGNORE_PACT.write(plugin)
-        elif numnewlines == 1:
-            IGNORE_PACT.write(plugin + "\n")
-        elif numnewlines == 2:
-            IGNORE_PACT.write("\n" + plugin + "\n")
-        else:
-            raise ValueError("Invalid number of newlines for PACT Ignore.txt")
+        IGNORE_PACT.write("\n" * numnewlinesbefore + plugin + "\n" * numnewlinesafter)
 # =================== WARNING MESSAGES ==================
 # Can change first line to """\ to remove the spacing.
 
@@ -556,7 +549,7 @@ def check_cleaning_results(plugin_name):
             else:
                 pact_log_update(f"\n{plugin_name} -> NOTHING TO CLEAN")
                 print("NOTHING TO CLEAN ! Adding plugin to PACT Ignore file...")
-                pact_ignore_update(f"\n{plugin_name}", numnewlines=0)
+                pact_ignore_update(plugin_name, numnewlinesafter=0)
                 info.LCL_skip_list.append(plugin_name)
         clear_xedit_logs()
 

@@ -552,8 +552,8 @@ class PactThread(QThread):
             for proc in mo2_procs:
                 if str(info.MO2_EXE).lower() in proc.name().lower():
                     self.error_detected.emit()
-                    self.msleep(1000)
                     self.cleaning_done = True
+                    self.msleep(1000)
                     return
 
         check_settings_integrity()

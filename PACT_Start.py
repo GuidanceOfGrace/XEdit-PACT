@@ -78,9 +78,6 @@ def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Conve
 
 
 def pact_log_update(log_message):
-    with open("PACT Journal.log", "a", encoding="utf-8", errors="ignore") as LOG_PACT:
-        LOG_PACT.write(log_message)
-
     # Delete journal if older than set amount of days.
 
     PACT_folder = os.getcwd()
@@ -91,6 +88,9 @@ def pact_log_update(log_message):
         journal_age_days = journal_age.days
         if journal_age_days > info.Journal_Expiration:
             os.remove(journal_path)
+
+    with open("PACT Journal.log", "a", encoding="utf-8", errors="ignore") as LOG_PACT:
+        LOG_PACT.write(log_message)
 
 
 def pact_ignore_update(plugin, numnewlinesbefore=1, numnewlinesafter=1):

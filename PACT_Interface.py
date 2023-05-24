@@ -537,7 +537,10 @@ class PactThread(QThread):
         self.cleaning_done = False
 
     def run(self):  # def Plugins_CLEAN():
-        check_process_mo2()
+        is_mo2_running = check_process_mo2()
+        if is_mo2_running:
+            self.cleaning_done = is_mo2_running
+            return
         check_settings_integrity()
         while not self.cleaning_done:
             self.cleaning_done = clean_plugins()

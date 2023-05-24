@@ -19,7 +19,7 @@ import tomlkit
 '''
 
 
-# =================== PACT INI FILE ===================
+# =================== PACT TOML FILE ===================
 def pact_ini_create():
     if not os.path.exists("PACT Settings.toml"):
         INI_Settings = """[MAIN]
@@ -76,6 +76,7 @@ def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Conve
     with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
         tomlkit.dump(PACT_config, INI_PACT)
 
+
 def pact_journal_expire():
     # Delete journal if older than set amount of days.
 
@@ -87,6 +88,7 @@ def pact_journal_expire():
         journal_age_days = journal_age.days
         if journal_age_days > info.Journal_Expiration:
             os.remove(journal_path)
+
 
 def pact_log_update(log_message):
     pact_journal_expire()
@@ -340,15 +342,24 @@ def check_settings_integrity():
         sys.exit()
 
 
+PAUSE_MESSAGE = "Press Enter to continue..."
+
+def update_log_paths(info, game_mode=None):
+    path = Path(info.XEDIT_PATH)
+    if game_mode:
+        info.XEDIT_LOG_TXT = str(path.with_name(f"{game_mode.upper()}Edit_log.txt"))
+        info.XEDIT_EXC_LOG = str(path.with_name(f"{game_mode.upper()}EditException.log"))
+    else:
+        info.XEDIT_LOG_TXT = str(path.with_name(path.stem + "_log.txt"))
+        info.XEDIT_EXC_LOG = str(path.with_name(path.stem + "Exception.log"))
+
+
 def create_bat_command(info, plugin_name):
     xedit_exe_lower = str(info.XEDIT_EXE).lower()
     xedit_path_str = str(info.XEDIT_PATH)
-    log_txt_path = xedit_path_str.replace('.exe', '_log.txt')
-    exc_log_path = xedit_path_str.replace('.exe', 'Exception.log')
 
     if xedit_exe_lower in info.xedit_list_specific:
-        info.XEDIT_LOG_TXT = log_txt_path
-        info.XEDIT_EXC_LOG = exc_log_path
+        update_log_paths(info)
         bat_command = create_specific_xedit_command(info, plugin_name)
         if bat_command:
             return bat_command
@@ -357,50 +368,57 @@ def create_bat_command(info, plugin_name):
         game_mode = get_game_mode(info)
         if game_mode is None:
             print(Err_Invalid_LO_File)
-            input("Press Enter to continue...")
-            raise Exception("Invalid load order file")
-        
-        info.XEDIT_LOG_TXT = str(Path(info.XEDIT_PATH).with_name(f"{game_mode.upper()}Edit_log.txt"))
-        info.XEDIT_EXC_LOG = str(Path(info.XEDIT_PATH).with_name(f"{game_mode.upper()}EditException.log"))
+            input(PAUSE_MESSAGE)
+            raise ValueError("Invalid load order file")
+
+        update_log_paths(info, game_mode)
         bat_command = create_universal_xedit_command(info, plugin_name, game_mode)
         if bat_command:
             return bat_command
 
-    print("\n❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?")
-    print("   If you're seeing this, make sure that your load order / xedit paths are correct.")
-    print("   If problems continue, try a different load order file or xedit executable.")
-    print("   If nothing works, please report this error to the PACT Nexus page.")
-    input("Press Enter to continue...")
-    raise Exception("Unable to start the cleaning process")
+    print("""❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?
+    If you're seeing this, make sure that your load order / xedit paths are correct.
+    If problems continue, try a different load order file or xedit executable.
+    If nothing works, please report this error to the PACT Nexus page.""")
+    input(PAUSE_MESSAGE)
+    raise RuntimeError("Unable to start the cleaning process")
 
     # Additional helper functions
 def create_specific_xedit_command(info, plugin_name):
-    # Similar to your existing code, but now in a separate function
     xedit_exe_lower = str(info.XEDIT_EXE).lower()
     if info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:
         return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
     elif not info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:
         return f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
     else:
+        print("Invalid xedit executable specified")
         return None
 
+
 def create_universal_xedit_command(info, plugin_name, game_mode):
-    # Similar to your existing code, but now in a separate function
     if info.MO2Mode:
         return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
     else:
         return f'"{info.XEDIT_PATH}" -a -{game_mode} -QAC -autoexit -autoload "{plugin_name}"'
 
+
 def get_game_mode(info):
     # Read the load order file line by line to determine the game mode
-    with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
-        for line in LO_Check:
-            if "Skyrim.esm" in line:
-                return "sse"
-            elif "FalloutNV.esm" in line:
-                return "fnv"
-            elif "Fallout4.esm" in line:
-                return "fo4"
+    try:
+        with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
+            for line in LO_Check:
+                if "Skyrim.esm" in line:
+                    return "sse"
+                elif "FalloutNV.esm" in line:
+                    return "fnv"
+                elif "Fallout4.esm" in line:
+                    return "fo4"
+    except FileNotFoundError:
+        print(f"Load order file not found: {info.LOAD_ORDER_PATH}")
+        raise
+    except Exception as e:
+        print(f"Error reading load order file: {info.LOAD_ORDER_PATH}, error: {str(e)}")
+        raise
     return None
 
 

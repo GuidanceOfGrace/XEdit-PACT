@@ -76,8 +76,7 @@ def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Conve
     with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
         tomlkit.dump(PACT_config, INI_PACT)
 
-
-def pact_log_update(log_message):
+def pact_journal_expire():
     # Delete journal if older than set amount of days.
 
     PACT_folder = os.getcwd()
@@ -88,6 +87,9 @@ def pact_log_update(log_message):
         journal_age_days = journal_age.days
         if journal_age_days > info.Journal_Expiration:
             os.remove(journal_path)
+
+def pact_log_update(log_message):
+    pact_journal_expire()
 
     with open("PACT Journal.log", "a", encoding="utf-8", errors="ignore") as LOG_PACT:
         LOG_PACT.write(log_message)

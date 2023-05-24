@@ -548,6 +548,7 @@ class PactThread(QThread):
 
     def run(self):  # def Plugins_CLEAN():
         if os.path.exists(info.MO2_PATH):
+            pact_update_settings(info, PACT_config)
             mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if str(info.MO2_EXE).lower() in proc.name().lower()]
             for proc in mo2_procs:
                 if str(info.MO2_EXE).lower() in proc.name().lower():

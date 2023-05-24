@@ -7,7 +7,7 @@ import sys
 
 import psutil
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QThread, QTimer, QUrl
+from PySide6.QtCore import Qt, QThread, QTimer, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QApplication, QFileDialog, QLabel, QLineEdit,
                                QPushButton, QStyleFactory, QFrame, QMessageBox)
@@ -316,6 +316,7 @@ class UiPACTMainWin(object):
             self.RegBT_BROWSE_XEDIT.setEnabled(False)
             self.RegBT_EXIT.setEnabled(False)
             thread = PactThread()
+            thread.error_detected.connect(self.show_error_dialog)
             if thread.cleaning_done is True:
                 thread.terminate()
                 thread.wait()
@@ -528,16 +529,32 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         elif os.path.exists(XEDIT_EXE) and "edit" not in XEDIT_EXE.lower():
             self.RegBT_BROWSE_XEDIT.setText("❌ WRONG XEDIT EXE")
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
+    
+    def show_error_dialog(self):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Critical) # type: ignore
+        msg_box.setWindowTitle("Error")
+        msg_box.setText("ERROR: CANNOT START PACT WHILE MOD ORGANIZER 2 IS ALREADY RUNNING!")
+        msg_box.setInformativeText("PLEASE CLOSE MO2 AND RUN PACT AGAIN! (DO NOT RUN PACT THROUGH MO2)")
+        msg_box.setStandardButtons(QMessageBox.Ok) # type: ignore
 
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI
 class PactThread(QThread):
+    error_detected = Signal()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.cleaning_done = False
 
     def run(self):  # def Plugins_CLEAN():
-        check_process_mo2()
+        if os.path.exists(info.MO2_PATH):
+            mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if str(info.MO2_EXE).lower() in proc.name().lower()]
+            for proc in mo2_procs:
+                if str(info.MO2_EXE).lower() in proc.name().lower():
+                    self.error_detected.emit()
+                    self.msleep(1000)
+                    return
+
         check_settings_integrity()
         while not self.cleaning_done:
             self.cleaning_done = clean_plugins()

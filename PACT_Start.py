@@ -251,26 +251,18 @@ def pact_update_settings(info, pact_config):
     info.Journal_Expiration = int(pact_config["MAIN"]["Journal_Expiration"])
 
     if not isinstance(info.Cleaning_Timeout, int) or info.Cleaning_Timeout <= 0:
-        print("❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS NOT VALID.")
-        print("   Please change Cleaning Timeout to a valid positive number.")
-        os.system("pause")
-        sys.exit()
+        raise ValueError("""❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS NOT VALID.)
+Please change Cleaning Timeout to a valid positive number.""")
     elif info.Cleaning_Timeout < 30:
-        print("❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS TOO SMALL.")
-        print("   Cleaning Timeout must be set to at least 30 seconds or more.")
-        os.system("pause")
-        sys.exit()
+        raise ValueError("""❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS TOO SMALL.)
+Cleaning Timeout must be set to at least 30 seconds or more.""")
 
     if not isinstance(info.Journal_Expiration, int) or info.Journal_Expiration <= 0:
-        print("❌ ERROR : JOURNAL EXPIRATION VALUE IN PACT SETTINGS IS NOT VALID.")
-        print("   Please change Journal Expiration to a valid positive number.")
-        os.system("pause")
-        sys.exit()
+        raise ValueError("""❌ ERROR : JOURNAL EXPIRATION VALUE IN PACT SETTINGS IS NOT VALID.)
+Please change Journal Expiration to a valid positive number.""")
     elif info.Journal_Expiration < 1:
-        print("❌ ERROR : JOURNAL EXPIRATION VALUE IN PACT SETTINGS IS TOO SMALL.")
-        print("   Journal Expiration must be set to at least 1 day or more.")
-        os.system("pause")
-        sys.exit()
+        raise ValueError("""❌ ERROR : JOURNAL EXPIRATION VALUE IN PACT SETTINGS IS TOO SMALL.)
+Journal Expiration must be set to at least 1 day or more.""")
 
 
 pact_update_settings(info, PACT_config)
@@ -278,7 +270,7 @@ if ".exe" in str(info.XEDIT_PATH) and info.XEDIT_EXE in info.xedit_list_specific
     info.XEDIT_LOG_TXT = str(info.XEDIT_PATH).replace('.exe', '_log.txt')
     info.XEDIT_EXC_LOG = str(info.XEDIT_PATH).replace('.exe', 'Exception.log')
 elif info.XEDIT_PATH and not ".exe" in str(info.XEDIT_PATH):
-    print(Err_Invalid_XEDIT_File)
+    print(Err_Invalid_XEDIT_File)  # Figure out which exception to raise here.
     os.system("pause")
     sys.exit()
 
@@ -294,7 +286,6 @@ def check_process_mo2():
 PLEASE CLOSE MO2 AND RUN PACT AGAIN! (DO NOT RUN PACT THROUGH MO2)""")
                 return True
     return False
-            
 
 
 # Clear xedit log files to check them for each plugin separately.
@@ -307,8 +298,7 @@ def clear_xedit_logs():
     except (PermissionError, OSError):
         print("❌ ERROR : CANNOT CLEAR XEDIT LOGS. Try running PACT in Admin Mode.")
         print("   If problems continue, please report this to the PACT Nexus page.")
-        os.system("pause")
-        sys.exit()
+        raise
 
 
 # Make sure right XEDIT is running for the right game.
@@ -318,7 +308,7 @@ def check_settings_integrity():
         print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF INI SETTINGS ARE CORRECT...")
     else:
         print(Warn_Invalid_INI_Path)
-        os.system("pause")
+        os.system("pause")  # Figure out which exception to raise here.
         sys.exit()
 
     if os.path.exists(info.MO2_PATH):
@@ -340,12 +330,13 @@ def check_settings_integrity():
                 os.system("pause")
                 sys.exit()
     elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
-        print(Err_Invalid_LO_File)
+        print(Err_Invalid_LO_File)  # Figure out which exception to raise here.
         os.system("pause")
         sys.exit()
 
 
 PAUSE_MESSAGE = "Press Enter to continue..."
+
 
 def update_log_paths(info, game_mode=None):
     path = Path(info.XEDIT_PATH)
@@ -387,6 +378,8 @@ def create_bat_command(info, plugin_name):
     raise RuntimeError("Unable to start the cleaning process")
 
     # Additional helper functions
+
+
 def create_specific_xedit_command(info, plugin_name):
     xedit_exe_lower = str(info.XEDIT_EXE).lower()
     if info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:

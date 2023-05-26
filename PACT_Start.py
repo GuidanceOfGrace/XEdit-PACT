@@ -268,8 +268,8 @@ Journal Expiration must be set to at least 1 day or more.""")
 pact_update_settings(info, PACT_config)
 if ".exe" in str(info.XEDIT_PATH) and info.XEDIT_EXE in info.xedit_list_specific:
     xedit_path = Path(info.XEDIT_PATH)
-    info.XEDIT_LOG_TXT = str(xedit_path.with_name(xedit_path.stem + '_log.txt'))
-    info.XEDIT_EXC_LOG = str(xedit_path.with_name(xedit_path.stem + 'Exception.log'))
+    info.XEDIT_LOG_TXT = str(xedit_path.with_name(xedit_path.stem.upper() + '_log.txt'))
+    info.XEDIT_EXC_LOG = str(xedit_path.with_name(xedit_path.stem.upper() + 'Exception.log'))
 elif info.XEDIT_PATH and not ".exe" in str(info.XEDIT_PATH):
     print(Err_Invalid_XEDIT_File)  # Figure out which exception to raise here.
     os.system("pause")

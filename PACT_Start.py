@@ -345,8 +345,8 @@ def update_log_paths(info, game_mode=None):
         info.XEDIT_LOG_TXT = str(path.with_name(f"{game_mode.upper()}Edit_log.txt"))
         info.XEDIT_EXC_LOG = str(path.with_name(f"{game_mode.upper()}EditException.log"))
     else:
-        info.XEDIT_LOG_TXT = str(path.with_name(path.stem + "_log.txt"))
-        info.XEDIT_EXC_LOG = str(path.with_name(path.stem + "Exception.log"))
+        info.XEDIT_LOG_TXT = str(path.with_name(path.stem.upper() + "_log.txt"))
+        info.XEDIT_EXC_LOG = str(path.with_name(path.stem.upper() + "Exception.log"))
 
 
 def create_bat_command(info, plugin_name):

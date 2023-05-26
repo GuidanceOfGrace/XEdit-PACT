@@ -42,7 +42,7 @@ Journal_Expiration = 7
 # See the PACT Nexus Page for instructions on where you can find these files. 
 LoadOrder_TXT = ""
 
-# Set or copy-paste your XEdit (FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below. 
+# Set or copy-paste your XEdit (FO3Edit.exe / FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below. 
 # xEdit.exe is also supported, but requires that you set LoadOrder TXT path to loadorder.txt only. 
 XEDIT_EXE = ""
 
@@ -159,7 +159,7 @@ def pact_update_check():
 
 
 # =================== TERMINAL OUTPUT START ====================
-print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| FNV, FO4, SSE")
+print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| FO3, FNV, FO4, SSE")
 print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING PLUGINS")
 print("===============================================================================")
 
@@ -176,11 +176,12 @@ class Info:
     Cleaning_Timeout = 300
 
     MO2Mode = False
+    xedit_list_fallout3 = ("fo3edit.exe", "fo3edit64.exe")
     xedit_list_newvegas = ("fnvedit.exe", "fnvedit64.exe")
     xedit_list_fallout4 = ("fo4edit.exe", "fo4edit64.exe", "fo4vredit.exe")
     xedit_list_skyrimse = ("sseedit.exe", "sseedit64.exe", "tes5vredit.exe")
     xedit_list_universal = ("xedit.exe", "xedit64.exe", "xfoedit.exe", "xfoedit64.exe")
-    xedit_list_specific = xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
+    xedit_list_specific = xedit_list_fallout3 + xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
 
     clean_results_UDR = []  # Undisabled References
     clean_results_ITM = []  # Identical To Master
@@ -199,15 +200,19 @@ class Info:
             LCL_skip_list = [line.group() for line in plugins_pattern.finditer(PACT_Ignore.read())]
 
     # HARD EXCLUDE PLUGINS PER GAME HERE
+    FO3_skip_list = ["", "Fallout3.esm", "Anchorage.esm", "ThePitt.esm", "BrokenSteel.esm", "PointLookout.esm", "Zeta.esm", "Unofficial Fallout 3 Patch.esm"]
+
     FNV_skip_list = ["", "FalloutNV.esm", "DeadMoney.esm", "OldWorldBlues.esm", "HonestHearts.esm", "LonesomeRoad.esm", "TribalPack.esm", "MercenaryPack.esm",
                      "ClassicPack.esm", "CaravanPack.esm", "GunRunnersArsenal.esm", "Unofficial Patch NVSE Plus.esp"]
+
+    TTW_skip_list = ["", "TaleOfTwoWastelands.esm", "TTWInteriors_Core.esm", "TTWInteriorsProject_Combo.esm", "TTWInteriorsProject_ComboHotfix.esm", "TTWInteriorsProject_Merged.esm", "TTWInteriors_Core_Hotfix.esm"]  # How the hell did Github Copilot know the file names for TTW?
 
     FO4_skip_list = ["", "Fallout4.esm", "DLCCoast.esm", "DLCNukaWorld.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCworkshop02.esm", "DLCworkshop03.esm",
                      "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm"]
 
     SSE_skip_list = ["", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm", "Unofficial Skyrim Special Edition Patch.esp"]
 
-    VIP_skip_list = FNV_skip_list + FO4_skip_list + SSE_skip_list
+    VIP_skip_list = FO3_skip_list + FNV_skip_list + TTW_skip_list + FO4_skip_list + SSE_skip_list
 
     XEDIT_LOG_TXT: str = field(default_factory=str)
     XEDIT_EXC_LOG: str = field(default_factory=str)
@@ -317,6 +322,7 @@ def check_settings_integrity():
         info.MO2Mode = False
 
     valid_xedit_executables = {
+        "Fallout3.esm": info.xedit_list_fallout3,
         "FalloutNV.esm": info.xedit_list_newvegas,
         "Fallout4.esm": info.xedit_list_fallout4,
         "Skyrim.esm": info.xedit_list_skyrimse
@@ -405,6 +411,8 @@ def get_game_mode(info):
             for line in LO_Check:
                 if "Skyrim.esm" in line:
                     return "sse"
+                elif "Fallout3.esm" in line:
+                    return "fo3"
                 elif "FalloutNV.esm" in line:
                     return "fnv"
                 elif "Fallout4.esm" in line:

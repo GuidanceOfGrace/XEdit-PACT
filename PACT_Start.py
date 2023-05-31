@@ -133,9 +133,11 @@ Err_Invalid_XEDIT_File = """
    Make sure that you have set XEDIT EXE path to a valid .exe file!
    OR try changing XEDIT EXE path to a different XEdit version.
 """
-
+PAUSE_MESSAGE = "Press Enter to continue..."
 
 # =================== UPDATE FUNCTION ===================
+
+
 def pact_update_check():
     if PACT_config["MAIN"]["Update_Check"] is True:  # type: ignore
         print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
@@ -271,9 +273,9 @@ if ".exe" in str(info.XEDIT_PATH) and info.XEDIT_EXE in info.xedit_list_specific
     info.XEDIT_LOG_TXT = str(xedit_path.with_name(xedit_path.stem.upper() + '_log.txt'))
     info.XEDIT_EXC_LOG = str(xedit_path.with_name(xedit_path.stem.upper() + 'Exception.log'))
 elif info.XEDIT_PATH and not ".exe" in str(info.XEDIT_PATH):
-    print(Err_Invalid_XEDIT_File)  # Figure out which exception to raise here.
-    os.system("pause")
-    sys.exit()
+    print(Err_Invalid_XEDIT_File)
+    input(PAUSE_MESSAGE)
+    raise ValueError
 
 
 # Make sure Mod Organizer 2 is not already running.
@@ -309,8 +311,8 @@ def check_settings_integrity():
         print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF INI SETTINGS ARE CORRECT...")
     else:
         print(Warn_Invalid_INI_Path)
-        os.system("pause")  # Figure out which exception to raise here.
-        sys.exit()
+        input(PAUSE_MESSAGE)
+        raise ValueError
 
     if os.path.exists(info.MO2_PATH):
         info.MO2Mode = True
@@ -328,15 +330,12 @@ def check_settings_integrity():
             LO_Plugins = LO_Check.read()
             if not any(game in LO_Plugins and str(info.XEDIT_EXE).lower() in executables for game, executables in valid_xedit_executables.items()):
                 print(Warn_Invalid_INI_Setup)
-                os.system("pause")
-                sys.exit()
+                input(PAUSE_MESSAGE)
+                raise ValueError
     elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
-        print(Err_Invalid_LO_File)  # Figure out which exception to raise here.
-        os.system("pause")
-        sys.exit()
-
-
-PAUSE_MESSAGE = "Press Enter to continue..."
+        print(Err_Invalid_LO_File)
+        input(PAUSE_MESSAGE)
+        raise ValueError
 
 
 def update_log_paths(info, game_mode=None):
@@ -364,7 +363,7 @@ def create_bat_command(info, plugin_name):
         if game_mode is None:
             print(Err_Invalid_LO_File)
             input(PAUSE_MESSAGE)
-            raise ValueError("Invalid load order file")
+            raise ValueError
 
         update_log_paths(info, game_mode)
         bat_command = create_universal_xedit_command(info, plugin_name, game_mode)

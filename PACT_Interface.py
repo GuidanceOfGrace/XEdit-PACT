@@ -32,27 +32,6 @@ class UiPACTMainWin(object):
     def __init__(self, PACT_WINDOW):
         super().__init__()  # Allow subclasses to inherit & extend behavior of parent class.
         QApplication.setStyle(QStyleFactory.create("Fusion"))
-        """self.InputField_JE: Optional[Union[QLabel, QLineEdit]] = None
-        self.InputField_CT: Optional[Union[QLabel, QLineEdit]] = None
-        self.configured_LO: bool = False
-        self.configured_MO2: bool = False
-        self.configured_XEDIT: bool = False
-        # self.ChkBT_UPDATE: Optional[QWidget] = None # These don't seem to be used.
-        # self.ChkBT_STATS: Optional[QWidget] = None
-        self.LINE_SEPARATOR1: Optional[QtWidgets.QFrame] = None
-        self.LBL_SETTINGS1: Optional[QtWidgets.QLabel] = None
-        self.LBL_SETTINGS2: Optional[QtWidgets.QLabel] = None
-        self.RegBT_BROWSE_LO: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_BROWSE_MO2: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_BROWSE_XEDIT: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_CLEAN_PLUGINS: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_RESTORE_BACKUP: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_BACKUP_PLUGINS: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_UPDATE_SETTINGS: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_HELP: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_EXIT: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None"""
 
         self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
         self.timer.timeout.connect(self.timed_states)

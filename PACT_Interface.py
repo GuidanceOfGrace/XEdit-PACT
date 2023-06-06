@@ -32,27 +32,6 @@ class UiPACTMainWin(object):
     def __init__(self, PACT_WINDOW):
         super().__init__()  # Allow subclasses to inherit & extend behavior of parent class.
         QApplication.setStyle(QStyleFactory.create("Fusion"))
-        """self.InputField_JE: Optional[Union[QLabel, QLineEdit]] = None
-        self.InputField_CT: Optional[Union[QLabel, QLineEdit]] = None
-        self.configured_LO: bool = False
-        self.configured_MO2: bool = False
-        self.configured_XEDIT: bool = False
-        # self.ChkBT_UPDATE: Optional[QWidget] = None # These don't seem to be used.
-        # self.ChkBT_STATS: Optional[QWidget] = None
-        self.LINE_SEPARATOR1: Optional[QtWidgets.QFrame] = None
-        self.LBL_SETTINGS1: Optional[QtWidgets.QLabel] = None
-        self.LBL_SETTINGS2: Optional[QtWidgets.QLabel] = None
-        self.RegBT_BROWSE_LO: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_BROWSE_MO2: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_BROWSE_XEDIT: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_CLEAN_PLUGINS: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_RESTORE_BACKUP: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_BACKUP_PLUGINS: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_UPDATE_SETTINGS: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_HELP: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_EXIT: Optional[QtWidgets.QPushButton] = None
-        self.RegBT_CHECK_UPDATES: Optional[QtWidgets.QPushButton] = None"""
 
         self.timer = QTimer()  # For CLEAN PLUGINS button auto check.
         self.timer.timeout.connect(self.timed_states)
@@ -135,9 +114,14 @@ class UiPACTMainWin(object):
                                              self.select_file_lo
                                              )
         if "loadorder" in PACT_config["MAIN"]["LoadOrder_TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder_TXT"]:  # type: ignore
-            self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
-            self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
-            self.configured_LO = True
+            if os.path.isfile(PACT_config["MAIN"]["LoadOrder_TXT"]):
+                self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
+                self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
+                self.configured_LO = True
+            else:
+                self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
+                self.RegBT_BROWSE_LO.setText("❓ LOAD ORDER FILE NOT FOUND")
+                self.configured_LO = False
 
         # Button - Browse MO2 EXE
         self.RegBT_BROWSE_MO2 = create_button("SET MO2 EXECUTABLE",
@@ -148,9 +132,14 @@ class UiPACTMainWin(object):
                                               self.select_file_mo2
                                               )
         if "ModOrganizer" in PACT_config["MAIN"]["MO2_EXE"]:  # type: ignore
-            self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
-            self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
-            self.configured_MO2 = True
+            if os.path.isfile(PACT_config["MAIN"]["MO2_EXE"]):
+                self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
+                self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
+                self.configured_MO2 = True
+            else:
+                self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
+                self.RegBT_BROWSE_MO2.setText("❓ MO2 EXECUTABLE NOT FOUND")
+                self.configured_MO2 = False
 
         # Button - Browse XEDIT EXE
         self.RegBT_BROWSE_XEDIT = create_button("SET XEDIT EXECUTABLE",
@@ -161,9 +150,14 @@ class UiPACTMainWin(object):
                                                 self.select_file_xedit
                                                 )
         if "Edit" in PACT_config["MAIN"]["XEDIT_EXE"]:  # type: ignore
-            self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
-            self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
-            self.configured_XEDIT = True
+            if os.path.isfile(PACT_config["MAIN"]["XEDIT_EXE"]):
+                self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
+                self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
+                self.configured_XEDIT = True
+            else:
+                self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;")
+                self.RegBT_BROWSE_XEDIT.setText("❓ XEDIT EXECUTABLE NOT FOUND")
+                self.configured_XEDIT = False
 
         # SEPARATOR LINE 1
         self.LINE_SEPARATOR1 = create_horizontal_line_separator(

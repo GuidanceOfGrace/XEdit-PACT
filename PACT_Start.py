@@ -523,14 +523,17 @@ def run_auto_cleaning(plugin_name):
                 # Check for low CPU usage (indicative of an error)
                 if check_cpu_usage(proc):
                     handle_error(proc, plugin_name, info, "❌ ERROR : PLUGIN IS DISABLED OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                    pact_log_update(f"{plugin_name} -> Disabled or missing requirements")
                     break
                 # Check for process running longer than specified timeout
                 if check_process_timeout(proc, info):
                     handle_error(proc, plugin_name, info, "❌ ERROR : XEDIT TIMED OUT (CLEANING PROCESS TOOK TOO LONG)! KILLING XEDIT...", add_ignore=False)
+                    pact_log_update(f"{plugin_name} -> XEdit timed out")
                     break
                 # Check for exceptions in process
                 if check_process_exceptions(info):
                     handle_error(proc, plugin_name, info, "❌ ERROR : PLUGIN IS EMPTY OR HAS MISSING REQUIREMENTS! KILLING XEDIT AND ADDING PLUGIN TO IGNORE LIST...")
+                    pact_log_update(f"{plugin_name} -> Empty or missing requirements")
                     break
         time.sleep(3)
     # Increment processed plugins count

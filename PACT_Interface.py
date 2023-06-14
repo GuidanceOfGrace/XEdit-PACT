@@ -528,9 +528,9 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 class PactThread(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.cleaning_done = False
 
     def run(self):  # def Plugins_CLEAN():
+        self.cleaning_done = False
         is_mo2_running = check_process_mo2()
         if is_mo2_running:
             self.cleaning_done = is_mo2_running

@@ -6,6 +6,7 @@ import shutil
 import sys
 
 import psutil
+from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
@@ -332,7 +333,7 @@ class UiPACTMainWin(object):
 
     def start_cleaning(self):
         if self.thread is None:
-            self.thread = PactThread()
+            self.thread = PactThread(progress_bar=self.ProgressBar)
             self.thread.start()
             progress_emitter.progress.connect(self.ProgressBar.setValue)
             progress_emitter.max_value.connect(self.ProgressBar.setMaximum)
@@ -544,9 +545,10 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI
 class PactThread(QThread):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, progress_bar: Union[QtWidgets.QProgressBar, None] = None):
         super().__init__(parent)
         self.cleaning_done = False
+        self.progress_bar = progress_bar
     def run(self):  # def Plugins_CLEAN():
         is_mo2_running = check_process_mo2()
         if is_mo2_running:
@@ -555,6 +557,10 @@ class PactThread(QThread):
         check_settings_integrity()
         while not self.cleaning_done:
             self.cleaning_done = clean_plugins(progress_emitter)
+            if self.progress_bar and info.plugins_processed == self.progress_bar.maximum():
+                self.progress_bar.setValue(info.plugins_processed)
+                self.cleaning_done = True
+                break
             self.msleep(1000)
 
 if __name__ == "__main__":

@@ -97,6 +97,7 @@ class UiPACTMainWin(object):
             progress_bar.setValue(0)
             progress_bar.setObjectName(object_name)
             progress_bar.setFormat(format)
+            progress_bar.setVisible(False)
             return progress_bar
 
         self.RegBT_CHECK_UPDATES = create_button("CHECK FOR UPDATES",
@@ -332,6 +333,8 @@ class UiPACTMainWin(object):
                 self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
 
     def start_cleaning(self):
+        if not self.ProgressBar.isVisible():
+            self.ProgressBar.setVisible(True)
         if self.thread is None:
             self.thread = PactThread(progress_bar=self.ProgressBar)
             self.thread.start()

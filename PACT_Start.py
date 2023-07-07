@@ -8,6 +8,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Union
+from PySide6.QtCore import QObject, Signal, Slot
 
 import psutil
 import requests
@@ -17,7 +18,6 @@ import tomlkit
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
 - (..., encoding="utf-8", errors="ignore") needs to go with every opened file because unicode errors are a bitch.
 '''
-
 
 # =================== PACT TOML FILE ===================
 def pact_ini_create():
@@ -213,7 +213,7 @@ class Info:
 
     XEDIT_LOG_TXT: str = field(default_factory=str)
     XEDIT_EXC_LOG: str = field(default_factory=str)
-
+    PLUGIN_COUNT: int = field(default_factory=int)
 
 info = Info()
 
@@ -586,10 +586,21 @@ def get_plugin_list(load_order_path):
 def clean_plugin(plugin):
     run_auto_cleaning(plugin)
     check_cleaning_results(plugin)
-
-
-def clean_plugins():
+def init_plugins_info():
     ALL_skip_list = info.VIP_skip_list + info.LCL_skip_list
+    plugin_list = get_plugin_list(info.LOAD_ORDER_PATH)
+    count_plugins = len(set(plugin_list) - set(ALL_skip_list))
+    return plugin_list, count_plugins, ALL_skip_list
+class ProgressEmitter(QObject):
+    progress = Signal(int)
+    max_value = Signal(int)
+
+    def report_max_value(self):
+        count = init_plugins_info()[1]
+        self.max_value.emit(count)
+    def report_progress(self):
+        self.progress.emit(info.plugins_processed)
+def clean_plugins(progress_emitter = None):
 
     print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")
     print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")
@@ -600,9 +611,10 @@ def clean_plugins():
     else:
         print("❌ MO2 EXECUTABLE NOT SET OR FOUND. SWITCHING TO VORTEX MODE...")
 
-    plugin_list = get_plugin_list(info.LOAD_ORDER_PATH)
-    count_plugins = len(set(plugin_list) - set(ALL_skip_list))
-    print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {count_plugins} )")
+    plugin_list, plugin_count, ALL_skip_list = init_plugins_info()
+    if progress_emitter:
+        progress_emitter.report_max_value()
+    print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {plugin_count} )")
     log_start = time.perf_counter()
     log_time = datetime.datetime.now()
     pact_log_update(f"\nSTARTED CLEANING PROCESS AT : {log_time}")
@@ -610,9 +622,11 @@ def clean_plugins():
 
     for plugin in plugin_list:
         if not any(plugin in elem for elem in ALL_skip_list) and re.search(r"(?:.+?)(?:\.(?:esl|esm|esp)+)$", plugin, re.IGNORECASE):
-            count_cleaned += 1
             clean_plugin(plugin)
-            print(f"Finished cleaning : {plugin} ({count_cleaned} / {count_plugins})")
+            count_cleaned += 1
+            print(f"Finished cleaning : {plugin} ({count_cleaned} / {plugin_count})")
+            if progress_emitter:
+                progress_emitter.report_progress()
     completion_time = (str(time.perf_counter() - log_start))[:3]
     pact_log_update(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in {completion_time} seconds.")
     pact_log_update(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")

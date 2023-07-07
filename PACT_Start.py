@@ -591,6 +591,7 @@ def init_plugins_info():
     plugin_list = get_plugin_list(info.LOAD_ORDER_PATH)
     count_plugins = len(set(plugin_list) - set(ALL_skip_list))
     return plugin_list, count_plugins, ALL_skip_list
+
 class ProgressEmitter(QObject):
     progress = Signal(int)
     max_value = Signal(int)
@@ -600,6 +601,7 @@ class ProgressEmitter(QObject):
         self.max_value.emit(count)
     def report_progress(self):
         self.progress.emit(info.plugins_processed)
+
 def clean_plugins(progress_emitter = None):
 
     print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")

@@ -213,7 +213,6 @@ class Info:
 
     XEDIT_LOG_TXT: str = field(default_factory=str)
     XEDIT_EXC_LOG: str = field(default_factory=str)
-    PLUGIN_COUNT: int = field(default_factory=int)
 
 info = Info()
 

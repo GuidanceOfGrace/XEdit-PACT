@@ -594,12 +594,15 @@ def init_plugins_info():
 class ProgressEmitter(QObject):
     progress = Signal(int)
     max_value = Signal(int)
+    plugin_value = Signal(str)
 
     def report_max_value(self):
         count = init_plugins_info()[1]
         self.max_value.emit(count)
     def report_progress(self):
         self.progress.emit(info.plugins_processed)
+    def report_plugin(self, plugin):
+        self.plugin_value.emit(f"Cleaning {plugin} %v/%m - %p%")
 
 def clean_plugins(progress_emitter = None):
 
@@ -623,6 +626,8 @@ def clean_plugins(progress_emitter = None):
 
     for plugin in plugin_list:
         if not any(plugin in elem for elem in ALL_skip_list) and re.search(r"(?:.+?)(?:\.(?:esl|esm|esp)+)$", plugin, re.IGNORECASE):
+            if progress_emitter:
+                progress_emitter.report_plugin(plugin)
             clean_plugin(plugin)
             count_cleaned += 1
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {plugin_count})")

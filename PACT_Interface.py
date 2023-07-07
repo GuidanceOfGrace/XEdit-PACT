@@ -337,7 +337,7 @@ class UiPACTMainWin(object):
             self.thread.start()
             progress_emitter.progress.connect(self.ProgressBar.setValue)
             progress_emitter.max_value.connect(self.ProgressBar.setMaximum)
-            self.ProgressBar.setFormat("Cleaning: %v/%m - %p%")
+            progress_emitter.plugin_value.connect(self.ProgressBar.setFormat)
             self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: pink; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()

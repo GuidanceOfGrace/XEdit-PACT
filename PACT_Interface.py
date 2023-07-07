@@ -12,7 +12,7 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QApplication, QFileDialog, QLabel, QLineEdit,
                                QPushButton, QStyleFactory, QFrame, QMessageBox)
 
-from PACT_Start import (PACT_config, PACT_Current, check_process_mo2,
+from PACT_Start import (PACT_config, PACT_Current, ProgressEmitter, check_process_mo2,
                         check_settings_integrity, clean_plugins, info,
                         pact_ini_update, pact_update_check,
                         pact_update_settings)
@@ -27,7 +27,7 @@ if current_platform == 'Windows':
 QMessageBox.NoIcon | Question | Information | Warning | Critical
 '''
 
-
+progress_emitter = ProgressEmitter()
 class UiPACTMainWin(object):
     def __init__(self, PACT_WINDOW):
         super().__init__()  # Allow subclasses to inherit & extend behavior of parent class.
@@ -90,6 +90,14 @@ class UiPACTMainWin(object):
             separator.setObjectName(object_name)
             return separator
 
+        def create_progress_bar(parent, geometry: QtCore.QRect, object_name, format: str = "%p%"):
+            progress_bar = QtWidgets.QProgressBar(parent)
+            progress_bar.setGeometry(geometry)
+            progress_bar.setValue(0)
+            progress_bar.setObjectName(object_name)
+            progress_bar.setFormat(format)
+            return progress_bar
+
         self.RegBT_CHECK_UPDATES = create_button("CHECK FOR UPDATES",
                                                  PACT_WINDOW,
                                                  QtCore.QRect(80, 50, 230, 32),
@@ -114,7 +122,7 @@ class UiPACTMainWin(object):
                                              self.select_file_lo
                                              )
         if "loadorder" in PACT_config["MAIN"]["LoadOrder_TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder_TXT"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["LoadOrder_TXT"]):
+            if os.path.isfile(PACT_config["MAIN"]["LoadOrder_TXT"]):  # type: ignore
                 self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
                 self.configured_LO = True
@@ -132,7 +140,7 @@ class UiPACTMainWin(object):
                                               self.select_file_mo2
                                               )
         if "ModOrganizer" in PACT_config["MAIN"]["MO2_EXE"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["MO2_EXE"]):
+            if os.path.isfile(PACT_config["MAIN"]["MO2_EXE"]):  # type: ignore
                 self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
                 self.configured_MO2 = True
@@ -150,7 +158,7 @@ class UiPACTMainWin(object):
                                                 self.select_file_xedit
                                                 )
         if "Edit" in PACT_config["MAIN"]["XEDIT_EXE"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["XEDIT_EXE"]):
+            if os.path.isfile(PACT_config["MAIN"]["XEDIT_EXE"]):  # type: ignore
                 self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
                 self.configured_XEDIT = True
@@ -249,7 +257,11 @@ class UiPACTMainWin(object):
                                                  )
 
         # BOTTOM
-
+        self.ProgressBar = create_progress_bar(PACT_WINDOW,
+                                               QtCore.QRect(80, 400, 480, 24),
+                                               "ProgressBar",
+                                               format="%v/%m - %p%",
+                                               )
         # Button - HELP
         self.RegBT_HELP = create_button("HELP",
                                         PACT_WINDOW,
@@ -288,6 +300,7 @@ class UiPACTMainWin(object):
 
     def timed_states(self):
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.name().lower()]
+        self.ProgressBar.setValue(0)
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
@@ -322,6 +335,8 @@ class UiPACTMainWin(object):
         if self.thread is None:
             self.thread = PactThread()
             self.thread.start()
+            progress_emitter.progress.connect(self.ProgressBar.setValue)
+            progress_emitter.max_value.connect(self.ProgressBar.setMaximum)
             self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: pink; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
@@ -528,18 +543,17 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 class PactThread(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.cleaning_done = False
 
     def run(self):  # def Plugins_CLEAN():
+        self.cleaning_done = False
         is_mo2_running = check_process_mo2()
         if is_mo2_running:
             self.cleaning_done = is_mo2_running
             return
         check_settings_integrity()
         while not self.cleaning_done:
-            self.cleaning_done = clean_plugins()
+            self.cleaning_done = clean_plugins(progress_emitter)
             self.msleep(1000)
-
 
 if __name__ == "__main__":
     gui_prompt = """\
@@ -553,9 +567,9 @@ PRESS 'START CLEANING' BUTTON TO CLEAN ALL ACTIVE GAME PLUGINS
 YOU CAN ALSO CREATE AND RESTORE PLUGIN BACKUPS (READ THE INFO CAREFULLY)
 DON'T FORGET TO CHECK THE PACT README FOR MORE DETAILS AND INSTRUCTIONS
 """
-    print(gui_prompt)
     app = QtWidgets.QApplication(sys.argv)
     PACT_WINDOW = QtWidgets.QDialog()
     ui = UiPACTMainWin(PACT_WINDOW)
+    print(gui_prompt)
     PACT_WINDOW.show()
     sys.exit(app.exec())

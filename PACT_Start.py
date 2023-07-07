@@ -8,7 +8,6 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Union
-from PySide6.QtCore import QObject, Signal, Slot
 
 import psutil
 import requests
@@ -598,19 +597,28 @@ def init_plugins_info():
     plugin_list = get_plugin_list(info.LOAD_ORDER_PATH)
     count_plugins = len(set(plugin_list) - set(ALL_skip_list))
     return plugin_list, count_plugins, ALL_skip_list
+try:
+    from PySide6.QtCore import QObject, Signal, Slot
+    class ProgressEmitter(QObject): # type: ignore
+        progress = Signal(int)
+        max_value = Signal(int)
+        plugin_value = Signal(str)
 
-class ProgressEmitter(QObject):
-    progress = Signal(int)
-    max_value = Signal(int)
-    plugin_value = Signal(str)
-
-    def report_max_value(self):
-        count = init_plugins_info()[1]
-        self.max_value.emit(count)
-    def report_progress(self):
-        self.progress.emit(info.plugins_processed)
-    def report_plugin(self, plugin):
-        self.plugin_value.emit(f"Cleaning {plugin} %v/%m - %p%")
+        def report_max_value(self):
+            count = init_plugins_info()[1]
+            self.max_value.emit(count)
+        def report_progress(self):
+            self.progress.emit(info.plugins_processed)
+        def report_plugin(self, plugin):
+            self.plugin_value.emit(f"Cleaning {plugin} %v/%m - %p%")
+except ImportError:
+    class ProgressEmitter:
+        def report_max_value(self):
+            pass
+        def report_progress(self):
+            pass
+        def report_plugin(self, plugin):
+            pass
 
 def clean_plugins(progress_emitter = None):
 

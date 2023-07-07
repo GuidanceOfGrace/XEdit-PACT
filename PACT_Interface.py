@@ -260,7 +260,7 @@ class UiPACTMainWin(object):
         self.ProgressBar = create_progress_bar(PACT_WINDOW,
                                                QtCore.QRect(80, 400, 480, 24),
                                                "ProgressBar",
-                                               format="%v/%m - %p%",
+                                               format=""
                                                )
         # Button - HELP
         self.RegBT_HELP = create_button("HELP",
@@ -336,6 +336,7 @@ class UiPACTMainWin(object):
             self.thread.start()
             progress_emitter.progress.connect(self.ProgressBar.setValue)
             progress_emitter.max_value.connect(self.ProgressBar.setMaximum)
+            self.ProgressBar.setFormat("Cleaning: %v/%m - %p%")
             self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: pink; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
@@ -351,6 +352,7 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
             print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
+            self.ProgressBar.setFormat("Cleaning Stopped!")
             self.ProgressBar.setValue(0)
 
     # ================== POP-UPS / WARNINGS =====================

@@ -332,6 +332,7 @@ class UiPACTMainWin(object):
                 self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
 
     def start_cleaning(self):
+        self.ProgressBar.setValue(0)
         if self.thread is None:
             self.thread = PactThread()
             self.thread.start()
@@ -351,6 +352,7 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
             print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
+            self.ProgressBar.setValue(0)
 
     # ================== POP-UPS / WARNINGS =====================
 

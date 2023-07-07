@@ -6,6 +6,7 @@ import shutil
 import sys
 
 import psutil
+from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
@@ -260,7 +261,7 @@ class UiPACTMainWin(object):
         self.ProgressBar = create_progress_bar(PACT_WINDOW,
                                                QtCore.QRect(80, 400, 480, 24),
                                                "ProgressBar",
-                                               format="%v/%m - %p%",
+                                               format=""
                                                )
         # Button - HELP
         self.RegBT_HELP = create_button("HELP",
@@ -300,7 +301,6 @@ class UiPACTMainWin(object):
 
     def timed_states(self):
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.name().lower()]
-        self.ProgressBar.setValue(0)
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
@@ -333,10 +333,11 @@ class UiPACTMainWin(object):
 
     def start_cleaning(self):
         if self.thread is None:
-            self.thread = PactThread()
+            self.thread = PactThread(progress_bar=self.ProgressBar)
             self.thread.start()
             progress_emitter.progress.connect(self.ProgressBar.setValue)
             progress_emitter.max_value.connect(self.ProgressBar.setMaximum)
+            progress_emitter.plugin_value.connect(self.ProgressBar.setFormat)
             self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: pink; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
@@ -346,11 +347,14 @@ class UiPACTMainWin(object):
         if self.thread is not None:
             self.thread.terminate()
             self.thread.wait()
+            self.thread.cleaning_done = True
             self.thread = None
             self.RegBT_CLEAN_PLUGINS.setEnabled(False)
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
             print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
+            self.ProgressBar.setFormat("Cleaning Stopped!")
+            self.ProgressBar.setValue(0)
 
     # ================== POP-UPS / WARNINGS =====================
 
@@ -541,11 +545,11 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI
 class PactThread(QThread):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, progress_bar: Union[QtWidgets.QProgressBar, None] = None):
         super().__init__(parent)
-
-    def run(self):  # def Plugins_CLEAN():
         self.cleaning_done = False
+        self.progress_bar = progress_bar
+    def run(self):  # def Plugins_CLEAN():
         is_mo2_running = check_process_mo2()
         if is_mo2_running:
             self.cleaning_done = is_mo2_running
@@ -553,6 +557,10 @@ class PactThread(QThread):
         check_settings_integrity()
         while not self.cleaning_done:
             self.cleaning_done = clean_plugins(progress_emitter)
+            if self.progress_bar and info.plugins_processed == self.progress_bar.maximum():
+                self.progress_bar.setValue(info.plugins_processed)
+                self.cleaning_done = True
+                break
             self.msleep(1000)
 
 if __name__ == "__main__":

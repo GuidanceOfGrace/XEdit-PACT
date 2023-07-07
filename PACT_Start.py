@@ -607,15 +607,15 @@ try:
         def report_max_value(self):
             count = init_plugins_info()[1]
             self.max_value.emit(count)
-        def report_progress(self):
-            self.progress.emit(info.plugins_processed)
+        def report_progress(self, count):
+            self.progress.emit(count)
         def report_plugin(self, plugin):
             self.plugin_value.emit(f"Cleaning {plugin} %v/%m - %p%")
 except ImportError:
     class ProgressEmitter:
         def report_max_value(self):
             pass
-        def report_progress(self):
+        def report_progress(self, count):
             pass
         def report_plugin(self, plugin):
             pass
@@ -648,7 +648,7 @@ def clean_plugins(progress_emitter = None):
             count_cleaned += 1
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {plugin_count})")
             if progress_emitter:
-                progress_emitter.report_progress()
+                progress_emitter.report_progress(count_cleaned)
     completion_time = (str(time.perf_counter() - log_start))[:3]
     pact_log_update(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in {completion_time} seconds.")
     pact_log_update(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")

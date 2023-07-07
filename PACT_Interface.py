@@ -351,6 +351,7 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
             print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
+            self.ProgressBar.setValue(0)
 
     # ================== POP-UPS / WARNINGS =====================
 

@@ -348,9 +348,9 @@ class UiPACTMainWin(object):
 
     def stop_cleaning(self):
         if self.thread is not None:
+            self.thread.cleaning_done = True
             self.thread.terminate()
             self.thread.wait()
-            self.thread.cleaning_done = True
             self.thread = None
             self.RegBT_CLEAN_PLUGINS.setEnabled(False)
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
@@ -561,7 +561,6 @@ class PactThread(QThread):
         while not self.cleaning_done:
             self.cleaning_done = clean_plugins(progress_emitter)
             if self.progress_bar and info.plugins_processed == self.progress_bar.maximum():
-                self.progress_bar.setValue(info.plugins_processed)
                 self.cleaning_done = True
                 break
             self.msleep(1000)

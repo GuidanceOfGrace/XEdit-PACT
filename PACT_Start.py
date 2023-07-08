@@ -620,7 +620,7 @@ except ImportError:
         def report_plugin(self, plugin):
             pass
 
-def clean_plugins(progress_emitter = None):
+def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
 
     print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")
     print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")

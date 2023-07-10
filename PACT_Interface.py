@@ -91,13 +91,16 @@ class UiPACTMainWin(object):
             separator.setObjectName(object_name)
             return separator
 
-        def create_progress_bar(parent, geometry: QtCore.QRect, object_name, format: str = "%p%"):
+        def create_progress_bar(parent, geometry: QtCore.QRect, object_name, format: str = "%p%", visible=False):
             progress_bar = QtWidgets.QProgressBar(parent)
             progress_bar.setGeometry(geometry)
             progress_bar.setValue(0)
             progress_bar.setObjectName(object_name)
             progress_bar.setFormat(format)
-            progress_bar.setVisible(False)
+            if visible:
+                progress_bar.setVisible(True)
+            else:
+                progress_bar.setVisible(False)
             return progress_bar
 
         self.RegBT_CHECK_UPDATES = create_button("CHECK FOR UPDATES",

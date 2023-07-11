@@ -603,6 +603,8 @@ try:
         progress = Signal(int)
         max_value = Signal(int)
         plugin_value = Signal(str)
+        done = Signal()
+        is_done = False
 
         def report_max_value(self):
             count = init_plugins_info()[1]
@@ -611,6 +613,9 @@ try:
             self.progress.emit(count)
         def report_plugin(self, plugin):
             self.plugin_value.emit(f"Cleaning {plugin} %v/%m - %p%")
+        def report_done(self):
+            self.done.emit()
+            self.is_done = True
 except ImportError:
     class ProgressEmitter:
         def report_max_value(self):
@@ -619,9 +624,12 @@ except ImportError:
             pass
         def report_plugin(self, plugin):
             pass
+        def report_done(self):
+            pass
 
 def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
-
+    if not __name__ == "__main__" and not progress_emitter:
+        raise Exception("ProgressEmitter must be provided when running as a module")
     print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")
     print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")
     print(f"❓ MO2 EXE is set to : {info.MO2_PATH}")
@@ -665,7 +673,9 @@ def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
             for plugin in plugins:
                 print(plugin)
 
-    return True  # Required for running function check in PACT_Interface.
+    if progress_emitter:
+        progress_emitter.report_done()
+    # return True  # Required for running function check in PACT_Interface.
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.

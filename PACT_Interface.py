@@ -302,35 +302,29 @@ class UiPACTMainWin(object):
                                         )
 
     # ============== CLEAN PLUGINS BUTTON STATES ================
-
-    def timed_states(self):
+    def is_xedit_running(self):
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.name().lower()]
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
                 xedit_running = True
+        return xedit_running
+    def timed_states(self):
+        xedit_running = self.is_xedit_running()
 
         if self.thread is None:
-            self.RegBT_BROWSE_LO.setEnabled(True)
-            self.RegBT_BROWSE_MO2.setEnabled(True)
-            self.RegBT_BROWSE_XEDIT.setEnabled(True)
-            self.RegBT_EXIT.setEnabled(True)
-            if self.configured_LO and self.configured_XEDIT and xedit_running is False:
-                self.RegBT_CLEAN_PLUGINS.setEnabled(True)
-                self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")
-                self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
-                self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
-                self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)
+            self.init_start_button(xedit_running)
         else:
             self.RegBT_BROWSE_LO.setEnabled(False)
             self.RegBT_BROWSE_MO2.setEnabled(False)
             self.RegBT_BROWSE_XEDIT.setEnabled(False)
             self.RegBT_EXIT.setEnabled(False)
-            thread = PactThread()
-            if thread.cleaning_done is True:
-                thread.terminate()
-                thread.wait()
-                self.thread = None
+            if not self.thread:
+                self.thread = PactThread(progress_bar=self.ProgressBar)
+            if progress_emitter.is_done == True:
+                self.thread.terminate()
+                self.thread.wait()
+                self.reset_thread()
             if "STOP CLEANING" not in self.RegBT_CLEAN_PLUGINS.text() and xedit_running is False:
                 self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")
                 self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
@@ -341,20 +335,43 @@ class UiPACTMainWin(object):
         if self.thread is None:
             self.thread = PactThread(progress_bar=self.ProgressBar)
             self.thread.start()
+            self.thread.finished.connect(self.init_start_and_reset)
             progress_emitter.progress.connect(self.ProgressBar.setValue)
             progress_emitter.max_value.connect(self.ProgressBar.setMaximum)
             progress_emitter.plugin_value.connect(self.ProgressBar.setFormat)
+            progress_emitter.done.connect(self.thread.terminate)
+            progress_emitter.done.connect(self.thread.wait)
+            progress_emitter.done.connect(self.reset_thread)
             self.RegBT_CLEAN_PLUGINS.setText("STOP CLEANING")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: pink; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
             self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)
-
+    def init_start_button(self, xedit_running=False):
+        if not self.RegBT_BROWSE_LO.isEnabled():
+            self.RegBT_BROWSE_LO.setEnabled(True)
+        if not self.RegBT_BROWSE_MO2.isEnabled():
+            self.RegBT_BROWSE_MO2.setEnabled(True)
+        if not self.RegBT_BROWSE_XEDIT.isEnabled():
+            self.RegBT_BROWSE_XEDIT.setEnabled(True)
+        if not self.RegBT_EXIT.isEnabled():
+            self.RegBT_EXIT.setEnabled(True)
+        if self.configured_LO and self.configured_XEDIT and xedit_running is False:
+            self.RegBT_CLEAN_PLUGINS.setEnabled(True)
+            self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")
+            self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
+            self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
+            self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)
+    def reset_thread(self):
+        self.thread = None
+    def init_start_and_reset(self):
+        self.init_start_button()
+        self.reset_thread()
+        
+        
     def stop_cleaning(self):
         if self.thread is not None:
-            self.thread.cleaning_done = True
-            self.thread.terminate()
-            self.thread.wait()
-            self.thread = None
+            progress_emitter.report_done()
+            self.reset_thread()
             self.RegBT_CLEAN_PLUGINS.setEnabled(False)
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
@@ -558,15 +575,12 @@ class PactThread(QThread):
     def run(self):  # def Plugins_CLEAN():
         is_mo2_running = check_process_mo2()
         if is_mo2_running:
-            self.cleaning_done = is_mo2_running
-            return
+            if self.progress_bar:
+                self.progress_bar.setVisible(False)
+            self.quit()
         check_settings_integrity()
-        while not self.cleaning_done:
-            self.cleaning_done = clean_plugins(progress_emitter)
-            if self.progress_bar and info.plugins_processed == self.progress_bar.maximum():
-                self.cleaning_done = True
-                break
-            self.msleep(1000)
+        clean_plugins(progress_emitter)
+        self.msleep(1000)
 
 if __name__ == "__main__":
     gui_prompt = """\

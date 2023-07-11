@@ -330,8 +330,6 @@ class UiPACTMainWin(object):
                 self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
 
     def start_cleaning(self):
-        if not self.ProgressBar.isVisible():
-            self.ProgressBar.setVisible(True)
         if self.thread is None:
             self.thread = PactThread(progress_bar=self.ProgressBar)
             self.thread.start()
@@ -339,6 +337,7 @@ class UiPACTMainWin(object):
             progress_emitter.progress.connect(self.ProgressBar.setValue)
             progress_emitter.max_value.connect(self.ProgressBar.setMaximum)
             progress_emitter.plugin_value.connect(self.ProgressBar.setFormat)
+            progress_emitter.visible.connect(self.ProgressBar.setVisible)
             progress_emitter.done.connect(self.thread.terminate)
             progress_emitter.done.connect(self.thread.wait)
             progress_emitter.done.connect(self.reset_thread)

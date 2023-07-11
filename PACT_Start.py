@@ -604,6 +604,7 @@ try:
         max_value = Signal(int)
         plugin_value = Signal(str)
         done = Signal()
+        visible = Signal(bool)
         is_done = False
 
         def report_max_value(self):
@@ -616,6 +617,8 @@ try:
         def report_done(self):
             self.done.emit()
             self.is_done = True
+        def set_visible(self):
+            self.visible.emit(True)
 except ImportError:
     class ProgressEmitter:
         def report_max_value(self):
@@ -625,6 +628,8 @@ except ImportError:
         def report_plugin(self, plugin):
             pass
         def report_done(self):
+            pass
+        def set_visible(self):
             pass
 
 def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
@@ -642,6 +647,7 @@ def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
     plugin_list, plugin_count, ALL_skip_list = init_plugins_info()
     if progress_emitter:
         progress_emitter.report_max_value()
+        progress_emitter.set_visible()
     print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {plugin_count} )")
     log_start = time.perf_counter()
     log_time = datetime.datetime.now()

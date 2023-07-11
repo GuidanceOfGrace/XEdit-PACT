@@ -621,6 +621,7 @@ try:
             self.visible.emit(True)
 except ImportError:
     class ProgressEmitter:
+        is_done = False
         def report_max_value(self):
             pass
         def report_progress(self, count):
@@ -638,7 +639,8 @@ def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
     print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")
     print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")
     print(f"❓ MO2 EXE is set to : {info.MO2_PATH}")
-
+    if progress_emitter:
+        progress_emitter.is_done = False
     if info.MO2Mode:
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")
     else:

@@ -635,7 +635,7 @@ except ImportError:
 
 def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
     if not __name__ == "__main__" and not progress_emitter:
-        raise Exception("ProgressEmitter must be provided when running as a module")
+        raise ValueError("ProgressEmitter must be provided when running as a module")
     print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")
     print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")
     print(f"❓ MO2 EXE is set to : {info.MO2_PATH}")

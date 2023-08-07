@@ -4,6 +4,7 @@ import os
 import platform
 import shutil
 import sys
+import re
 
 import psutil
 from typing import Union
@@ -55,7 +56,7 @@ class UiPACTMainWin(object):
         # TOP
 
         # Button - Check Updates
-        def create_button(text, parent, geometry, object_name, stylesheet=None, clicked=None, font=None):
+        def create_button(text, parent, geometry, object_name, stylesheet=None, clicked=None, font=None, enabled=True):
             button = QPushButton(text, parent)
             button.setGeometry(geometry)
             button.setObjectName(object_name)
@@ -65,6 +66,10 @@ class UiPACTMainWin(object):
                 button.clicked.connect(clicked)
             if font:
                 button.setFont(font)
+            if not enabled:
+                button.setEnabled(False)
+            else:
+                button.setEnabled(True)
             return button
 
         def create_labeled_input_field(label_text, parent, label_geometry, input_geometry, input_validator, input_text):
@@ -107,7 +112,8 @@ class UiPACTMainWin(object):
                                                  PACT_WINDOW,
                                                  QtCore.QRect(80, 50, 230, 32),
                                                  "RegBT_CHECK_UPDATES",
-                                                 clicked=self.update_popup
+                                                 clicked=self.update_popup,
+                                                 enabled=False
                                                  )
 
         # Button - Update Settings
@@ -303,7 +309,8 @@ class UiPACTMainWin(object):
 
     # ============== CLEAN PLUGINS BUTTON STATES ================
     def is_xedit_running(self):
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.name().lower()]
+        xedit_regex = re.compile(r"(?:xedit|fo3edit|fnvedit|sseedit|fo4edit|tes5edit|fo4vredit|tes5vredit|xfoedit)(?:64)?\.exe", re.IGNORECASE)
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if xedit_regex.search(proc.name())]
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():

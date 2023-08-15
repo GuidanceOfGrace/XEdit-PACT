@@ -437,7 +437,7 @@ def check_cpu_usage(proc):
         bool: True if CPU usage is low, False otherwise.
     """
     if proc.is_running() and proc.cpu_percent() < 1:
-        time.sleep(5)  # Previous versions of this script were a bit trigger happy on the kill switch and I think the cpu usage code was the reason why.
+        time.sleep(10)  # Previous versions of this script were a bit trigger happy on the kill switch and I think the cpu usage code was the reason why.
         if proc.is_running() and proc.cpu_percent() < 1:
             return True
     return False
@@ -597,41 +597,27 @@ def init_plugins_info():
     plugin_list = get_plugin_list(info.LOAD_ORDER_PATH)
     count_plugins = len(set(plugin_list) - set(ALL_skip_list))
     return plugin_list, count_plugins, ALL_skip_list
-try:
-    from PySide6.QtCore import QObject, Signal, Slot
-    class ProgressEmitter(QObject): # type: ignore
-        progress = Signal(int)
-        max_value = Signal(int)
-        plugin_value = Signal(str)
-        done = Signal()
-        visible = Signal(bool)
-        is_done = False
+from PySide6.QtCore import QObject, Signal, Slot
+class ProgressEmitter(QObject): # type: ignore
+    progress = Signal(int)
+    max_value = Signal(int)
+    plugin_value = Signal(str)
+    done = Signal()
+    visible = Signal(bool)
+    is_done = False
 
-        def report_max_value(self):
-            count = init_plugins_info()[1]
-            self.max_value.emit(count)
-        def report_progress(self, count):
-            self.progress.emit(count)
-        def report_plugin(self, plugin):
-            self.plugin_value.emit(f"Cleaning {plugin} %v/%m - %p%")
-        def report_done(self):
-            self.done.emit()
-            self.is_done = True
-        def set_visible(self):
-            self.visible.emit(True)
-except ImportError:
-    class ProgressEmitter:
-        is_done = False
-        def report_max_value(self):
-            pass
-        def report_progress(self, count):
-            pass
-        def report_plugin(self, plugin):
-            pass
-        def report_done(self):
-            pass
-        def set_visible(self):
-            pass
+    def report_max_value(self):
+        count = init_plugins_info()[1]
+        self.max_value.emit(count)
+    def report_progress(self, count):
+        self.progress.emit(count)
+    def report_plugin(self, plugin):
+        self.plugin_value.emit(f"Cleaning {plugin} %v/%m - %p%")
+    def report_done(self):
+        self.done.emit()
+        self.is_done = True
+    def set_visible(self):
+        self.visible.emit(True)
 
 def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
     if not __name__ == "__main__" and not progress_emitter:

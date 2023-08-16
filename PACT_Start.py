@@ -12,6 +12,7 @@ from typing import Union
 import psutil
 import requests
 import tomlkit
+from PySide6.QtCore import QObject, Signal, Slot
 
 '''AUTHOR NOTES (POET)
 - Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
@@ -19,6 +20,8 @@ import tomlkit
 '''
 
 # =================== PACT TOML FILE ===================
+
+
 def pact_ini_create():
     if not os.path.exists("PACT Settings.toml"):
         INI_Settings = """[MAIN]
@@ -217,6 +220,7 @@ class Info:
 
     XEDIT_LOG_TXT: str = field(default_factory=str)
     XEDIT_EXC_LOG: str = field(default_factory=str)
+
 
 info = Info()
 
@@ -591,13 +595,16 @@ def get_plugin_list(load_order_path):
 def clean_plugin(plugin):
     run_auto_cleaning(plugin)
     check_cleaning_results(plugin)
+
+
 def init_plugins_info():
     ALL_skip_list = info.VIP_skip_list + info.LCL_skip_list
     plugin_list = get_plugin_list(info.LOAD_ORDER_PATH)
     count_plugins = len(set(plugin_list) - set(ALL_skip_list))
     return plugin_list, count_plugins, ALL_skip_list
-from PySide6.QtCore import QObject, Signal, Slot
-class ProgressEmitter(QObject): # type: ignore
+
+
+class ProgressEmitter(QObject):  # type: ignore
     progress = Signal(int)
     max_value = Signal(int)
     plugin_value = Signal(str)
@@ -608,33 +615,36 @@ class ProgressEmitter(QObject): # type: ignore
     def report_max_value(self):
         count = init_plugins_info()[1]
         self.max_value.emit(count)
+
     def report_progress(self, count):
         self.progress.emit(count)
+
     def report_plugin(self, plugin):
         self.plugin_value.emit(f"Cleaning {plugin} %v/%m - %p%")
+
     def report_done(self):
         self.done.emit()
         self.is_done = True
+
     def set_visible(self):
         self.visible.emit(True)
 
-def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
-    if not __name__ == "__main__" and not progress_emitter:
-        raise ValueError("ProgressEmitter must be provided when running as a module")
+
+def clean_plugins(progress_emitter: ProgressEmitter):
+    progress_emitter.is_done = False
     print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")
     print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")
     print(f"❓ MO2 EXE is set to : {info.MO2_PATH}")
-    if progress_emitter:
-        progress_emitter.is_done = False
+    # progress_emitter.is_done = False
     if info.MO2Mode:
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")
     else:
         print("❌ MO2 EXECUTABLE NOT SET OR FOUND. SWITCHING TO VORTEX MODE...")
 
     plugin_list, plugin_count, ALL_skip_list = init_plugins_info()
-    if progress_emitter:
-        progress_emitter.report_max_value()
-        progress_emitter.set_visible()
+    progress_emitter.report_max_value()
+    progress_emitter.set_visible()
+
     print(f"✔️ CLEANING STARTED... ( PLUGINS TO CLEAN: {plugin_count} )")
     log_start = time.perf_counter()
     log_time = datetime.datetime.now()
@@ -643,13 +653,11 @@ def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
 
     for plugin in plugin_list:
         if not any(plugin in elem for elem in ALL_skip_list) and re.search(r"(?:.+?)(?:\.(?:esl|esm|esp)+)$", plugin, re.IGNORECASE):
-            if progress_emitter:
-                progress_emitter.report_plugin(plugin)
+            progress_emitter.report_plugin(plugin)
             clean_plugin(plugin)
             count_cleaned += 1
             print(f"Finished cleaning : {plugin} ({count_cleaned} / {plugin_count})")
-            if progress_emitter:
-                progress_emitter.report_progress(count_cleaned)
+            progress_emitter.report_progress(count_cleaned)
     completion_time = (str(time.perf_counter() - log_start))[:3]
     pact_log_update(f"\n✔️ CLEANING COMPLETE! {info.XEDIT_EXE} processed all available plugins in {completion_time} seconds.")
     pact_log_update(f"\n   {info.XEDIT_EXE} successfully processed {info.plugins_processed} plugins and cleaned {info.plugins_cleaned} of them.\n")
@@ -666,5 +674,4 @@ def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
             for plugin in plugins:
                 print(plugin)
 
-    if progress_emitter:
-        progress_emitter.report_done()
+    progress_emitter.report_done()

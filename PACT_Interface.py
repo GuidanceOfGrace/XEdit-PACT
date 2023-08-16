@@ -2,22 +2,23 @@ import datetime
 import hashlib
 import os
 import platform
+import re
 import shutil
 import sys
-import re
+from typing import Union
 
 import psutil
-from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import (QApplication, QFileDialog, QLabel, QLineEdit,
-                               QPushButton, QStyleFactory, QFrame, QMessageBox)
+from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QLabel,
+                               QLineEdit, QMessageBox, QPushButton,
+                               QStyleFactory)
 
-from PACT_Start import (PACT_config, PACT_Current, ProgressEmitter, check_process_mo2,
-                        check_settings_integrity, clean_plugins, info,
-                        pact_ini_update, pact_update_check,
-                        pact_update_settings)
+from PACT_Start import (PACT_config, PACT_Current, ProgressEmitter,
+                        check_process_mo2, check_settings_integrity,
+                        clean_plugins, info, pact_ini_update,
+                        pact_update_check, pact_update_settings)
 
 current_platform = platform.system()
 if current_platform == 'Windows':
@@ -30,6 +31,8 @@ QMessageBox.NoIcon | Question | Information | Warning | Critical
 '''
 
 progress_emitter = ProgressEmitter()
+
+
 class UiPACTMainWin(object):
     def __init__(self, PACT_WINDOW):
         super().__init__()  # Allow subclasses to inherit & extend behavior of parent class.
@@ -269,7 +272,7 @@ class UiPACTMainWin(object):
 
         # BOTTOM
         self.ProgressBar = create_progress_bar(PACT_WINDOW,
-                                               QtCore.QRect(80, 600, 480, 24),
+                                               QtCore.QRect(80, 400, 480, 24),
                                                "ProgressBar",
                                                format=""
                                                )
@@ -306,8 +309,8 @@ class UiPACTMainWin(object):
                                         """,
                                         PACT_WINDOW.close
                                         )
-
     # ============== CLEAN PLUGINS BUTTON STATES ================
+
     def is_xedit_running(self):
         xedit_regex = re.compile(r"(?:xedit|fo3edit|fnvedit|sseedit|fo4edit|tes5edit|fo4vredit|tes5vredit|xfoedit)(?:64)?\.exe", re.IGNORECASE)
         xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if xedit_regex.search(proc.name())]
@@ -316,6 +319,7 @@ class UiPACTMainWin(object):
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
                 xedit_running = True
         return xedit_running
+
     def timed_states(self):
         xedit_running = self.is_xedit_running()
 
@@ -328,10 +332,13 @@ class UiPACTMainWin(object):
             self.RegBT_EXIT.setEnabled(False)
             if not self.thread:
                 self.thread = PactThread(progress_bar=self.ProgressBar)
-            if progress_emitter.is_done == True:
-                self.thread.terminate()
-                self.thread.wait()
-                self.reset_thread()
+            if progress_emitter.is_done == True and isinstance(self.thread, PactThread):
+                try:
+                    self.thread.terminate()
+                    self.thread.wait()
+                    self.reset_thread()
+                except AttributeError:
+                    pass
             if "STOP CLEANING" not in self.RegBT_CLEAN_PLUGINS.text() and xedit_running is False:
                 self.RegBT_CLEAN_PLUGINS.setText("START CLEANING")
                 self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
@@ -352,6 +359,7 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: pink; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
             self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)
+
     def init_start_button(self, xedit_running=False):
         if not self.RegBT_BROWSE_LO.isEnabled():
             self.RegBT_BROWSE_LO.setEnabled(True)
@@ -367,17 +375,17 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: lightblue; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_CLEAN_PLUGINS.clicked.disconnect()
             self.RegBT_CLEAN_PLUGINS.clicked.connect(self.start_cleaning)
+
     def reset_thread(self):
         self.thread = None
+
     def init_start_and_reset(self):
         self.init_start_button()
         self.reset_thread()
-        
-        
+
     def stop_cleaning(self):
         if self.thread is not None:
-            progress_emitter.report_done()
-            self.reset_thread()
+            progress_emitter.is_done = True
             self.RegBT_CLEAN_PLUGINS.setEnabled(False)
             self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
             self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
@@ -574,10 +582,11 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI
 class PactThread(QThread):
-    def __init__(self, parent=None, progress_bar: Union[QtWidgets.QProgressBar, None] = None):
+    def __init__(self, progress_bar, parent=None):
         super().__init__(parent)
         self.cleaning_done = False
         self.progress_bar = progress_bar
+
     def run(self):  # def Plugins_CLEAN():
         is_mo2_running = check_process_mo2(progress_emitter)
         if is_mo2_running:
@@ -587,6 +596,7 @@ class PactThread(QThread):
         check_settings_integrity()
         clean_plugins(progress_emitter)
         self.msleep(1000)
+
 
 if __name__ == "__main__":
     gui_prompt = """\

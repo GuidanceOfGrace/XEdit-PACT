@@ -269,7 +269,7 @@ class UiPACTMainWin(object):
 
         # BOTTOM
         self.ProgressBar = create_progress_bar(PACT_WINDOW,
-                                               QtCore.QRect(80, 400, 480, 24),
+                                               QtCore.QRect(80, 600, 480, 24),
                                                "ProgressBar",
                                                format=""
                                                )
@@ -579,7 +579,7 @@ class PactThread(QThread):
         self.cleaning_done = False
         self.progress_bar = progress_bar
     def run(self):  # def Plugins_CLEAN():
-        is_mo2_running = check_process_mo2()
+        is_mo2_running = check_process_mo2(progress_emitter)
         if is_mo2_running:
             if self.progress_bar:
                 self.progress_bar.setVisible(False)

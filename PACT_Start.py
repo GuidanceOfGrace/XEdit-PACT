@@ -282,7 +282,7 @@ elif info.XEDIT_PATH and not ".exe" in str(info.XEDIT_PATH):
 
 
 # Make sure Mod Organizer 2 is not already running.
-def check_process_mo2():
+def check_process_mo2(progress_emitter):
     pact_update_settings(info, PACT_config)
     if os.path.exists(info.MO2_PATH):
         mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if str(info.MO2_EXE).lower() in proc.name().lower()]
@@ -290,8 +290,7 @@ def check_process_mo2():
             if str(info.MO2_EXE).lower() in proc.name().lower():
                 print("""❌ ERROR : CANNOT START PACT WHILE MOD ORGANIZER 2 IS ALREADY RUNNING!
 PLEASE CLOSE MO2 AND RUN PACT AGAIN! (DO NOT RUN PACT THROUGH MO2)""")
-                return True
-    return False
+                progress_emitter.report_done()
 
 
 # Clear xedit log files to check them for each plugin separately.
@@ -669,12 +668,3 @@ def clean_plugins(progress_emitter: Union[ProgressEmitter, None] = None):
 
     if progress_emitter:
         progress_emitter.report_done()
-    # return True  # Required for running function check in PACT_Interface.
-
-
-if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
-    pact_update_settings(info, PACT_config)
-    check_process_mo2()
-    check_settings_integrity()
-    clean_plugins()
-    os.system("pause")

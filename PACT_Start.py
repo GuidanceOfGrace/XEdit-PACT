@@ -212,7 +212,7 @@ class Info:
     TTW_skip_list = ["", "TaleOfTwoWastelands.esm", "TTWInteriors_Core.esm", "TTWInteriorsProject_Combo.esm", "TTWInteriorsProject_ComboHotfix.esm", "TTWInteriorsProject_Merged.esm", "TTWInteriors_Core_Hotfix.esm"]  # How the hell did Github Copilot know the file names for TTW?
 
     FO4_skip_list = ["", "Fallout4.esm", "DLCCoast.esm", "DLCNukaWorld.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCworkshop02.esm", "DLCworkshop03.esm",
-                     "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm", "SS2_XPAC_Chapter3.esm"]
+                     "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm", "SS2_XPAC_Chapter3.esm", "LIF.esl"]
 
     SSE_skip_list = ["", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm", "Unofficial Skyrim Special Edition Patch.esp"]
 

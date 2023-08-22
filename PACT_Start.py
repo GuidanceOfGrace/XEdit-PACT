@@ -675,3 +675,7 @@ def clean_plugins(progress_emitter: ProgressEmitter):
                 print(plugin)
 
     progress_emitter.report_done()
+
+if __name__ == "__main__":
+    input("This is not the main file. Press Enter to exit...")
+    raise SystemExit

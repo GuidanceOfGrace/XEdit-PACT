@@ -3,7 +3,6 @@ import datetime
 import os
 import re
 import subprocess
-import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -678,4 +677,4 @@ def clean_plugins(progress_emitter: ProgressEmitter):
 
 if __name__ == "__main__":
     input("This is not the main file. Press Enter to exit...")
-    raise SystemExit
+    raise SystemExit  # This is basically what sys.exit() does, but without having to import sys

@@ -272,7 +272,7 @@ class UiPACTMainWin(object):
 
         # BOTTOM
         self.ProgressBar = create_progress_bar(PACT_WINDOW,
-                                               QtCore.QRect(80, 400, 480, 24),
+                                               QtCore.QRect(20, 400, 600, 24),
                                                "ProgressBar",
                                                format=""
                                                )

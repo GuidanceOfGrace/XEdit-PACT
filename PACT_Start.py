@@ -439,7 +439,7 @@ def check_cpu_usage(proc):
         bool: True if CPU usage is low, False otherwise.
     """
     if proc.is_running() and proc.cpu_percent() < 1:
-        time.sleep(10)  # Previous versions of this script were a bit trigger happy on the kill switch and I think the cpu usage code was the reason why.
+        time.sleep(5)  # Previous versions of this script were a bit trigger happy on the kill switch and I think the cpu usage code was the reason why.
         if proc.is_running() and proc.cpu_percent() < 1:
             return True
     return False

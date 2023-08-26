@@ -633,7 +633,7 @@ def clean_plugins(progress_emitter: ProgressEmitter):
     print(f"❓ LOAD ORDER TXT is set to : {info.LOAD_ORDER_PATH}")
     print(f"❓ XEDIT EXE is set to : {info.XEDIT_PATH}")
     print(f"❓ MO2 EXE is set to : {info.MO2_PATH}")
-    # progress_emitter.is_done = False
+
     if info.MO2Mode:
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")
     else:
@@ -673,6 +673,7 @@ def clean_plugins(progress_emitter: ProgressEmitter):
                 print(plugin)
 
     progress_emitter.report_done()
+
 
 if __name__ == "__main__":
     input("This is not the main file. Press Enter to exit...")

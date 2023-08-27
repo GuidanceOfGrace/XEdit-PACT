@@ -441,7 +441,7 @@ def check_cpu_usage(proc):
     """if proc.is_running() and proc.cpu_percent() < 1:
         return True
     return False"""
-    if proc.is_running() and proc.cpu_percent(interval=5) < 1 or (proc.status() == psutil.STATUS_ZOMBIE or proc.status() == psutil.STATUS_DEAD):  # You have to give cpu_percent an interval or it returns a meaningless result,
+    if proc.is_running() and (proc.cpu_percent(interval=5) < 1 or proc.status() == psutil.STATUS_ZOMBIE or proc.status() == psutil.STATUS_DEAD):  # You have to give cpu_percent an interval or it returns a meaningless result,
         return True
     return False
 

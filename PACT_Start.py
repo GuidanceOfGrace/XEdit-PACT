@@ -193,14 +193,13 @@ class Info:
     plugins_processed = 0
     plugins_cleaned = 0
 
-    plugins_pattern = re.compile(r"(?:.+?)(?:\.(?:esp|esm|esl)+)$", re.IGNORECASE | re.MULTILINE)
     LCL_skip_list = []
     if not os.path.exists("PACT Ignore.txt"):  # Local plugin skip / ignore list.
         with open("PACT Ignore.txt", "w", encoding="utf-8", errors="ignore") as PACT_Ignore:
             PACT_Ignore.write("Write plugin names you want CLAS to ignore here. (ONE PLUGIN PER LINE)\n")
     else:
         with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as PACT_Ignore:
-            LCL_skip_list = [line.group() for line in plugins_pattern.finditer(PACT_Ignore.read())]
+            LCL_skip_list = [line.replace("\n", "").strip() for line in PACT_Ignore.readlines()[1:]]
 
     # HARD EXCLUDE PLUGINS PER GAME HERE
     FO3_skip_list = ["", "Fallout3.esm", "Anchorage.esm", "ThePitt.esm", "BrokenSteel.esm", "PointLookout.esm", "Zeta.esm", "Unofficial Fallout 3 Patch.esm"]
@@ -441,9 +440,12 @@ def check_cpu_usage(proc):
     """if proc.is_running() and proc.cpu_percent() < 1:
         return True
     return False"""
-    if proc.is_running() and (proc.cpu_percent(interval=5) < 1 or proc.status() == psutil.STATUS_ZOMBIE or proc.status() == psutil.STATUS_DEAD):  # You have to give cpu_percent an interval or it returns a meaningless result,
-        return True
-    return False
+    try:
+        if proc.is_running() and (proc.cpu_percent(interval=5) < 1 or proc.status() == psutil.STATUS_ZOMBIE or proc.status() == psutil.STATUS_DEAD):  # You have to give cpu_percent an interval or it returns a meaningless result,
+            return True
+        return False
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, subprocess.CalledProcessError):
+        return False
 
 
 def check_process_timeout(proc, info):

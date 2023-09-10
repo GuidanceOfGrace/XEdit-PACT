@@ -135,6 +135,7 @@ class UiPACTMainWin(object):
                                              "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
                                              self.select_file_lo
                                              )
+        self.configured_LO = False
         if "loadorder" in PACT_config["MAIN"]["LoadOrder_TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder_TXT"]:  # type: ignore
             if os.path.isfile(PACT_config["MAIN"]["LoadOrder_TXT"]):  # type: ignore
                 self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
@@ -153,6 +154,7 @@ class UiPACTMainWin(object):
                                               "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
                                               self.select_file_mo2
                                               )
+        self.configured_MO2 = False
         if "ModOrganizer" in PACT_config["MAIN"]["MO2_EXE"]:  # type: ignore
             if os.path.isfile(PACT_config["MAIN"]["MO2_EXE"]):  # type: ignore
                 self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
@@ -171,6 +173,7 @@ class UiPACTMainWin(object):
                                                 "color: black; background-color: lightyellow; border-radius: 5px; border: 1px solid gray;",
                                                 self.select_file_xedit
                                                 )
+        self.configured_XEDIT = False
         if "Edit" in PACT_config["MAIN"]["XEDIT_EXE"]:  # type: ignore
             if os.path.isfile(PACT_config["MAIN"]["XEDIT_EXE"]):  # type: ignore
                 self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
@@ -361,13 +364,13 @@ class UiPACTMainWin(object):
             self.RegBT_CLEAN_PLUGINS.clicked.connect(self.stop_cleaning)
 
     def init_start_button(self, xedit_running=False):
-        if not self.RegBT_BROWSE_LO.isEnabled():
+        if self.RegBT_BROWSE_LO and not self.RegBT_BROWSE_LO.isEnabled():
             self.RegBT_BROWSE_LO.setEnabled(True)
-        if not self.RegBT_BROWSE_MO2.isEnabled():
+        if self.RegBT_BROWSE_MO2 and not self.RegBT_BROWSE_MO2.isEnabled():
             self.RegBT_BROWSE_MO2.setEnabled(True)
-        if not self.RegBT_BROWSE_XEDIT.isEnabled():
+        if self.RegBT_BROWSE_XEDIT and not self.RegBT_BROWSE_XEDIT.isEnabled():
             self.RegBT_BROWSE_XEDIT.setEnabled(True)
-        if not self.RegBT_EXIT.isEnabled():
+        if self.RegBT_EXIT and not self.RegBT_EXIT.isEnabled():
             self.RegBT_EXIT.setEnabled(True)
         if self.configured_LO and self.configured_XEDIT and xedit_running is False:
             self.RegBT_CLEAN_PLUGINS.setEnabled(True)

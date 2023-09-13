@@ -6,7 +6,6 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Union
 
 import psutil
 import requests
@@ -65,7 +64,7 @@ PACT_Current = "PACT v1.80"
 PACT_Updated = False
 
 
-def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Convenience function for checking & writing to INI.
+def pact_ini_update(section: str, value: str | int | float | bool):  # Convenience function for checking & writing to INI.
     if " " in section:
         raise ValueError
 
@@ -169,12 +168,12 @@ print("=========================================================================
 
 @dataclass
 class Info:
-    MO2_EXE: Union[str, Path] = field(default_factory=Path)
-    MO2_PATH: Union[str, Path] = field(default_factory=Path)
-    XEDIT_EXE: Union[str, Path] = field(default_factory=Path)
-    XEDIT_PATH: Union[str, Path] = field(default_factory=Path)
-    LOAD_ORDER_TXT: Union[str, Path] = field(default_factory=Path)
-    LOAD_ORDER_PATH: Union[str, Path] = field(default_factory=Path)
+    MO2_EXE: str | Path = field(default_factory=Path)
+    MO2_PATH: str | Path = field(default_factory=Path)
+    XEDIT_EXE: str | Path = field(default_factory=Path)
+    XEDIT_PATH: str | Path = field(default_factory=Path)
+    LOAD_ORDER_TXT: str | Path = field(default_factory=Path)
+    LOAD_ORDER_PATH: str | Path = field(default_factory=Path)
     Journal_Expiration = 7
     Cleaning_Timeout = 300
 

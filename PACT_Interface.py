@@ -53,7 +53,7 @@ class UiPACTMainWin(object):
         font_bold = QtGui.QFont()
         font_bold.setPointSize(10)
         font_bold.setBold(True)
-
+        xedit_regex = re.compile(r"(?:xedit|fo3edit|fnvedit|sseedit|fo4edit|tes5edit|fo4vredit|tes5vredit|xfoedit)(?:64)?\.exe", re.IGNORECASE)
         # ==================== MAIN WINDOW ITEMS =====================
         # TOP
 
@@ -312,10 +312,9 @@ class UiPACTMainWin(object):
                                         PACT_WINDOW.close
                                         )
     # ============== CLEAN PLUGINS BUTTON STATES ================
-
+    
     def is_xedit_running(self):
-        xedit_regex = re.compile(r"(?:xedit|fo3edit|fnvedit|sseedit|fo4edit|tes5edit|fo4vredit|tes5vredit|xfoedit)(?:64)?\.exe", re.IGNORECASE)
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if xedit_regex.search(proc.name())]
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if self.xedit_regex.search(proc.name())]
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
@@ -389,9 +388,13 @@ class UiPACTMainWin(object):
         if self.thread is not None:
             progress_emitter.is_done = True
             self.RegBT_CLEAN_PLUGINS.setEnabled(False)
-            self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
-            self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
-            print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
+            is_stopping = False
+            while self.is_xedit_running():
+                if not is_stopping:
+                    self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
+                    self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
+                    is_stopping = True
+            print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n") # With the new while loop, this message might need to change - evildarkarchon
             self.ProgressBar.setFormat("Cleaning Stopped!")
             self.ProgressBar.setValue(0)
 

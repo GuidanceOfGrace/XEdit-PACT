@@ -8,16 +8,16 @@ import sys
 
 import psutil
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QThread, QTimer, QUrl
+from PySide6.QtCore import Qt, QThread, QTimer, QUrl, QEventLoop
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QLabel,
                                QLineEdit, QMessageBox, QPushButton,
                                QStyleFactory)
 
-from PACT_Start import (PACT_config, PACT_Current, ProgressEmitter,
+from PACT_Start import (ProgressEmitter,
                         check_process_mo2, check_settings_integrity,
                         clean_plugins, info, pact_ini_update,
-                        pact_update_check, pact_update_settings)
+                        pact_update_check, pact_update_settings, yaml_settings)
 
 current_platform = platform.system()
 if current_platform == 'Windows':
@@ -44,7 +44,7 @@ class UiPACTMainWin(object):
 
         # MAIN WINDOW
         PACT_WINDOW.setObjectName("PACT_WINDOW")
-        PACT_WINDOW.setWindowTitle(f"Plugin Auto Cleaning Tool {PACT_Current[-4:]}")
+        PACT_WINDOW.setWindowTitle(f"Plugin Auto Cleaning Tool {yaml_settings('PACT Data/PACT Data.yaml', 'PACT_Data.version')}")
         PACT_WINDOW.resize(640, 640)
         PACT_WINDOW.setMinimumSize(QtCore.QSize(640, 480))
         PACT_WINDOW.setMaximumSize(QtCore.QSize(640, 480))
@@ -53,7 +53,6 @@ class UiPACTMainWin(object):
         font_bold = QtGui.QFont()
         font_bold.setPointSize(10)
         font_bold.setBold(True)
-        xedit_regex = re.compile(r"(?:xedit|fo3edit|fnvedit|sseedit|fo4edit|tes5edit|fo4vredit|tes5vredit|xfoedit)(?:64)?\.exe", re.IGNORECASE)
         # ==================== MAIN WINDOW ITEMS =====================
         # TOP
 
@@ -394,6 +393,10 @@ class UiPACTMainWin(object):
                     self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
                     self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
                     is_stopping = True
+                if self.thread is not None:  # In case the thread is terminated before the while loop is broken.
+                    loop = QEventLoop()
+                    self.thread.finished.connect(loop.quit)
+                    loop.exec()
             print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n") # With the new while loop, this message might need to change - evildarkarchon
             self.ProgressBar.setFormat("Cleaning Stopped!")
             self.ProgressBar.setValue(0)
@@ -544,7 +547,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
     # ================= MAIN BUTTON FUNCTIONS ===================
 
     def update_settings(self):
-        pact_update_settings(info, PACT_config)
+        pact_update_settings(info)
         value_CT = int(self.InputField_CT.text())
         value_JE = int(self.InputField_JE.text())
         pact_ini_update("Cleaning_Timeout", value_CT)

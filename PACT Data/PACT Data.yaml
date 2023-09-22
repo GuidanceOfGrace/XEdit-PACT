@@ -1,0 +1,148 @@
+PACT_Data:
+  default_settings: |
+    PACT_Settings:
+    # This file contains settings for both source scripts and Plugin Auto Cleaning Tool.exe 
+    # Set to true if you want PACT to check that you have the latest version of PACT. 
+      Update Check: true
+
+    # Set to true if you want PACT to show extra stats about cleaned plugins in the command line window. 
+      Stat Logging: true
+
+    # In seconds, set below how long should PACT wait for xedit to clean any plugin. 
+    # If it takes longer than the set amount, the plugin will be immediately skipped. 
+      Cleaning Timeout: 300
+
+    # In days, set below how long should PACT wait until the logging journal is cleared. 
+    # If PACT Journal.txt is older than the set amount, it is immediately deleted. 
+      Journal Expiration: 7
+
+    # Set or copy-paste your load order (loadorder.txt / plugins.txt) file path below. 
+    # See the PACT Nexus Page for instructions on where you can find these files. 
+      LoadOrder TXT:
+
+    # Set or copy-paste your XEdit (FO3Edit.exe / FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below. 
+    # xEdit.exe is also supported, but requires that you set LoadOrder TXT path to loadorder.txt only. 
+      XEDIT EXE:
+
+    # Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below. 
+    # Required if MO2 is your main mod manager. Otherwise, leave this blank. 
+      MO2 EXE:
+  
+  default_ignorefile: |
+    # This file contains plugin names that CLASSIC will IGNORE while scanning your crash logs and mod files.
+    # When adding plugin names, make sure you add it under the correct game list, same applies to VR plugins.
+    
+    # To add plugin names yourself, make sure each plugin starts with a dash followed by a space,
+    # AND ends with either .esm | .esp | .esl | Uppercase / lowercase does not matter.
+    
+    PACT_Ignore_Fallout4:
+      - Example Plugin.esp
+      - Another Example.esl
+    
+    PACT_Ignore_Skyrim:
+      - Example Plugin.esp
+      - Another Example.esl
+  
+  version: 1.80
+  version_date: 23.04.14
+
+  Errors:
+    Ivalid_XEDIT_File: |
+      ❌ ERROR : CANNOT DETERMINE THE SET XEDIT EXECUTABLE FROM PACT SETTINGS!
+      Make sure that you have set XEDIT EXE path to a valid .exe file!
+      OR try changing XEDIT EXE path to a different XEdit version.
+    Invalid_LO_File: |
+      ❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!
+      You have to set your load order file path to loadorder.txt and NOT plugins.txt
+      This is so PACT can detect the right game. Change the load order file path and try again.
+  
+  Warnings:
+    Invalid_INI_Setup: |
+      ❌  WARNING : YOUR PACT INI SETUP IS INCORRECT!
+      You likely set the wrong XEdit version for your game.
+      Check your EXE or PACT Settings.toml settings and try again.
+    Outdated_PACT: |
+      ❌  WARNING : YOUR PACT VERSION IS OUTDATED!
+      You can download the latest version from the PACT Nexus Page.
+      https://www.nexusmods.com/fallout4/mods/48065
+    PACT_Update_Failed: |
+      ❌  WARNING : PACT FAILED TO CHECK FOR UPDATES!
+      You can download the latest version from the PACT Nexus Page.
+      https://www.nexusmods.com/fallout4/mods/48065
+  
+  XEdit_Lists:
+    FO3:
+      - FO3Edit.exe
+      - FOEdit64.exe
+    FNV:
+      - FNVEdit.exe
+      - FNVEdit64.exe
+    FO4:
+      - FO4Edit.exe
+      - FO4Edit64.exe
+    SSE:
+      - SSEEdit.exe
+      - SSEEdit64.exe
+    FO4VR:
+      - FO4VREdit.exe
+      - FO4VREdit64.exe
+    SkyrimVR:
+      - TES5VREdit.exe
+    Universal:
+      - xEdit.exe
+      - xEdit64.exe
+      - xfoedit.exe
+      - xfoedit64.exe
+  
+  Skip_Lists:
+    FO3:
+      - Fallout3.esm
+      - Anchorage.esm
+      - ThePitt.esm
+      - BrokenSteel.esm
+      - PointLookout.esm
+      - Zeta.esm
+      - Unofficial Fallout 3 Patch.esm
+    FNV:
+      - FalloutNV.esm
+      - DeadMoney.esm
+      - HonestHearts.esm
+      - OldWorldBlues.esm
+      - LonesomeRoad.esm
+      - GunRunnersArsenal.esm
+      - TribalPack.esm
+      - MercenaryPack.esm
+      - ClassicPack.esm
+      - CaravanPack.esm
+      - YUP - Base Game + All DLC.esm
+      - Unofficial Patch NVSE Plus.esp
+    TTW:
+      - "TaleOfTwoWastelands.esm"
+      - "TTWInteriors_Core.esm"
+      - "TTWInteriorsProject_Combo.esm"
+      - "TTWInteriorsProject_ComboHotfix.esm"
+      - "TTWInteriorsProject_Merged.esm"
+      - "TTWInteriors_Core_Hotfix.esm"
+    FO4:
+      - Fallout4.esm
+      - DLCRobot.esm
+      - DLCworkshop01.esm
+      - DLCCoast.esm
+      - DLCworkshop02.esm
+      - DLCworkshop03.esm
+      - DLCNukaWorld.esm
+      - Unofficial Fallout 4 Patch.esp
+      - PPF.esm
+      - PRP.esp
+      - PRP-Compat
+      - SS2.esm
+      - SS2_XPAC_Chapter2.esm
+      - SS2_XPAC_Chapter3.esm
+      - SS2Extended.esp
+    SSE:
+      - Skyrim.esm
+      - Update.esm
+      - Dawnguard.esm
+      - HearthFires.esm
+      - Dragonborn.esm
+      - Unofficial Skyrim Special Edition Patch.esp

@@ -169,8 +169,10 @@ class Info:
     MO2Mode = False
     xedit_list_fallout3 = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FO3")
     xedit_list_newvegas = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FNV")
-    xedit_list_fallout4 = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FO4") + yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FO4VR")
-    xedit_list_skyrimse = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.SSE") + yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.SkyrimVR")
+    xedit_list_fallout4 = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FO4")
+    xedit_list_fallout4.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FO4VR"))
+    xedit_list_skyrimse = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.SSE")
+    xedit_list_skyrimse.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.SkyrimVR"))
     xedit_list_universal = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.Universal")
     xedit_list_specific = xedit_list_fallout3 + xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
 

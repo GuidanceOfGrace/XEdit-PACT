@@ -313,7 +313,9 @@ class UiPACTMainWin(object):
     # ============== CLEAN PLUGINS BUTTON STATES ================
     
     def is_xedit_running(self):
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if proc.name() in info.xedit_list_specific or proc.name() in info.xedit_list_universal]
+        lower_specific = set(map(str.lower, info.xedit_list_specific))
+        lower_universal = set(map(str.lower, info.xedit_list_universal)) 
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if proc.name().lower() in lower_specific or proc.name().lower() in lower_universal]
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():

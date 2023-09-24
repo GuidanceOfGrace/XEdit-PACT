@@ -50,13 +50,13 @@ def yaml_settings(yaml_path, key_path, new_value=None):
     return value
 
 if not os.path.exists("PACT Ignore.yaml"):
-    default_ignorefile = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.default_ignorefile")
+    default_ignorefile = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.default_ignorefile")
     with open('PACT Ignore.yaml', 'w', encoding='utf-8') as file:
             file.write(default_ignorefile)
 
 def pact_settings(setting=None):
     if not os.path.exists("PACT Settings.yaml"):
-        default_settings = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Settings.default_settings")
+        default_settings = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Settings.default_settings")
         with open('CLASSIC Settings.yaml', 'w', encoding='utf-8') as file:
             file.write(default_settings)
     if setting:
@@ -150,7 +150,7 @@ PAUSE_MESSAGE = "Press Enter to continue..."
 
 
 # =================== TERMINAL OUTPUT START ====================
-print(f"Hello World! | Plugin Auto Cleaning Tool (PACT) | Version {str(yaml_settings('PACT Data/PACT Data.yaml', 'PACT_Data.version'))} | FO3, FNV, FO4, SSE")
+print(f"Hello World! | Plugin Auto Cleaning Tool (PACT) | Version {str(yaml_settings('PACT Data/PACT Main.yaml', 'PACT_Data.version'))} | FO3, FNV, FO4, SSE")
 print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING PLUGINS")
 print("===============================================================================")
 
@@ -167,13 +167,13 @@ class Info:
     Cleaning_Timeout = 300
 
     MO2Mode = False
-    xedit_list_fallout3 = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FO3")
-    xedit_list_newvegas = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FNV")
-    xedit_list_fallout4 = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FO4")
-    xedit_list_fallout4.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.FO4VR"))
-    xedit_list_skyrimse = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.SSE")
-    xedit_list_skyrimse.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.SkyrimVR"))
-    xedit_list_universal = yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.XEdit_Lists.Universal")
+    xedit_list_fallout3 = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO3")
+    xedit_list_newvegas = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FNV")
+    xedit_list_fallout4 = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO4")
+    xedit_list_fallout4.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO4VR"))
+    xedit_list_skyrimse = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.SSE")
+    xedit_list_skyrimse.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.SkyrimVR"))
+    xedit_list_universal = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.Universal")
     xedit_list_specific = xedit_list_fallout3 + xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
 
     clean_results_UDR = []  # Undisabled References
@@ -187,19 +187,19 @@ class Info:
 
     # HARD EXCLUDE PLUGINS PER GAME HERE
     FO3_skip_list = [""]
-    FO3_skip_list.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.Skip_Lists.FO3"))
+    FO3_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO3"))
 
     FNV_skip_list = [""]
-    FNV_skip_list.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.Skip_Lists.FNV"))
+    FNV_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FNV"))
 
     TTW_skip_list = [""]  # How the hell did Github Copilot know the file names for TTW?
-    TTW_skip_list.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.Skip_Lists.TTW"))
+    TTW_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.TTW"))
 
     FO4_skip_list = [""]
-    FO4_skip_list.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.Skip_Lists.FO4"))
+    FO4_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO4"))
 
     SSE_skip_list = [""]
-    SSE_skip_list.extend(yaml_settings("PACT Data/PACT Data.yaml", "PACT_Data.Skip_Lists.SSE"))
+    SSE_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.SSE"))
 
     VIP_skip_list = FO3_skip_list + FNV_skip_list + TTW_skip_list + FO4_skip_list + SSE_skip_list
 

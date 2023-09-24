@@ -44,7 +44,7 @@ class UiPACTMainWin(object):
 
         # MAIN WINDOW
         PACT_WINDOW.setObjectName("PACT_WINDOW")
-        PACT_WINDOW.setWindowTitle(f"Plugin Auto Cleaning Tool {yaml_settings('PACT Data/PACT Data.yaml', 'PACT_Data.version')}")
+        PACT_WINDOW.setWindowTitle(f"Plugin Auto Cleaning Tool {yaml_settings('PACT Data/PACT Main.yaml', 'PACT_Data.version')}")
         PACT_WINDOW.resize(640, 640)
         PACT_WINDOW.setMinimumSize(QtCore.QSize(640, 480))
         PACT_WINDOW.setMaximumSize(QtCore.QSize(640, 480))

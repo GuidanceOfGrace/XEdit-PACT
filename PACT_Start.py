@@ -186,20 +186,15 @@ class Info:
     LCL_skip_list = []
 
     # HARD EXCLUDE PLUGINS PER GAME HERE
-    FO3_skip_list = [""]
-    FO3_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO3"))
+    FO3_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO3")
 
-    FNV_skip_list = [""]
-    FNV_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FNV"))
+    FNV_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FNV")
 
-    TTW_skip_list = [""]  # How the hell did Github Copilot know the file names for TTW?
-    TTW_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.TTW"))
+    TTW_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.TTW")
 
-    FO4_skip_list = [""]
-    FO4_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO4"))
+    FO4_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO4")
 
-    SSE_skip_list = [""]
-    SSE_skip_list.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.SSE"))
+    SSE_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.SSE")
 
     VIP_skip_list = FO3_skip_list + FNV_skip_list + TTW_skip_list + FO4_skip_list + SSE_skip_list
 
@@ -362,7 +357,7 @@ def create_bat_command(info, plugin_name):
             return bat_command
 
     if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.xedit_list_universal:
-        game_mode = get_game_mode(info)[0]
+        game_mode = get_game_mode(info)
         if game_mode is None:
             print(Err_Invalid_LO_File)
             input(PAUSE_MESSAGE)
@@ -407,13 +402,13 @@ def get_game_mode(info):
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             for line in LO_Check:
                 if "Skyrim.esm" in line:
-                    return "sse", "Skyrim"
+                    return "sse"
                 elif "Fallout3.esm" in line:
-                    return "fo3", "Fallout3"
+                    return "fo3"
                 elif "FalloutNV.esm" in line:
-                    return "fnv", "FalloutNV"
+                    return "fnv"
                 elif "Fallout4.esm" in line:
-                    return "fo4", "Fallout4"
+                    return "fo4"
     except FileNotFoundError:
         print(f"Load order file not found: {info.LOAD_ORDER_PATH}")
         raise
@@ -506,7 +501,7 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         info.clean_failed_list.append(plugin_name)
         print(error_message)
         if add_ignore:
-            pact_ignore_update(plugin_name, get_game_mode(info)[1])
+            pact_ignore_update(plugin_name, get_game_mode(info).upper())
 
 
 def run_auto_cleaning(plugin_name):
@@ -578,7 +573,7 @@ def check_cleaning_results(plugin_name):
             else:
                 pact_log_update(f"\n{plugin_name} -> NOTHING TO CLEAN")
                 print("NOTHING TO CLEAN ! Adding plugin to PACT Ignore file...")
-                pact_ignore_update(plugin_name, get_game_mode(info)[1])
+                pact_ignore_update(plugin_name, get_game_mode(info).upper())
                 info.LCL_skip_list.append(plugin_name)
         clear_xedit_logs()
 
@@ -642,7 +637,7 @@ def clean_plugins(progress_emitter: ProgressEmitter):
     else:
         print("❌ MO2 EXECUTABLE NOT SET OR FOUND. SWITCHING TO VORTEX MODE...")
     
-    info.LCL_skip_list.extend(yaml_settings("PACT Ignore.yaml", f"PACT_Ignore_{get_game_mode(info)[1]}"))
+    info.LCL_skip_list.extend(yaml_settings("PACT Ignore.yaml", f"PACT_Ignore_{get_game_mode(info).upper()}"))
 
     plugin_list, plugin_count, ALL_skip_list = init_plugins_info()
     progress_emitter.report_max_value()

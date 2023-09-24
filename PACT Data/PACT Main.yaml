@@ -34,14 +34,14 @@ PACT_Data:
     
     # To add plugin names yourself, make sure each plugin starts with a dash followed by a space,
     # AND ends with either .esm | .esp | .esl | Uppercase / lowercase does not matter.
-    
-    PACT_Ignore_Fallout4:
-      - Example Plugin.esp
-      - Another Example.esl
-    
-    PACT_Ignore_Skyrim:
-      - Example Plugin.esp
-      - Another Example.esl
+    PACT_Ignore_FO3:
+      - ""
+    PACT_Ignore_FNV:
+      - ""
+    PACT_Ignore_FO4:
+      - ""
+    PACT_Ignore_SSE:
+      - ""
   
   version: 1.80
   version_date: 23.04.14

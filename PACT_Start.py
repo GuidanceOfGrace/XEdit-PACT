@@ -49,21 +49,21 @@ def yaml_settings(yaml_path, key_path, new_value=None):
 
     return value
 
-if not os.path.exists("PACT Ignore.yaml"):
-    default_ignorefile = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.default_ignorefile")
-    with open('PACT Ignore.yaml', 'w', encoding='utf-8') as file:
-            file.write(default_ignorefile)
-
 def pact_settings(setting=None):
     if not os.path.exists("PACT Settings.yaml"):
-        default_settings = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Settings.default_settings")
-        with open('CLASSIC Settings.yaml', 'w', encoding='utf-8') as file:
+        default_settings = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.default_settings")
+        with open('PACT Settings.yaml', 'w', encoding='utf-8') as file:
             file.write(default_settings)
     if setting:
         get_setting = yaml_settings("PACT Settings.yaml", f"PACT_Settings.{setting}")
         if get_setting is None and "Path" not in setting:  # Error me if I make a stupid mistype.
-            print(f"❌ ERROR (classic_settings)! Trying to grab a None value for : '{setting}'")
+            print(f"❌ ERROR (pact_settings)! Trying to grab a None value for : '{setting}'")
         return get_setting
+
+if not os.path.exists("PACT Ignore.yaml"):
+    default_ignorefile = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.default_ignorefile")
+    with open('PACT Ignore.yaml', 'w', encoding='utf-8') as file:
+            file.write(default_ignorefile)
 
 def pact_journal_expire():
     # Delete journal if older than set amount of days.
@@ -127,14 +127,14 @@ PAUSE_MESSAGE = "Press Enter to continue..."
 # =================== UPDATE FUNCTION ===================
 
 
-"""def pact_update_check():
+def pact_update_check():
     if PACT_config["MAIN"]["Update_Check"] is True:  # type: ignore
         print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
         print("   (You can disable this check in the EXE or PACT Settings.toml) \n")
         try:
             response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")
             PACT_Received = response.json()["name"]
-            if PACT_Received == PACT_Current:
+            if PACT_Received == yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.version"):
                 print("\n✔️ You have the latest version of PACT!")
                 return True
             else:
@@ -146,7 +146,7 @@ PAUSE_MESSAGE = "Press Enter to continue..."
     else:
         print("\n ❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
         print("===============================================================================")
-    return False"""
+    return False
 
 
 # =================== TERMINAL OUTPUT START ====================
@@ -212,37 +212,48 @@ info = Info()
 
 def update_load_order_path(info, load_order_path):
     info.LOAD_ORDER_PATH = load_order_path
-    info.LOAD_ORDER_TXT = os.path.basename(load_order_path)
+    if load_order_path is not None:
+        info.LOAD_ORDER_TXT = os.path.basename(load_order_path)
+    else:
+        info.LOAD_ORDER_TXT = ""
 
 
 def update_xedit_path(info, xedit_path):
     info.XEDIT_PATH = xedit_path
-    if ".exe" in xedit_path:
-        info.XEDIT_EXE = os.path.basename(xedit_path)
-    elif os.path.exists(xedit_path):
-        for file in os.listdir(xedit_path):
-            if file.endswith(".exe") and "edit" in str(file).lower():
-                info.XEDIT_PATH = os.path.join(xedit_path, file)
-                info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
+    if xedit_path is not None:
+        if ".exe" in xedit_path:
+            info.XEDIT_EXE = os.path.basename(xedit_path)
+        elif os.path.exists(xedit_path):
+            for file in os.listdir(xedit_path):
+                if file.endswith(".exe") and "edit" in str(file).lower():
+                    info.XEDIT_PATH = os.path.join(xedit_path, file)
+                    info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
+    else:
+        info.XEDIT_EXE = ""
+        info.XEDIT_PATH = ""
 
 
 def update_mo2_path(info, mo2_path):
-    info.MO2_PATH = mo2_path
-    if ".exe" in mo2_path:
-        info.MO2_EXE = os.path.basename(mo2_path)
-    elif os.path.exists(mo2_path):
-        for file in os.listdir(mo2_path):
-            if file.endswith(".exe") and ("mod" in str(file).lower() or "mo2" in str(file).lower()):
-                info.MO2_PATH = os.path.join(mo2_path, file)
-                info.MO2_EXE = os.path.basename(info.MO2_PATH)
+    if mo2_path is not None:
+        info.MO2_PATH = mo2_path
+        if ".exe" in mo2_path:
+            info.MO2_EXE = os.path.basename(mo2_path)
+        elif os.path.exists(mo2_path):
+            for file in os.listdir(mo2_path):
+                if file.endswith(".exe") and ("mod" in str(file).lower() or "mo2" in str(file).lower()):
+                    info.MO2_PATH = os.path.join(mo2_path, file)
+                    info.MO2_EXE = os.path.basename(info.MO2_PATH)
+    else:
+        info.MO2_EXE = ""
+        info.MO2_PATH = ""
 
 
 def pact_update_settings(info):
-    update_load_order_path(info, yaml_settings("PACT Settings.yaml", "PACT_Settings.LoadOrder TXT"))
-    update_xedit_path(info, yaml_settings("PACT Settings.yaml", "PACT_Settings.XEdit EXE"))
-    update_mo2_path(info, yaml_settings("PACT Settings.yaml", "PACT_Settings.MO2 EXE"))
-    info.Cleaning_Timeout = int(yaml_settings("PACT Settings.yaml", "PACT_Settings.Cleaning Timeout"))
-    info.Journal_Expiration = int(yaml_settings("PACT Settings.yaml", "PACT_Settings.Journal Expiration"))
+    update_load_order_path(info, pact_settings("LoadOrder TXT"))
+    update_xedit_path(info, pact_settings("XEDIT EXE"))
+    update_mo2_path(info, pact_settings("MO2 EXE"))
+    info.Cleaning_Timeout = int(pact_settings("Cleaning Timeout"))
+    info.Journal_Expiration = int(pact_settings("Journal Expiration"))
 
     if not isinstance(info.Cleaning_Timeout, int) or info.Cleaning_Timeout <= 0:
         raise ValueError("""❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS NOT VALID.)

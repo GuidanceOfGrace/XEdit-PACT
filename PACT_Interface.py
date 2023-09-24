@@ -16,8 +16,8 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QLabel,
 
 from PACT_Start import (ProgressEmitter,
                         check_process_mo2, check_settings_integrity,
-                        clean_plugins, info, pact_ini_update,
-                        pact_update_check, pact_update_settings, yaml_settings)
+                        clean_plugins, info, pact_update_check,
+                        pact_update_settings, yaml_settings, pact_settings)
 
 current_platform = platform.system()
 if current_platform == 'Windows':
@@ -134,8 +134,8 @@ class UiPACTMainWin(object):
                                              self.select_file_lo
                                              )
         self.configured_LO = False
-        if "loadorder" in PACT_config["MAIN"]["LoadOrder_TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder_TXT"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["LoadOrder_TXT"]):  # type: ignore
+        if "loadorder" in pact_settings("LoadOrder TXT") or "plugins" in pact_settings("LoadOrder TXT"):  # type: ignore
+            if os.path.isfile(pact_settings("LoadOrder TXT")):  # type: ignore
                 self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
                 self.configured_LO = True
@@ -153,8 +153,8 @@ class UiPACTMainWin(object):
                                               self.select_file_mo2
                                               )
         self.configured_MO2 = False
-        if "ModOrganizer" in PACT_config["MAIN"]["MO2_EXE"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["MO2_EXE"]):  # type: ignore
+        if "ModOrganizer" in pact_settings("MO2 EXE"):  # type: ignore
+            if os.path.isfile(pact_settings("MO2 EXE")):  # type: ignore
                 self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
                 self.configured_MO2 = True
@@ -172,8 +172,8 @@ class UiPACTMainWin(object):
                                                 self.select_file_xedit
                                                 )
         self.configured_XEDIT = False
-        if "Edit" in PACT_config["MAIN"]["XEDIT_EXE"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["XEDIT_EXE"]):  # type: ignore
+        if "Edit" in pact_settings("XEDIT EXE"):  # type: ignore
+            if os.path.isfile(pact_settings("XEDIT EXE")):  # type: ignore
                 self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
                 self.configured_XEDIT = True
@@ -313,7 +313,7 @@ class UiPACTMainWin(object):
     # ============== CLEAN PLUGINS BUTTON STATES ================
     
     def is_xedit_running(self):
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if self.xedit_regex.search(proc.name())]
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if proc.name() in info.xedit_list_specific or proc.name() in info.xedit_list_universal]
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
@@ -550,15 +550,15 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         pact_update_settings(info)
         value_CT = int(self.InputField_CT.text())
         value_JE = int(self.InputField_JE.text())
-        pact_ini_update("Cleaning_Timeout", value_CT)
-        pact_ini_update("Journal_Expiration", value_JE)
+        yaml_settings("PACT Settings.yaml", "PACT_Settings.Cleaning Timeout", value_CT)
+        yaml_settings("PACT Settings.yaml", "Journal Expiration", value_JE)
         QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Settings", "All PACT settings have been updated and refreshed!")
 
     def select_file_lo(self):
         LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")  # type: ignore
         if os.path.exists(LO_file) and ("loadorder" in LO_file or "plugins" in LO_file):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")
-            pact_ini_update("LoadOrder_TXT", LO_file)
+            yaml_settings("PACT Settings.yaml", "PACT_Settings.LoadOrder TXT", LO_file)
             self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
             self.configured_LO = True
@@ -570,7 +570,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         MO2_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
         if os.path.exists(MO2_EXE):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set MO2 to: \n" + MO2_EXE)
-            pact_ini_update("MO2_EXE", MO2_EXE)
+            yaml_settings("PACT Settings.yaml", "PACT_Settings.MO2 EXE", MO2_EXE)
             self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
             self.configured_MO2 = True
@@ -579,7 +579,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         XEDIT_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
         if os.path.exists(XEDIT_EXE) and "edit" in XEDIT_EXE.lower():
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)
-            pact_ini_update("XEDIT_EXE", XEDIT_EXE)
+            yaml_settings("PACT Settings.yaml", "PACT_Settings.XEDIT EXE", XEDIT_EXE)
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
             self.configured_XEDIT = True

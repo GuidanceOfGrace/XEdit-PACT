@@ -18,15 +18,15 @@ PACT_Data:
 
     # Set or copy-paste your load order (loadorder.txt / plugins.txt) file path below. 
     # See the PACT Nexus Page for instructions on where you can find these files. 
-      LoadOrder TXT:
+      LoadOrder TXT: ""
 
     # Set or copy-paste your XEdit (FO3Edit.exe / FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below. 
     # xEdit.exe is also supported, but requires that you set LoadOrder TXT path to loadorder.txt only. 
-      XEDIT EXE:
+      XEDIT EXE: ""
 
     # Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below. 
     # Required if MO2 is your main mod manager. Otherwise, leave this blank. 
-      MO2 EXE:
+      MO2 EXE: ""
   
   default_ignorefile: |
     # This file contains plugin names that CLASSIC will IGNORE while scanning your crash logs and mod files.

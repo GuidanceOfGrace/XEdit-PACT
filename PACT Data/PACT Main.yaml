@@ -43,7 +43,7 @@ PACT_Data:
     PACT_Ignore_SSE:
       - ""
   
-  version: 1.80
+  version: "1.80"
   version_date: 23.04.14
 
   Errors:

@@ -176,6 +176,9 @@ class Info:
     xedit_list_universal = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.Universal")
     xedit_list_specific = xedit_list_fallout3 + xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
 
+    lower_specific = set(map(str.lower, xedit_list_specific))
+    lower_universal = set(map(str.lower, xedit_list_universal)) 
+
     clean_results_UDR = []  # Undisabled References
     clean_results_ITM = []  # Identical To Master
     clean_results_NVM = []  # Deleted Navmeshes
@@ -323,7 +326,7 @@ def check_settings_integrity():
         "Skyrim.esm": info.xedit_list_skyrimse
     }
 
-    if str(info.XEDIT_EXE).lower() not in info.xedit_list_universal:
+    if str(info.XEDIT_EXE).lower() not in info.lower_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             LO_Plugins = LO_Check.read()
             if not any(game in LO_Plugins and str(info.XEDIT_EXE).lower() in executables for game, executables in valid_xedit_executables.items()):
@@ -350,13 +353,13 @@ def create_bat_command(info, plugin_name):
     xedit_exe_lower = str(info.XEDIT_EXE).lower()
     xedit_path_str = str(info.XEDIT_PATH)
 
-    if xedit_exe_lower in info.xedit_list_specific:
+    if xedit_exe_lower in info.lower_specific:
         update_log_paths(info)
         bat_command = create_specific_xedit_command(info, plugin_name)
         if bat_command:
             return bat_command
 
-    if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.xedit_list_universal:
+    if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.lower_universal:
         game_mode = get_game_mode(info)
         if game_mode is None:
             print(Err_Invalid_LO_File)
@@ -380,9 +383,9 @@ def create_bat_command(info, plugin_name):
 
 def create_specific_xedit_command(info, plugin_name):
     xedit_exe_lower = str(info.XEDIT_EXE).lower()
-    if info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:
+    if info.MO2Mode and xedit_exe_lower in info.lower_specific:
         return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
-    elif not info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:
+    elif not info.MO2Mode and xedit_exe_lower in info.lower_specific:
         return f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
     else:
         print("Invalid xedit executable specified")

@@ -10,7 +10,6 @@ from pathlib import Path
 
 import psutil
 import requests
-import tomlkit
 from PySide6.QtCore import QObject, Signal, Slot
 
 '''AUTHOR NOTES (POET)

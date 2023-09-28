@@ -348,36 +348,6 @@ def update_log_paths(info, game_mode=None):
         info.XEDIT_LOG_TXT = str(path.with_name(f"{path.stem.upper()}_log.txt"))
         info.XEDIT_EXC_LOG = str(path.with_name(f"{path.stem.upper()}Exception.log"))
 
-
-def create_bat_command(info, plugin_name):
-    xedit_exe_lower = str(info.XEDIT_EXE).lower()
-    xedit_path_str = str(info.XEDIT_PATH)
-
-    if xedit_exe_lower in info.lower_specific:
-        update_log_paths(info)
-        bat_command = create_specific_xedit_command(info, plugin_name)
-        if bat_command:
-            return bat_command
-
-    if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.lower_universal:
-        game_mode = get_game_mode(info)
-        if game_mode is None:
-            print(Err_Invalid_LO_File)
-            input(PAUSE_MESSAGE)
-            raise ValueError
-
-        update_log_paths(info, game_mode)
-        bat_command = create_universal_xedit_command(info, plugin_name, game_mode)
-        if bat_command:
-            return bat_command
-
-    print("""❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?
-    If you're seeing this, make sure that your load order / xedit paths are correct.
-    If problems continue, try a different load order file or xedit executable.
-    If nothing works, please report this error to the PACT Nexus page.""")
-    input(PAUSE_MESSAGE)
-    raise RuntimeError("Unable to start the cleaning process")
-
     # Additional helper functions
 
 
@@ -426,7 +396,7 @@ def check_cpu_usage(proc):
     """
     Checks the CPU usage of a process.
 
-    If CPU usage is below 1% for 10 seconds, returns True, indicating a likely error. 
+    If CPU usage is below 1% after an interval of 5 seconds, returns True, indicating a likely error. 
 
     Args:
         proc (psutil.Process): The process to check.
@@ -434,7 +404,7 @@ def check_cpu_usage(proc):
     Returns:
         bool: True if CPU usage is low, False otherwise.
     """
-    """if proc.is_running() and proc.cpu_percent() < 1:
+    """proc.is_running() and (proc.cpu_percent(interval=5) < 1 or proc.status() == psutil.STATUS_ZOMBIE or proc.status() == psutil.STATUS_DEAD):
         return True
     return False"""
     try:
@@ -506,6 +476,34 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         if add_ignore:
             pact_ignore_update(plugin_name, get_game_mode(info).upper())
 
+def create_bat_command(info, plugin_name):
+    xedit_exe_lower = str(info.XEDIT_EXE).lower()
+    xedit_path_str = str(info.XEDIT_PATH)
+
+    if xedit_exe_lower in info.lower_specific:
+        update_log_paths(info)
+        bat_command = create_specific_xedit_command(info, plugin_name)
+        if bat_command:
+            return bat_command
+
+    if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.lower_universal:
+        game_mode = get_game_mode(info)
+        if game_mode is None:
+            print(Err_Invalid_LO_File)
+            input(PAUSE_MESSAGE)
+            raise ValueError
+
+        update_log_paths(info, game_mode)
+        bat_command = create_universal_xedit_command(info, plugin_name, game_mode)
+        if bat_command:
+            return bat_command
+
+    print("""❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?
+    If you're seeing this, make sure that your load order / xedit paths are correct.
+    If problems continue, try a different load order file or xedit executable.
+    If nothing works, please report this error to the PACT Nexus page.""")
+    input(PAUSE_MESSAGE)
+    raise RuntimeError("Unable to start the cleaning process")
 
 def run_auto_cleaning(plugin_name):
     """

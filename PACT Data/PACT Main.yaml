@@ -73,7 +73,7 @@ PACT_Data:
   XEdit_Lists:
     FO3:
       - FO3Edit.exe
-      - FOEdit64.exe
+      - FO3Edit64.exe
     FNV:
       - FNVEdit.exe
       - FNVEdit64.exe

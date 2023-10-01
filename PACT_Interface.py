@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QLabel,
 from PACT_Start import (ProgressEmitter,
                         check_process_mo2, check_settings_integrity,
                         clean_plugins, info, pact_update_check,
-                        pact_update_settings, yaml_settings, pact_settings)
+                        pact_update_settings, yaml_settings, pact_settings, is_it_xedit)
 
 current_platform = platform.system()
 if current_platform == 'Windows':
@@ -314,7 +314,7 @@ class UiPACTMainWin(object):
     
     def is_xedit_running(self):
         
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if proc.name().lower() in info.lower_specific or proc.name().lower() in info.lower_universal]
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if is_it_xedit(proc.name(), info)]
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
@@ -578,13 +578,13 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
     def select_file_xedit(self):
         XEDIT_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
-        if os.path.exists(XEDIT_EXE) and "edit" in XEDIT_EXE.lower():
+        if os.path.exists(XEDIT_EXE) and is_it_xedit(XEDIT_EXE, info):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)
             yaml_settings("PACT Settings.yaml", "PACT_Settings.XEDIT EXE", XEDIT_EXE)
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
             self.configured_XEDIT = True
-        elif os.path.exists(XEDIT_EXE) and "edit" not in XEDIT_EXE.lower():
+        elif os.path.exists(XEDIT_EXE) and not is_it_xedit(XEDIT_EXE, info):
             self.RegBT_BROWSE_XEDIT.setText("❌ WRONG XEDIT EXE")
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
 

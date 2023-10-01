@@ -59,6 +59,11 @@ def pact_settings(setting=None):
             print(f"❌ ERROR (pact_settings)! Trying to grab a None value for : '{setting}'")
         return get_setting
 
+def is_it_xedit(compare_string, info):
+    if compare_string.lower() in info.lower_specific or compare_string.lower() in info.lower_universal:
+        return True
+    return False
+
 if not os.path.exists("PACT Ignore.yaml"):
     default_ignorefile = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.default_ignorefile")
     with open('PACT Ignore.yaml', 'w', encoding='utf-8') as file:
@@ -91,36 +96,6 @@ def pact_ignore_update(plugin, game):
 # =================== WARNING MESSAGES ==================
 # Can change first line to """\ to remove the spacing.
 
-
-Warn_PACT_Update_Failed = """
-❌  WARNING : PACT WAS UNABLE TO CHECK FOR UPDATES, BUT WILL CONTINUE RUNNING
-    CHECK FOR ANY PACT UPDATES HERE: https://www.nexusmods.com/fallout4/mods/69413
-"""
-Warn_Outdated_PACT = """
-❌  WARNING : YOUR PACT VERSION IS OUT OF DATE!
-    Please download the latest version from here:
-    https://www.nexusmods.com/fallout4/mods/69413
-"""
-Warn_Invalid_INI_Path = """
-❌  WARNING : YOUR PACT INI PATHS ARE INCORRECT!
-    Please run the PACT program or open PACT Settings.toml
-    And make sure that file / folder paths are correctly set!
-"""
-Warn_Invalid_INI_Setup = """
-❌  WARNING : YOUR PACT INI SETUP IS INCORRECT!
-    You likely set the wrong XEdit version for your game.
-    Check your EXE or PACT Settings.toml settings and try again.
-"""
-Err_Invalid_LO_File = """
-❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!
-   You have to set your load order file path to loadorder.txt and NOT plugins.txt
-   This is so PACT can detect the right game. Change the load order file path and try again.
-"""
-Err_Invalid_XEDIT_File = """
-❌ ERROR : CANNOT DETERMINE THE SET XEDIT EXECUTABLE FROM PACT SETTINGS!
-   Make sure that you have set XEDIT EXE path to a valid .exe file!
-   OR try changing XEDIT EXE path to a different XEdit version.
-"""
 PAUSE_MESSAGE = "Press Enter to continue..."
 
 # =================== UPDATE FUNCTION ===================
@@ -137,10 +112,10 @@ def pact_update_check():
                 print("\n✔️ You have the latest version of PACT!")
                 return True
             else:
-                print(Warn_Outdated_PACT)
+                print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Warnings.Outdated_PACT"))
                 print("===============================================================================")
         except (OSError, requests.exceptions.RequestException):
-            print(Warn_PACT_Update_Failed)
+            print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Warnings.PACT_Update_Failed"))
             print("===============================================================================")
     else:
         print("\n ❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
@@ -167,11 +142,15 @@ class Info:
 
     MO2Mode = False
     xedit_list_fallout3 = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO3")
+    lower_fo3 = set(map(str.lower, xedit_list_fallout3))
     xedit_list_newvegas = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FNV")
+    lower_fnv = set(map(str.lower, xedit_list_newvegas))
     xedit_list_fallout4 = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO4")
     xedit_list_fallout4.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO4VR"))
+    lower_fo4 = set(map(str.lower, xedit_list_fallout4))
     xedit_list_skyrimse = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.SSE")
     xedit_list_skyrimse.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.SkyrimVR"))
+    lower_sse = set(map(str.lower, xedit_list_skyrimse))
     xedit_list_universal = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.Universal")
     xedit_list_specific = xedit_list_fallout3 + xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
 
@@ -222,7 +201,7 @@ def update_xedit_path(info, xedit_path):
             info.XEDIT_EXE = os.path.basename(xedit_path)
         elif os.path.exists(xedit_path):
             for file in os.listdir(xedit_path):
-                if file.endswith(".exe") and "edit" in str(file).lower():
+                if file.endswith(".exe") and is_it_xedit(str(file).lower(), info):
                     info.XEDIT_PATH = os.path.join(xedit_path, file)
                     info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
     else:
@@ -273,7 +252,7 @@ if ".exe" in str(info.XEDIT_PATH) and info.XEDIT_EXE in info.xedit_list_specific
     info.XEDIT_LOG_TXT = str(xedit_path.with_name(xedit_path.stem.upper() + '_log.txt'))
     info.XEDIT_EXC_LOG = str(xedit_path.with_name(xedit_path.stem.upper() + 'Exception.log'))
 elif info.XEDIT_PATH and not ".exe" in str(info.XEDIT_PATH):
-    print(Err_Invalid_XEDIT_File)
+    print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Errors.Invalid_XEDIT_File"))
     input(PAUSE_MESSAGE)
     raise ValueError
 
@@ -309,7 +288,7 @@ def check_settings_integrity():
     if os.path.exists(info.LOAD_ORDER_PATH) and os.path.exists(info.XEDIT_PATH):
         print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF INI SETTINGS ARE CORRECT...")
     else:
-        print(Warn_Invalid_INI_Path)
+        print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Warnings.Invalid_INI_Path"))
         input(PAUSE_MESSAGE)
         raise ValueError
 
@@ -319,21 +298,21 @@ def check_settings_integrity():
         info.MO2Mode = False
 
     valid_xedit_executables = {
-        "Fallout3.esm": info.xedit_list_fallout3,
-        "FalloutNV.esm": info.xedit_list_newvegas,
-        "Fallout4.esm": info.xedit_list_fallout4,
-        "Skyrim.esm": info.xedit_list_skyrimse
+        "Fallout3.esm": info.lower_fo3,
+        "FalloutNV.esm": info.lower_fnv,
+        "Fallout4.esm": info.lower_fo4,
+        "Skyrim.esm": info.lower_sse
     }
 
     if str(info.XEDIT_EXE).lower() not in info.lower_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             LO_Plugins = LO_Check.read()
             if not any(game in LO_Plugins and str(info.XEDIT_EXE).lower() in executables for game, executables in valid_xedit_executables.items()):
-                print(Warn_Invalid_INI_Setup)
+                print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Warnings.Invalid_INI_Setup"))
                 input(PAUSE_MESSAGE)
                 raise ValueError
-    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
-        print(Err_Invalid_LO_File)
+    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.lower_universal:
+        print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Errors.Invalid_LO_File"))
         input(PAUSE_MESSAGE)
         raise ValueError
 
@@ -352,14 +331,14 @@ def update_log_paths(info, game_mode=None):
 
 def create_specific_xedit_command(info, plugin_name):
     xedit_exe_lower = str(info.XEDIT_EXE).lower()
-    if info.MO2Mode and xedit_exe_lower in info.lower_specific:
-        return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
-    elif not info.MO2Mode and xedit_exe_lower in info.lower_specific:
-        return f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
-    else:
-        print("Invalid xedit executable specified")
-        return None
-
+    match info.MO2Mode:
+        case True if xedit_exe_lower in info.lower_specific:
+            return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
+        case False if xedit_exe_lower in info.lower_specific:
+            return f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
+        case _:
+            print("Invalid xedit executable specified")
+            return None
 
 def create_universal_xedit_command(info, plugin_name, game_mode):
     if info.MO2Mode:
@@ -488,7 +467,7 @@ def create_bat_command(info, plugin_name):
     if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.lower_universal:
         game_mode = get_game_mode(info)
         if game_mode is None:
-            print(Err_Invalid_LO_File)
+            print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Errors.Invalid_LO_File"))
             input(PAUSE_MESSAGE)
             raise ValueError
 
@@ -522,7 +501,7 @@ def run_auto_cleaning(plugin_name):
 
     # Check subprocess for errors until it finishes
     while bat_process.poll() is None:
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.name().lower()]
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if is_it_xedit(proc.name().lower(), info)]
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
                 # Check for low CPU usage (indicative of an error)

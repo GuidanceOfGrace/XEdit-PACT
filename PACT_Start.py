@@ -60,7 +60,7 @@ def pact_settings(setting=None):
         return get_setting
 
 def is_it_xedit(compare_string, info):
-    if compare_string.lower() in info.lower_specific or compare_string.lower() in info.lower_universal:
+    if Path(compare_string).name.lower() in info.lower_specific or Path(compare_string).name.lower() in info.lower_universal:
         return True
     return False
 

@@ -35,16 +35,16 @@ PACT_Data:
     # To add plugin names yourself, make sure each plugin starts with a dash followed by a space,
     # AND ends with either .esm | .esp | .esl | Uppercase / lowercase does not matter.
     PACT_Ignore_FO3:
-      - ""
+      - Example Plugin.esp
     PACT_Ignore_FNV:
-      - ""
+      - Example Plugin.esp
     PACT_Ignore_FO4:
-      - ""
+      - Example Plugin.esp
     PACT_Ignore_SSE:
-      - ""
+      - Example Plugin.esp
   
-  version: "1.80"
-  version_date: 23.04.14
+  version: "1.80 EvilDarkArchon Beta 1"
+  version_date: 23.10.23
 
   Errors:
     Ivalid_XEDIT_File: |
@@ -96,6 +96,7 @@ PACT_Data:
   
   Skip_Lists:
     FO3:
+      - ''
       - Fallout3.esm
       - Anchorage.esm
       - ThePitt.esm
@@ -104,6 +105,7 @@ PACT_Data:
       - Zeta.esm
       - Unofficial Fallout 3 Patch.esm
     FNV:
+      - ''
       - FalloutNV.esm
       - DeadMoney.esm
       - HonestHearts.esm
@@ -116,7 +118,6 @@ PACT_Data:
       - CaravanPack.esm
       - YUP - Base Game + All DLC.esm
       - Unofficial Patch NVSE Plus.esp
-    TTW:
       - "TaleOfTwoWastelands.esm"
       - "TTWInteriors_Core.esm"
       - "TTWInteriorsProject_Combo.esm"
@@ -124,6 +125,7 @@ PACT_Data:
       - "TTWInteriorsProject_Merged.esm"
       - "TTWInteriors_Core_Hotfix.esm"
     FO4:
+      - ''
       - Fallout4.esm
       - DLCRobot.esm
       - DLCworkshop01.esm
@@ -140,6 +142,7 @@ PACT_Data:
       - SS2_XPAC_Chapter3.esm
       - SS2Extended.esp
     SSE:
+      - ''
       - Skyrim.esm
       - Update.esm
       - Dawnguard.esm

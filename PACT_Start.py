@@ -157,10 +157,10 @@ class Info:
     lower_specific = set(map(str.lower, xedit_list_specific))
     lower_universal = set(map(str.lower, xedit_list_universal)) 
 
-    clean_results_UDR = []  # Undisabled References
-    clean_results_ITM = []  # Identical To Master
-    clean_results_NVM = []  # Deleted Navmeshes
-    clean_failed_list = []  # Cleaning Failed
+    clean_results_UDR = set()  # Undisabled References
+    clean_results_ITM = set()  # Identical To Master
+    clean_results_NVM = set()  # Deleted Navmeshes
+    clean_failed_list = set()  # Cleaning Failed
     plugins_processed = 0
     plugins_cleaned = 0
 
@@ -171,13 +171,11 @@ class Info:
 
     FNV_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FNV")
 
-    TTW_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.TTW")
-
     FO4_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO4")
 
     SSE_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.SSE")
 
-    VIP_skip_list = FO3_skip_list + FNV_skip_list + TTW_skip_list + FO4_skip_list + SSE_skip_list
+    VIP_skip_list = FO3_skip_list + FNV_skip_list + FO4_skip_list + SSE_skip_list
 
     XEDIT_LOG_TXT: str = field(default_factory=str)
     XEDIT_EXC_LOG: str = field(default_factory=str)
@@ -495,7 +493,7 @@ def run_auto_cleaning(plugin_name):
 
     # Clear logs and start subprocess
     clear_xedit_logs()
-    print(f"\nCURRENTLY RUNNING : {bat_command}".replace("\\", "").replace('"', ""))
+    print(f"\nCURRENTLY CLEANING : {plugin_name}")
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
 
@@ -545,7 +543,7 @@ def check_cleaning_results(plugin_name):
                 for pattern, (message, results_list) in patterns.items():
                     if pattern.search(line):
                         pact_log_update(f"\n{plugin_name} -> {message}")
-                        results_list.append(plugin_name)
+                        results_list.add(plugin_name)
                         cleaned_something = True
             if cleaned_something:
                 info.plugins_cleaned += 1

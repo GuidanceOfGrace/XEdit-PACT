@@ -5,6 +5,7 @@ import platform
 import re
 import shutil
 import sys
+from pathlib import Path
 
 import psutil
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -17,7 +18,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QLabel,
 from PACT_Start import (ProgressEmitter,
                         check_process_mo2, check_settings_integrity,
                         clean_plugins, info, pact_update_check,
-                        pact_update_settings, yaml_settings, pact_settings, is_it_xedit)
+                        pact_update_settings, yaml_settings, pact_settings, is_it_xedit, get_game_mode)
 
 current_platform = platform.system()
 if current_platform == 'Windows':
@@ -31,6 +32,9 @@ QMessageBox.NoIcon | Question | Information | Warning | Critical
 
 progress_emitter = ProgressEmitter()
 
+def remove_from_list(list, item):
+    out = [value for value in list if value != item]
+    return out
 
 class UiPACTMainWin(object):
     def __init__(self, PACT_WINDOW):
@@ -444,18 +448,18 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
     @staticmethod
     def pact_create_backup():
-        plugins_folder = QFileDialog.getExistingDirectory()
+        plugins_folder = Path(QFileDialog.getExistingDirectory())
         if plugins_folder:
-            primary_backup = os.path.join("PACT BACKUP", "Primary Backup")
-            if not os.path.exists(primary_backup):
-                os.makedirs(primary_backup, exist_ok=True)
+            primary_backup = Path("PACT BACKUP/Primary Backup")
+            if not primary_backup.exists():
+                primary_backup.mkdir(parents=True, exist_ok=True)
                 print("CREATING PRIMARY BACKUP, PLEASE WAIT...")
-                for root, dirs, files in os.walk(plugins_folder):
+                for files in plugins_folder.glob("**/*"):
                     for file in files:
                         if info.plugins_pattern.search(file):
                             try:
-                                plugin_path = os.path.join(root, file)
-                                copy_path = os.path.join(primary_backup, file)
+                                plugin_path = plugins_folder.joinpath(file)
+                                copy_path = primary_backup.joinpath(file)
                                 shutil.copy2(plugin_path, copy_path)
                             except (PermissionError, OSError):
                                 print(f"❌ ERROR : Unable to create a backup for {file}")
@@ -464,33 +468,33 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
                 print("PRIMARY BACKUP CREATED!")
             else:
                 print("PROCESSING ADDITIONAL BACKUP, PLEASE WAIT...")
-                for root, dirs, files in os.walk(plugins_folder):
+                for files in plugins_folder.glob("**/*"):
                     for file in files:
                         if info.plugins_pattern.search(file):
-                            plugin_backup = os.path.join("PACT BACKUP", "Primary Backup", file)
-                            plugin_current = os.path.join(root, file)
-                            if os.path.exists(plugin_backup):
-                                with open(plugin_current, 'rb') as plugin1, open(plugin_backup, 'rb') as plugin2:
-                                    hash1 = hashlib.sha256(plugin1.read()).hexdigest()
-                                    hash2 = hashlib.sha256(plugin2.read()).hexdigest()
+                            plugin_backup = Path("PACT BACKUP", "Primary Backup", file)
+                            plugin_current = plugins_folder.joinpath(file)
+                            if plugin_backup.exists():
+                                hash1 = hashlib.sha256(plugin_backup.read_bytes()).hexdigest()
+                                hash2 = hashlib.sha256(plugin_current.read_bytes()).hexdigest()
                                 if hash1 != hash2:  # Compare hashes between current and backup plugins.
                                     current_date = datetime.date.today().strftime('%y-%m-%d')
-                                    dated_backup = os.path.join("PACT BACKUP", f"BACKUP {current_date}")
-                                    if not os.path.exists(dated_backup):
-                                        os.makedirs(dated_backup, exist_ok=True)
+                                    dated_backup = Path("PACT BACKUP", f"BACKUP {current_date}")
+                                    if not dated_backup.exists():
+                                        dated_backup.mkdir(parents=True, exist_ok=True)
                                     shutil.copy2(plugin_current, dated_backup)
                                     # Remove plugin name from PACT Ignore list if hashes are different.
                                     with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as Ignore_List:
                                         Ignore_Check = Ignore_List.read()
                                         if str(file) in Ignore_Check:
                                             Ignore_Check = Ignore_Check.replace(str(file), "")
-                                    with open("PACT Ignore.txt", "w", encoding="utf-8", errors="ignore") as Ignore_List:
-                                        Ignore_List.write(Ignore_Check)
+                                    ignore_list = yaml_settings(f"PACT Ignore.yaml", f"PACT_Ignore_{get_game_mode(info).upper()}")
+                                    ignore_list = remove_from_list(ignore_list, str(file))
+                                    yaml_settings(f"PACT Ignore.yaml", f"PACT_Ignore_{get_game_mode(info).upper()}", ignore_list)
                             else:  # Create plugin backup if not already in Primary Backup.
                                 current_date = datetime.date.today().strftime('%y-%m-%d')
-                                dated_backup = os.path.join("PACT BACKUP", f"BACKUP {current_date}")
-                                if not os.path.exists(dated_backup):
-                                    os.makedirs(dated_backup, exist_ok=True)
+                                dated_backup = Path("PACT BACKUP", f"BACKUP {current_date}")
+                                if not dated_backup.exists():
+                                    dated_backup.mkdir(parents=True, exist_ok=True)
                                 shutil.copy2(plugin_current, dated_backup)
                 print("ADDITIONAL BACKUP PROCESSED!")
 
@@ -506,19 +510,19 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
 
     @staticmethod
     def pact_restore_backup():
-        plugins_folder = QFileDialog.getExistingDirectory()
+        plugins_folder = Path(QFileDialog.getExistingDirectory())
         if plugins_folder:
-            primary_backup = os.path.join("PACT BACKUP", "Primary Backup")
-            if not os.path.exists(primary_backup):
+            primary_backup = Path("PACT BACKUP", "Primary Backup")
+            if not primary_backup.exists():
                 print("❌ ERROR : You need to create a backup before you can restore it!")
             else:
                 print("RESTORING PRIMARY BACKUP, PLEASE WAIT...")
-                for root, dirs, files in os.walk(plugins_folder):
+                for files in primary_backup.glob("**/*"):
                     for file in files:
                         if info.plugins_pattern.search(file):
-                            plugin_backup = os.path.join("PACT BACKUP", "Primary Backup", file)
-                            plugin_current = os.path.join(root, file)
-                            if os.path.exists(plugin_backup):
+                            plugin_backup = primary_backup.joinpath(file)
+                            plugin_current = plugins_folder.joinpath(file)
+                            if plugin_backup.exists() and plugin_current.exists():
                                 try:
                                     shutil.copy2(plugin_backup, plugin_current)
                                 except (PermissionError, OSError):
@@ -587,7 +591,6 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         elif os.path.exists(XEDIT_EXE) and not is_it_xedit(XEDIT_EXE, info):
             self.RegBT_BROWSE_XEDIT.setText("❌ WRONG XEDIT EXE")
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
-
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI
 class PactThread(QThread):

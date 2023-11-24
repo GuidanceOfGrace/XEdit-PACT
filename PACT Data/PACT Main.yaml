@@ -43,8 +43,8 @@ PACT_Data:
     PACT_Ignore_SSE:
       - Example Plugin.esp
   
-  version: "1.80 EvilDarkArchon Beta 1"
-  version_date: 23.10.23
+  version: "1.80 Unofficial"
+  version_date: 23.11.23
 
   Errors:
     Ivalid_XEDIT_File: |

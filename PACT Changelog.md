@@ -1,7 +1,7 @@
 ===========================================================================
 # CHANGELOG #
 
-1.80 (evildarkarchon beta branch)
+1.80 Unofficial
 - Convert data and configuration files to YAML.
 - Convert to GUI only.
 - Add a progress bar.
@@ -10,7 +10,7 @@
 - Add *Fallout 3* support.
 - Add *Fallout 3* and *Unofficial Fallout 3 Patch* ESMs to the internal ignore list.
 - Add *FNV | Tale of Two Wastelands* ESMs to the internal ignore list.
-- Beta Only: Disabled the update check, it will show any version that is not the latest official version as out-of-date.
+- Unofficial Only: Disabled the update check, since it will show any version that is not the latest official version as out-of-date.
 
 1.70
 - Increased internal timer values to prevent rare cases where PACT would skip all plugins.

@@ -1,5 +1,9 @@
 ===========================================================================
 # CHANGELOG #
+1.80.1 Unofficial: 
+- Add configuration setting to enable xEdit to use partial forms during auto-clean.
+This is an extremly experimental feature (even in xEdit) and will not be configurable in the GUI.
+You must have a version of xEdit >= 4.1.5b and it only works on Skyrim Special Edition and Fallout 4.
 
 1.80 Unofficial
 - Convert data and configuration files to YAML.

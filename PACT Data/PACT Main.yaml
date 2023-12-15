@@ -28,6 +28,13 @@ PACT_Data:
     # Required if MO2 is your main mod manager. Otherwise, leave this blank. 
       MO2 EXE: ""
   
+    # Allow XEdit to use partial forms.
+    # This is an extremely experimental feature, and may cause issues.
+    # It requires an XEdit version >= 4.1.5b.
+    # Because of the experimental nature of this feature, it will not be configurable in the GUI.
+    # Use at your own risk. No support will be provided for this feature.
+      Partial Forms: false
+  
   default_ignorefile: |
     # This file contains plugin names that CLASSIC will IGNORE while scanning your crash logs and mod files.
     # When adding plugin names, make sure you add it under the correct game list, same applies to VR plugins.
@@ -43,8 +50,8 @@ PACT_Data:
     PACT_Ignore_SSE:
       - Example Plugin.esp
   
-  version: "1.80 Unofficial"
-  version_date: 23.11.23
+  version: "1.80.1 Unofficial"
+  version_date: 23.12.15 #YY/MM/DD
 
   Errors:
     Ivalid_XEDIT_File: |

@@ -460,6 +460,8 @@ def create_bat_command(info, plugin_name):
         update_log_paths(info)
         bat_command = create_specific_xedit_command(info, plugin_name)
         if bat_command:
+            if pact_settings("Partial Forms") is True:
+                bat_command.append("-iknowwhatimdoing -allowmakepartial")
             return bat_command
 
     if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.lower_universal:
@@ -471,7 +473,10 @@ def create_bat_command(info, plugin_name):
 
         update_log_paths(info, game_mode)
         bat_command = create_universal_xedit_command(info, plugin_name, game_mode)
+        
         if bat_command:
+            if pact_settings("Partial Forms") is True:
+                bat_command.append("-iknowwhatimdoing -allowmakepartial")
             return bat_command
 
     print("""❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?

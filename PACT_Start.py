@@ -326,43 +326,23 @@ def update_log_paths(info, game_mode=None):
 
     # Additional helper functions
 
-
-def create_specific_xedit_command(info, plugin_name):
-    xedit_exe_lower = str(info.XEDIT_EXE).lower()
-    commandline = ""
-    match info.MO2Mode:
-        case True if xedit_exe_lower in info.lower_specific:
-            commandline = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
-            if pact_settings("Partial Forms") is True:
-                commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial")
-        case False if xedit_exe_lower in info.lower_specific:
-            commandline = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
-            if pact_settings("Partial Forms") is True:
-                commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial")
-        case _:
-            print("Invalid xedit executable specified")
-            return None
-    if commandline:
-        return commandline
-    else:
-        print("Invalid xedit executable specified")
-        return None
-
-def create_universal_xedit_command(info, plugin_name, game_mode):
-    commandline = ""
-    match info.MO2Mode:
-        case True:
+def create_xedit_command(info, plugin_name, universal, game_mode=None):
+    commandline=""
+    match info.MO2Mode, universal:
+        case True, True:
             commandline = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
-            if pact_settings("Partial Forms") is True:
-                commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial")
-        case False:
+        case True, False:
+            commandline = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
+        case False, True:
             commandline = f'"{info.XEDIT_PATH}" -a -{game_mode} -QAC -autoexit -autoload "{plugin_name}"'
-            if pact_settings("Partial Forms") is True:
-                commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial")
+        case False, False:
+            commandline = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
         case _:
             print("Invalid xedit executable specified")
-        
+
     if commandline:
+        if pact_settings("Partial Forms") is True:
+            commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial")
         return commandline
     else:
         print("Invalid xedit executable specified")
@@ -482,7 +462,7 @@ def create_bat_command(info, plugin_name):
 
     if xedit_exe_lower in info.lower_specific:
         update_log_paths(info)
-        bat_command = create_specific_xedit_command(info, plugin_name)
+        bat_command = create_xedit_command(info, plugin_name, False)
         if bat_command:
             return bat_command
 
@@ -494,7 +474,7 @@ def create_bat_command(info, plugin_name):
             raise ValueError
 
         update_log_paths(info, game_mode)
-        bat_command = create_universal_xedit_command(info, plugin_name, game_mode)
+        bat_command = create_xedit_command(info, plugin_name, True, game_mode)
         
         if bat_command:
             return bat_command

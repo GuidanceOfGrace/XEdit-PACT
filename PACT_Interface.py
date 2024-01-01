@@ -227,7 +227,8 @@ class UiPACTMainWin(object):
                                                         background-color: lightblue;
                                                         }
                                                     """,
-                                                  self.backup_popup
+                                                  self.backup_popup,
+                                                  enabled=False  # Temporary, not functional right now.
                                                   )
 
         # Button - Restore Backup
@@ -246,7 +247,8 @@ class UiPACTMainWin(object):
                                                         background-color: lightblue;
                                                         }
                                                     """,
-                                                  self.restore_popup
+                                                  self.restore_popup,
+                                                  enabled=False  # Temporary, not functional right now.
                                                   )
 
         # Input - Cleaning Timeout

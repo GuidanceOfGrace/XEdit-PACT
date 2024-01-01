@@ -102,11 +102,11 @@ PAUSE_MESSAGE = "Press Enter to continue..."
 
 
 def pact_update_check():
-    if PACT_config["MAIN"]["Update_Check"] is True:  # type: ignore
+    if pact_settings("Update Check"):  # type: ignore
         print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
         print("   (You can disable this check in the EXE or PACT Settings.toml) \n")
         try:
-            response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")
+            response = requests.get("https://api.github.com/repos/evildarkarchon/XEdit-PACT/releases/latest")
             PACT_Received = response.json()["name"]
             if PACT_Received == yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.version"):
                 print("\n✔️ You have the latest version of PACT!")

@@ -117,8 +117,7 @@ class UiPACTMainWin(object):
                                                  PACT_WINDOW,
                                                  QtCore.QRect(80, 50, 230, 32),
                                                  "RegBT_CHECK_UPDATES",
-                                                 clicked=self.update_popup,
-                                                 enabled=False  # Temporary, only for pre-release.
+                                                 clicked=self.update_popup
                                                  )
 
         # Button - Update Settings

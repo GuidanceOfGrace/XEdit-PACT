@@ -329,7 +329,7 @@ def update_log_paths(info, game_mode=None):
 
 def create_xedit_command(info, plugin_name, universal, game_mode=None):
     commandline=""
-    match info.MO2Mode, universal:
+    match info.MO2Mode, universal, game_mode:
         case True, True:
             commandline = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
         case True, False:
@@ -342,7 +342,7 @@ def create_xedit_command(info, plugin_name, universal, game_mode=None):
             print("Invalid xedit executable specified")
 
     if commandline:
-        if pact_settings("Partial Forms") is True:
+        if pact_settings("Partial Forms") is True and (game_mode == "fo4" or game_mode == "sse"):
             commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial")
         return commandline
     else:

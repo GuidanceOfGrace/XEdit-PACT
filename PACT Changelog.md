@@ -1,5 +1,9 @@
 ===========================================================================
 # CHANGELOG #
+1.80.2 Unofficial:
+- Re-enable update checking and direct them to my repo for now.
+- Disable the Backup and Restore buttons as they are non-functional at this time.
+
 1.80.1 Unofficial: 
 - Add configuration setting to enable xEdit to use partial forms during auto-clean.
 This is an extremly experimental feature (even in xEdit) and will not be configurable in the GUI.

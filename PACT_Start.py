@@ -160,6 +160,7 @@ class Info:
     clean_results_UDR = set()  # Undisabled References
     clean_results_ITM = set()  # Identical To Master
     clean_results_NVM = set()  # Deleted Navmeshes
+    clean_results_PARTIAL_FORMS = set()  # Partial Forms
     clean_failed_list = set()  # Cleaning Failed
     plugins_processed = 0
     plugins_cleaned = 0
@@ -449,7 +450,8 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         pass
     finally:
         time.sleep(1)
-        clear_xedit_logs()
+        if not pact_settings("Debug Mode"):
+            clear_xedit_logs()
         info.plugins_processed -= 1
         info.clean_failed_list.append(plugin_name)
         print(error_message)
@@ -497,7 +499,8 @@ def run_auto_cleaning(plugin_name):
     bat_command = create_bat_command(info, plugin_name)
 
     # Clear logs and start subprocess
-    clear_xedit_logs()
+    if not pact_settings("Debug Mode"):
+        clear_xedit_logs()
     print(f"\nCURRENTLY CLEANING : {plugin_name}")
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
@@ -531,7 +534,7 @@ def run_auto_cleaning(plugin_name):
 udr_pattern = re.compile(r"Undeleting:\s*(.*)")
 itm_pattern = re.compile(r"Removing:\s*(.*)")
 nvm_pattern = re.compile(r"Skipping:\s*(.*)")
-
+partial_form_pattern = re.compile(r"Making Partial Form:\s*(.*)")
 
 def check_cleaning_results(plugin_name):
     time.sleep(1)  # Wait to make sure xedit generates the logs.
@@ -543,6 +546,7 @@ def check_cleaning_results(plugin_name):
                 udr_pattern: ("Cleaned UDRs", info.clean_results_UDR),
                 itm_pattern: ("Cleaned ITMs", info.clean_results_ITM),
                 nvm_pattern: ("Found Deleted Navmeshes", info.clean_results_NVM),
+                partial_form_pattern: ("Created Partial Forms", info.clean_results_PARTIAL_FORMS)
             }
             for line in XE_Check:
                 for pattern, (message, results_list) in patterns.items():
@@ -557,7 +561,8 @@ def check_cleaning_results(plugin_name):
                 print("NOTHING TO CLEAN ! Adding plugin to PACT Ignore file...")
                 pact_ignore_update(plugin_name, get_game_mode(info).upper())
                 info.LCL_skip_list.append(plugin_name)
-        clear_xedit_logs()
+        if not pact_settings("Debug Mode"):
+            clear_xedit_logs()
 
 
 def get_plugin_list(load_order_path):
@@ -648,7 +653,8 @@ def clean_plugins(progress_emitter: ProgressEmitter):
     for plugins, message in [(info.clean_failed_list, "❌ {0} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {0} Timed Out):"),
                              (info.clean_results_UDR, "✔️ The following plugins had Undisabled Records and {0} properly disabled them:"),
                              (info.clean_results_ITM, "✔️ The following plugins had Identical To Master Records and {0} successfully cleaned them:"),
-                             (info.clean_results_NVM, "❌ CAUTION : The following plugins contain Deleted Navmeshes!\n   Such plugins may cause navmesh related problems or crashes.")]:
+                             (info.clean_results_NVM, "❌ CAUTION : The following plugins contain Deleted Navmeshes!\n   Such plugins may cause navmesh related problems or crashes."),
+                             (info.clean_results_PARTIAL_FORMS, f"✔️ The following plugins had ITMs converted to Partial Forms {0}:")]:
         if len(plugins) > 0:
             print(f"\n{message.format(info.XEDIT_EXE)}")
             for plugin in plugins:

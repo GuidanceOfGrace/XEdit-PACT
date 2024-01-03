@@ -34,6 +34,9 @@ PACT_Data:
     # Because of the experimental nature of this feature, it will not be configurable in the GUI.
     # Use at your own risk. No support will be provided for this feature.
       Partial Forms: false
+    
+    # Enables features that help debug PACT.
+      Debug Mode: false
   
   default_ignorefile: |
     # This file contains plugin names that CLASSIC will IGNORE while scanning your crash logs and mod files.
@@ -50,8 +53,8 @@ PACT_Data:
     PACT_Ignore_SSE:
       - Example Plugin.esp
   
-  version: "1.80.2 Unofficial"
-  version_date: 24.01.01 #YY/MM/DD
+  version: "1.80.3 Unofficial"
+  version_date: 24.01.03 #YY/MM/DD
 
   Errors:
     Ivalid_XEDIT_File: |

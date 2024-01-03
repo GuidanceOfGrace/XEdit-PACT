@@ -1,5 +1,9 @@
 ===========================================================================
 # CHANGELOG #
+1.80.3 Unofficial:
+- Add code to detect partial form creation (huge oversight on my part)
+- Add a debug mode setting, for now, it just disables clearing of the xEdit logs.
+
 1.80.2 Unofficial:
 - Re-enable update checking and direct them to my repo for now.
 - Disable the Backup and Restore buttons as they are non-functional at this time.

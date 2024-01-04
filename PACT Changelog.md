@@ -2,6 +2,8 @@
 # CHANGELOG #
 1.80.5 Unofficial (1.80.4 was reverted):
 - Fixed error in xEdit command line generation.
+- Hotfix: Change stylsheet for the backup and restore buttons to better indicate that they are disabled.
+- Hotfix: Fix bug in the error-checking code.
 
 1.80.3 Unofficial:
 - Add code to detect partial form creation (huge oversight on my part)

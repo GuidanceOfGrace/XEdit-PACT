@@ -452,7 +452,10 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         if not pact_settings("Debug Mode"):
             clear_xedit_logs()
         info.plugins_processed -= 1
-        info.clean_failed_list.append(plugin_name)
+        if isinstance(info.clean_failed_list, set):
+            info.clean_failed_list.add(plugin_name)
+        else:
+            info.clean_failed_list.append(plugin_name)
         print(error_message)
         if add_ignore:
             pact_ignore_update(plugin_name, get_game_mode(info).upper())

@@ -1,9 +1,5 @@
 ===========================================================================
 # CHANGELOG #
-1.80.4 Unofficial:
-- Change Backup and Restore button stylesheets to beter indicate their status
-- Add safeguard to only try partial form creation if game mode is Fallout 4 or Skyrim Special Edition
-
 1.80.3 Unofficial:
 - Add code to detect partial form creation (huge oversight on my part)
 - Add a debug mode setting, for now, it just disables clearing of the xEdit logs.

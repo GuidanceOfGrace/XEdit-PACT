@@ -219,7 +219,7 @@ class UiPACTMainWin(object):
                                                   """
                                                   QPushButton {
                                                     color: black; 
-                                                    background-color: grey; 
+                                                    background-color: lightyellow; 
                                                     border-radius: 5px; 
                                                     border: 1px solid gray;}
                                                     QPushButton:hover {
@@ -238,7 +238,7 @@ class UiPACTMainWin(object):
                                                   """
                                                   QPushButton {
                                                     color: black; 
-                                                    background-color: grey; 
+                                                    background-color: lightyellow; 
                                                     border-radius: 5px; 
                                                     border: 1px solid gray;
                                                     }

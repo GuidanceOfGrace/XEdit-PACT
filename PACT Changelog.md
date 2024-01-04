@@ -1,5 +1,8 @@
 ===========================================================================
 # CHANGELOG #
+1.80.5 Unofficial (1.80.4 was reverted):
+- Fixed error in xEdit command line generation.
+
 1.80.3 Unofficial:
 - Add code to detect partial form creation (huge oversight on my part)
 - Add a debug mode setting, for now, it just disables clearing of the xEdit logs.

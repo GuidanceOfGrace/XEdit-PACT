@@ -342,8 +342,7 @@ def create_xedit_command(info, plugin_name, universal, game_mode=None):
             print("Invalid xedit executable specified")
 
     if commandline:
-        if pact_settings("Partial Forms") is True:
-            commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial")
+        commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial") if pact_settings("Partial Forms") else commandline
         return commandline
     else:
         print("Invalid xedit executable specified")

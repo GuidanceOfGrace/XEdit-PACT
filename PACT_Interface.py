@@ -5,20 +5,20 @@ import platform
 import re
 import shutil
 import sys
-from typing import Union
+from pathlib import Path
 
 import psutil
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QThread, QTimer, QUrl
+from PySide6.QtCore import Qt, QThread, QTimer, QUrl, QEventLoop
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QLabel,
                                QLineEdit, QMessageBox, QPushButton,
                                QStyleFactory)
 
-from PACT_Start import (PACT_config, PACT_Current, ProgressEmitter,
+from PACT_Start import (ProgressEmitter,
                         check_process_mo2, check_settings_integrity,
-                        clean_plugins, info, pact_ini_update,
-                        pact_update_check, pact_update_settings)
+                        clean_plugins, info, pact_update_check,
+                        pact_update_settings, yaml_settings, pact_settings, is_it_xedit, get_game_mode)
 
 current_platform = platform.system()
 if current_platform == 'Windows':
@@ -32,6 +32,9 @@ QMessageBox.NoIcon | Question | Information | Warning | Critical
 
 progress_emitter = ProgressEmitter()
 
+def remove_from_list(list, item):
+    out = [value for value in list if value != item]
+    return out
 
 class UiPACTMainWin(object):
     def __init__(self, PACT_WINDOW):
@@ -45,7 +48,7 @@ class UiPACTMainWin(object):
 
         # MAIN WINDOW
         PACT_WINDOW.setObjectName("PACT_WINDOW")
-        PACT_WINDOW.setWindowTitle(f"Plugin Auto Cleaning Tool {PACT_Current[-4:]}")
+        PACT_WINDOW.setWindowTitle(f"Plugin Auto Cleaning Tool {yaml_settings('PACT Data/PACT Main.yaml', 'PACT_Data.version')}")
         PACT_WINDOW.resize(640, 640)
         PACT_WINDOW.setMinimumSize(QtCore.QSize(640, 480))
         PACT_WINDOW.setMaximumSize(QtCore.QSize(640, 480))
@@ -54,7 +57,6 @@ class UiPACTMainWin(object):
         font_bold = QtGui.QFont()
         font_bold.setPointSize(10)
         font_bold.setBold(True)
-
         # ==================== MAIN WINDOW ITEMS =====================
         # TOP
 
@@ -115,8 +117,7 @@ class UiPACTMainWin(object):
                                                  PACT_WINDOW,
                                                  QtCore.QRect(80, 50, 230, 32),
                                                  "RegBT_CHECK_UPDATES",
-                                                 clicked=self.update_popup,
-                                                 enabled=False
+                                                 clicked=self.update_popup
                                                  )
 
         # Button - Update Settings
@@ -136,8 +137,8 @@ class UiPACTMainWin(object):
                                              self.select_file_lo
                                              )
         self.configured_LO = False
-        if "loadorder" in PACT_config["MAIN"]["LoadOrder_TXT"] or "plugins" in PACT_config["MAIN"]["LoadOrder_TXT"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["LoadOrder_TXT"]):  # type: ignore
+        if "loadorder" in pact_settings("LoadOrder TXT") or "plugins" in pact_settings("LoadOrder TXT"):  # type: ignore
+            if os.path.isfile(pact_settings("LoadOrder TXT")):  # type: ignore
                 self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
                 self.configured_LO = True
@@ -155,8 +156,8 @@ class UiPACTMainWin(object):
                                               self.select_file_mo2
                                               )
         self.configured_MO2 = False
-        if "ModOrganizer" in PACT_config["MAIN"]["MO2_EXE"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["MO2_EXE"]):  # type: ignore
+        if "ModOrganizer" in pact_settings("MO2 EXE"):  # type: ignore
+            if os.path.isfile(pact_settings("MO2 EXE")):  # type: ignore
                 self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
                 self.configured_MO2 = True
@@ -174,8 +175,8 @@ class UiPACTMainWin(object):
                                                 self.select_file_xedit
                                                 )
         self.configured_XEDIT = False
-        if "Edit" in PACT_config["MAIN"]["XEDIT_EXE"]:  # type: ignore
-            if os.path.isfile(PACT_config["MAIN"]["XEDIT_EXE"]):  # type: ignore
+        if "Edit" in pact_settings("XEDIT EXE"):  # type: ignore
+            if os.path.isfile(pact_settings("XEDIT EXE")):  # type: ignore
                 self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
                 self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
                 self.configured_XEDIT = True
@@ -218,14 +219,15 @@ class UiPACTMainWin(object):
                                                   """
                                                   QPushButton {
                                                     color: black; 
-                                                    background-color: lightyellow; 
+                                                    background-color: grey; 
                                                     border-radius: 5px; 
                                                     border: 1px solid gray;}
                                                     QPushButton:hover {
                                                         background-color: lightblue;
                                                         }
                                                     """,
-                                                  self.backup_popup
+                                                  self.pact_placeholder_popup,
+                                                  enabled=False  # Temporary, not functional right now.
                                                   )
 
         # Button - Restore Backup
@@ -236,7 +238,7 @@ class UiPACTMainWin(object):
                                                   """
                                                   QPushButton {
                                                     color: black; 
-                                                    background-color: lightyellow; 
+                                                    background-color: grey; 
                                                     border-radius: 5px; 
                                                     border: 1px solid gray;
                                                     }
@@ -244,7 +246,8 @@ class UiPACTMainWin(object):
                                                         background-color: lightblue;
                                                         }
                                                     """,
-                                                  self.restore_popup
+                                                  self.pact_placeholder_popup,
+                                                  enabled=False  # Temporary, not functional right now.
                                                   )
 
         # Input - Cleaning Timeout
@@ -313,10 +316,10 @@ class UiPACTMainWin(object):
                                         PACT_WINDOW.close
                                         )
     # ============== CLEAN PLUGINS BUTTON STATES ================
-
+    
     def is_xedit_running(self):
-        xedit_regex = re.compile(r"(?:xedit|fo3edit|fnvedit|sseedit|fo4edit|tes5edit|fo4vredit|tes5vredit|xfoedit)(?:64)?\.exe", re.IGNORECASE)
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if xedit_regex.search(proc.name())]
+        
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if is_it_xedit(proc.name(), info)]
         xedit_running = False
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
@@ -390,9 +393,17 @@ class UiPACTMainWin(object):
         if self.thread is not None:
             progress_emitter.is_done = True
             self.RegBT_CLEAN_PLUGINS.setEnabled(False)
-            self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
-            self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
-            print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n")
+            is_stopping = False
+            while self.is_xedit_running():
+                if not is_stopping:
+                    self.RegBT_CLEAN_PLUGINS.setText("...STOPPING...")
+                    self.RegBT_CLEAN_PLUGINS.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
+                    is_stopping = True
+                if self.thread is not None:  # In case the thread is terminated before the while loop is broken.
+                    loop = QEventLoop()
+                    self.thread.finished.connect(loop.quit)
+                    loop.exec()
+            print("\n❌ CLEANING STOPPED! PLEASE WAIT UNTIL ALL RUNNING PROGRAMS ARE CLOSED BEFORE STARTING AGAIN!\n") # With the new while loop, this message might need to change - evildarkarchon
             self.ProgressBar.setFormat("Cleaning Stopped!")
             self.ProgressBar.setValue(0)
 
@@ -423,103 +434,7 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
     Please READ the #👋-welcome2 channel, react with the '2' emoji on the bot message there and leave your feedback in #💡-poet-guides-mods channel.
     Press OK to open the server link in your internet browser."""
 
-    # ================= PLUGIN BACKUP / RESTORE =================
     # @staticmethod recommended for func that don't call "self".
-
-    @staticmethod
-    def backup_popup():
-        Box_Backup = QMessageBox()
-        Box_Backup.setIcon(QMessageBox.Question)  # type: ignore
-        Box_Backup.setWindowTitle("PACT Backup")
-        Box_Backup.setText(UiPACTMainWin.backup_box_msg)  # RESERVED | Box_Backup.setInformativeText("...")
-        Box_Backup.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # type: ignore
-        if Box_Backup.exec() != QtWidgets.QMessageBox.Cancel:  # type: ignore
-            UiPACTMainWin.pact_create_backup()
-
-    @staticmethod
-    def pact_create_backup():
-        plugins_folder = QFileDialog.getExistingDirectory()
-        if plugins_folder:
-            primary_backup = os.path.join("PACT BACKUP", "Primary Backup")
-            if not os.path.exists(primary_backup):
-                os.makedirs(primary_backup, exist_ok=True)
-                print("CREATING PRIMARY BACKUP, PLEASE WAIT...")
-                for root, dirs, files in os.walk(plugins_folder):
-                    for file in files:
-                        if info.plugins_pattern.search(file):
-                            try:
-                                plugin_path = os.path.join(root, file)
-                                copy_path = os.path.join(primary_backup, file)
-                                shutil.copy2(plugin_path, copy_path)
-                            except (PermissionError, OSError):
-                                print(f"❌ ERROR : Unable to create a backup for {file}")
-                                print("   You can run PACT in admin mode and try again.")
-                                continue
-                print("PRIMARY BACKUP CREATED!")
-            else:
-                print("PROCESSING ADDITIONAL BACKUP, PLEASE WAIT...")
-                for root, dirs, files in os.walk(plugins_folder):
-                    for file in files:
-                        if info.plugins_pattern.search(file):
-                            plugin_backup = os.path.join("PACT BACKUP", "Primary Backup", file)
-                            plugin_current = os.path.join(root, file)
-                            if os.path.exists(plugin_backup):
-                                with open(plugin_current, 'rb') as plugin1, open(plugin_backup, 'rb') as plugin2:
-                                    hash1 = hashlib.sha256(plugin1.read()).hexdigest()
-                                    hash2 = hashlib.sha256(plugin2.read()).hexdigest()
-                                if hash1 != hash2:  # Compare hashes between current and backup plugins.
-                                    current_date = datetime.date.today().strftime('%y-%m-%d')
-                                    dated_backup = os.path.join("PACT BACKUP", f"BACKUP {current_date}")
-                                    if not os.path.exists(dated_backup):
-                                        os.makedirs(dated_backup, exist_ok=True)
-                                    shutil.copy2(plugin_current, dated_backup)
-                                    # Remove plugin name from PACT Ignore list if hashes are different.
-                                    with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as Ignore_List:
-                                        Ignore_Check = Ignore_List.read()
-                                        if str(file) in Ignore_Check:
-                                            Ignore_Check = Ignore_Check.replace(str(file), "")
-                                    with open("PACT Ignore.txt", "w", encoding="utf-8", errors="ignore") as Ignore_List:
-                                        Ignore_List.write(Ignore_Check)
-                            else:  # Create plugin backup if not already in Primary Backup.
-                                current_date = datetime.date.today().strftime('%y-%m-%d')
-                                dated_backup = os.path.join("PACT BACKUP", f"BACKUP {current_date}")
-                                if not os.path.exists(dated_backup):
-                                    os.makedirs(dated_backup, exist_ok=True)
-                                shutil.copy2(plugin_current, dated_backup)
-                print("ADDITIONAL BACKUP PROCESSED!")
-
-    @staticmethod
-    def restore_popup():
-        Box_Restore = QMessageBox()
-        Box_Restore.setIcon(QMessageBox.Question)  # type: ignore
-        Box_Restore.setWindowTitle("PACT Restore")
-        Box_Restore.setText(UiPACTMainWin.restore_box_msg)  # RESERVED | Box_Restore.setInformativeText("...")
-        Box_Restore.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # type: ignore
-        if Box_Restore.exec() != QMessageBox.Cancel:  # type: ignore
-            UiPACTMainWin.pact_restore_backup()
-
-    @staticmethod
-    def pact_restore_backup():
-        plugins_folder = QFileDialog.getExistingDirectory()
-        if plugins_folder:
-            primary_backup = os.path.join("PACT BACKUP", "Primary Backup")
-            if not os.path.exists(primary_backup):
-                print("❌ ERROR : You need to create a backup before you can restore it!")
-            else:
-                print("RESTORING PRIMARY BACKUP, PLEASE WAIT...")
-                for root, dirs, files in os.walk(plugins_folder):
-                    for file in files:
-                        if info.plugins_pattern.search(file):
-                            plugin_backup = os.path.join("PACT BACKUP", "Primary Backup", file)
-                            plugin_current = os.path.join(root, file)
-                            if os.path.exists(plugin_backup):
-                                try:
-                                    shutil.copy2(plugin_backup, plugin_current)
-                                except (PermissionError, OSError):
-                                    print(f"❌ ERROR : Unable to restore a backup for {file}")
-                                    print("   You can run PACT in admin mode and try again.")
-                                    continue
-                print("PRIMARY BACKUP RESTORED!")
 
     @staticmethod
     def help_popup():
@@ -538,22 +453,119 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         else:
             QtWidgets.QMessageBox.warning(PACT_WINDOW, "PACT Update", "New PACT version is available!\nPress OK to open the PACT Nexus Page.")
             QDesktopServices.openUrl(QUrl("https://www.nexusmods.com/fallout4/mods/56255"))
+    """ @staticmethod
+    def backup_popup():
+        Box_Backup = QMessageBox()
+        Box_Backup.setIcon(QMessageBox.Question)  # type: ignore
+        Box_Backup.setWindowTitle("PACT Backup")
+        Box_Backup.setText(UiPACTMainWin.backup_box_msg)  # RESERVED | Box_Backup.setInformativeText("...")
+        Box_Backup.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # type: ignore
+        if Box_Backup.exec() != QtWidgets.QMessageBox.Cancel:  # type: ignore
+            UiPACTMainWin.pact_create_backup()
+
+    @staticmethod
+    def pact_create_backup():
+        plugins_folder = Path(QFileDialog.getExistingDirectory())
+        if plugins_folder:
+            primary_backup = Path("PACT BACKUP/Primary Backup")
+            if not primary_backup.exists():
+                primary_backup.mkdir(parents=True, exist_ok=True)
+                print("CREATING PRIMARY BACKUP, PLEASE WAIT...")
+                for files in plugins_folder.glob("**/*"):
+                    for file in files:
+                        if info.plugins_pattern.search(file):
+                            try:
+                                plugin_path = plugins_folder.joinpath(file)
+                                copy_path = primary_backup.joinpath(file)
+                                shutil.copy2(plugin_path, copy_path)
+                            except (PermissionError, OSError):
+                                print(f"❌ ERROR : Unable to create a backup for {file}")
+                                print("   You can run PACT in admin mode and try again.")
+                                continue
+                print("PRIMARY BACKUP CREATED!")
+            else:
+                print("PROCESSING ADDITIONAL BACKUP, PLEASE WAIT...")
+                for files in plugins_folder.glob("**/*"):
+                    for file in files:
+                        if info.plugins_pattern.search(file):
+                            plugin_backup = Path("PACT BACKUP", "Primary Backup", file)
+                            plugin_current = plugins_folder.joinpath(file)
+                            if plugin_backup.exists():
+                                hash1 = hashlib.sha256(plugin_backup.read_bytes()).hexdigest()
+                                hash2 = hashlib.sha256(plugin_current.read_bytes()).hexdigest()
+                                if hash1 != hash2:  # Compare hashes between current and backup plugins.
+                                    current_date = datetime.date.today().strftime('%y-%m-%d')
+                                    dated_backup = Path("PACT BACKUP", f"BACKUP {current_date}")
+                                    if not dated_backup.exists():
+                                        dated_backup.mkdir(parents=True, exist_ok=True)
+                                    shutil.copy2(plugin_current, dated_backup)
+                                    # Remove plugin name from PACT Ignore list if hashes are different.
+                                    with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as Ignore_List:
+                                        Ignore_Check = Ignore_List.read()
+                                        if str(file) in Ignore_Check:
+                                            Ignore_Check = Ignore_Check.replace(str(file), "")
+                                    ignore_list = yaml_settings(f"PACT Ignore.yaml", f"PACT_Ignore_{get_game_mode(info).upper()}")
+                                    ignore_list = remove_from_list(ignore_list, str(file))
+                                    yaml_settings(f"PACT Ignore.yaml", f"PACT_Ignore_{get_game_mode(info).upper()}", ignore_list)
+                            else:  # Create plugin backup if not already in Primary Backup.
+                                current_date = datetime.date.today().strftime('%y-%m-%d')
+                                dated_backup = Path("PACT BACKUP", f"BACKUP {current_date}")
+                                if not dated_backup.exists():
+                                    dated_backup.mkdir(parents=True, exist_ok=True)
+                                shutil.copy2(plugin_current, dated_backup)
+                print("ADDITIONAL BACKUP PROCESSED!")
+
+    @staticmethod
+    def restore_popup():
+        Box_Restore = QMessageBox()
+        Box_Restore.setIcon(QMessageBox.Question)  # type: ignore
+        Box_Restore.setWindowTitle("PACT Restore")
+        Box_Restore.setText(UiPACTMainWin.restore_box_msg)  # RESERVED | Box_Restore.setInformativeText("...")
+        Box_Restore.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # type: ignore
+        if Box_Restore.exec() != QMessageBox.Cancel:  # type: ignore
+            UiPACTMainWin.pact_restore_backup()
+
+    @staticmethod
+    def pact_restore_backup():
+        plugins_folder = Path(QFileDialog.getExistingDirectory())
+        if plugins_folder:
+            primary_backup = Path("PACT BACKUP", "Primary Backup")
+            if not primary_backup.exists():
+                print("❌ ERROR : You need to create a backup before you can restore it!")
+            else:
+                print("RESTORING PRIMARY BACKUP, PLEASE WAIT...")
+                for files in primary_backup.glob("**/*"):
+                    for file in files:
+                        if info.plugins_pattern.search(file):
+                            plugin_backup = primary_backup.joinpath(file)
+                            plugin_current = plugins_folder.joinpath(file)
+                            if plugin_backup.exists() and plugin_current.exists():
+                                try:
+                                    shutil.copy2(plugin_backup, plugin_current)
+                                except (PermissionError, OSError):
+                                    print(f"❌ ERROR : Unable to restore a backup for {file}")
+                                    print("   You can run PACT in admin mode and try again.")
+                                    continue
+                print("PRIMARY BACKUP RESTORED!")""" # This is commented out because it's not functional right now.
+    @staticmethod
+    def pact_placeholder_popup():
+        QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Placeholder", "This feature is not available yet!")
 
     # ================= MAIN BUTTON FUNCTIONS ===================
 
     def update_settings(self):
-        pact_update_settings(info, PACT_config)
+        pact_update_settings(info)
         value_CT = int(self.InputField_CT.text())
         value_JE = int(self.InputField_JE.text())
-        pact_ini_update("Cleaning_Timeout", value_CT)
-        pact_ini_update("Journal_Expiration", value_JE)
+        yaml_settings("PACT Settings.yaml", "PACT_Settings.Cleaning Timeout", value_CT)
+        yaml_settings("PACT Settings.yaml", "Journal Expiration", value_JE)
         QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Settings", "All PACT settings have been updated and refreshed!")
 
     def select_file_lo(self):
         LO_file, _ = QFileDialog.getOpenFileName(filter="*.txt")  # type: ignore
         if os.path.exists(LO_file) and ("loadorder" in LO_file or "plugins" in LO_file):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New Load Order File Set", f"You have set the new path to: {LO_file} \n")
-            pact_ini_update("LoadOrder_TXT", LO_file)
+            yaml_settings("PACT Settings.yaml", "PACT_Settings.LoadOrder TXT", LO_file)
             self.RegBT_BROWSE_LO.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_LO.setText("✔️ LOAD ORDER FILE SET")
             self.configured_LO = True
@@ -565,23 +577,22 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
         MO2_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
         if os.path.exists(MO2_EXE):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set MO2 to: \n" + MO2_EXE)
-            pact_ini_update("MO2_EXE", MO2_EXE)
+            yaml_settings("PACT Settings.yaml", "PACT_Settings.MO2 EXE", MO2_EXE)
             self.RegBT_BROWSE_MO2.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_MO2.setText("✔️ MO2 EXECUTABLE SET")
             self.configured_MO2 = True
 
     def select_file_xedit(self):
         XEDIT_EXE, _ = QFileDialog.getOpenFileName(filter="*.exe")  # type: ignore
-        if os.path.exists(XEDIT_EXE) and "edit" in XEDIT_EXE.lower():
+        if os.path.exists(XEDIT_EXE) and is_it_xedit(XEDIT_EXE, info):
             QtWidgets.QMessageBox.information(PACT_WINDOW, "New MO2 Executable Set", "You have set XEDIT to: \n" + XEDIT_EXE)
-            pact_ini_update("XEDIT_EXE", XEDIT_EXE)
+            yaml_settings("PACT Settings.yaml", "PACT_Settings.XEDIT EXE", XEDIT_EXE)
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: lightgreen; border-radius: 5px; border: 1px solid gray;")
             self.RegBT_BROWSE_XEDIT.setText("✔️ XEDIT EXECUTABLE SET")
             self.configured_XEDIT = True
-        elif os.path.exists(XEDIT_EXE) and "edit" not in XEDIT_EXE.lower():
+        elif os.path.exists(XEDIT_EXE) and not is_it_xedit(XEDIT_EXE, info):
             self.RegBT_BROWSE_XEDIT.setText("❌ WRONG XEDIT EXE")
             self.RegBT_BROWSE_XEDIT.setStyleSheet("color: black; background-color: orange; border-radius: 5px; border: 1px solid gray;")
-
 
 # CLEANING NEEDS A SEPARATE THREAD SO IT DOESN'T FREEZE PACT GUI
 class PactThread(QThread):

@@ -4,13 +4,12 @@ import os
 import re
 import subprocess
 import time
+import ruamel.yaml
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Union
 
 import psutil
 import requests
-import tomlkit
 from PySide6.QtCore import QObject, Signal, Slot
 
 '''AUTHOR NOTES (POET)
@@ -20,63 +19,55 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 # =================== PACT TOML FILE ===================
 
+def yaml_settings(yaml_path, key_path, new_value=None):
+    yaml = ruamel.yaml.YAML()
+    yaml.indent(offset=2)
+    yaml.width = 300
+    with open(yaml_path, 'r', encoding='utf-8') as yaml_file:
+        data = yaml.load(yaml_file)
 
-def pact_ini_create():
-    if not os.path.exists("PACT Settings.toml"):
-        INI_Settings = """[MAIN]
-# This file contains settings for both source scripts and Plugin Auto Cleaning Tool.exe 
-# Set to true if you want PACT to check that you have the latest version of PACT. 
-Update_Check = true
+    keys = key_path.split('.') if isinstance(key_path, str) else key_path
+    value = data
+    # If new_value is provided, update the value.
+    if new_value is not None:
+        for key in keys[:-1]:
+            value = value[key]
 
-# Set to true if you want PACT to show extra stats about cleaned plugins in the command line window. 
-Stat_Logging = true
+        value[keys[-1]] = new_value
+        with open(yaml_path, 'w', encoding='utf-8') as yaml_file:
+            yaml.dump(data, yaml_file)
+    # Otherwise, traverse YAML structure to get value.
+    else:
+        for key in keys:
+            if key in value:
+                value = value[key]
+            else:
+                return None  # Key not found.
+        if value is None and "Path" not in key_path:  # Error me if I mistype or screw up the value grab.
+            print(f"❌ ERROR (yaml_settings)! Trying to grab a None value for : '{key_path}'")
 
-# In seconds, set below how long should PACT wait for xedit to clean any plugin. 
-# If it takes longer than the set amount, the plugin will be immediately skipped. 
-Cleaning_Timeout = 300
+    return value
 
-# In days, set below how long should PACT wait until the logging journal is cleared. 
-# If PACT Journal.txt is older than the set amount, it is immediately deleted. 
-Journal_Expiration = 7
+def pact_settings(setting=None):
+    if not os.path.exists("PACT Settings.yaml"):
+        default_settings = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.default_settings")
+        with open('PACT Settings.yaml', 'w', encoding='utf-8') as file:
+            file.write(default_settings)
+    if setting:
+        get_setting = yaml_settings("PACT Settings.yaml", f"PACT_Settings.{setting}")
+        if get_setting is None and "Path" not in setting:  # Error me if I make a stupid mistype.
+            print(f"❌ ERROR (pact_settings)! Trying to grab a None value for : '{setting}'")
+        return get_setting
 
-# Set or copy-paste your load order (loadorder.txt / plugins.txt) file path below. 
-# See the PACT Nexus Page for instructions on where you can find these files. 
-LoadOrder_TXT = ""
+def is_it_xedit(compare_string, info):
+    if Path(compare_string).name.lower() in info.lower_specific or Path(compare_string).name.lower() in info.lower_universal:
+        return True
+    return False
 
-# Set or copy-paste your XEdit (FO3Edit.exe / FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below. 
-# xEdit.exe is also supported, but requires that you set LoadOrder TXT path to loadorder.txt only. 
-XEDIT_EXE = ""
-
-# Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below. 
-# Required if MO2 is your main mod manager. Otherwise, leave this blank. 
-MO2_EXE = ""
-"""
-        toml_tmp = tomlkit.parse(INI_Settings)  # Do it the same way it is done in CLAS.
-        with open("PACT Settings.toml", "w", encoding="utf-8", errors="ignore") as INI_PACT:
-            INI_PACT.write(toml_tmp.as_string())
-
-
-pact_ini_create()
-
-with open("PACT Settings.toml", "r", encoding="utf-8", errors="ignore") as INI_PACT:
-    PACT_config: tomlkit.TOMLDocument = tomlkit.parse(INI_PACT.read())  # type: ignore
-PACT_Date = "140423"  # DDMMYY
-PACT_Current = "PACT v1.80"
-PACT_Updated = False
-
-
-def pact_ini_update(section: str, value: Union[str, int, float, bool]):  # Convenience function for checking & writing to INI.
-    if " " in section:
-        raise ValueError
-
-    if isinstance(value, Path):
-        value = str(value)
-
-    PACT_config["MAIN"][section] = value  # type: ignore
-
-    with open("PACT Settings.toml", "w+", encoding="utf-8", errors="ignore") as INI_PACT:
-        tomlkit.dump(PACT_config, INI_PACT)
-
+if not os.path.exists("PACT Ignore.yaml"):
+    default_ignorefile = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.default_ignorefile")
+    with open('PACT Ignore.yaml', 'w', encoding='utf-8') as file:
+            file.write(default_ignorefile)
 
 def pact_journal_expire():
     # Delete journal if older than set amount of days.
@@ -98,62 +89,33 @@ def pact_log_update(log_message):
         LOG_PACT.write(log_message)
 
 
-def pact_ignore_update(plugin, numnewlinesbefore=1, numnewlinesafter=1):
-    with open("PACT Ignore.txt", "a", encoding="utf-8", errors="ignore") as IGNORE_PACT:
-        IGNORE_PACT.write("\n" * numnewlinesbefore + plugin + "\n" * numnewlinesafter)
+def pact_ignore_update(plugin, game):
+    ignore_list = yaml_settings("PACT Ignore.yaml", f"PACT_Ignore_{game}")
+    ignore_list.append(plugin)
+    yaml_settings("PACT Ignore.yaml", f"PACT_Ignore_{game}", ignore_list)
 # =================== WARNING MESSAGES ==================
 # Can change first line to """\ to remove the spacing.
 
-
-Warn_PACT_Update_Failed = """
-❌  WARNING : PACT WAS UNABLE TO CHECK FOR UPDATES, BUT WILL CONTINUE RUNNING
-    CHECK FOR ANY PACT UPDATES HERE: https://www.nexusmods.com/fallout4/mods/69413
-"""
-Warn_Outdated_PACT = """
-❌  WARNING : YOUR PACT VERSION IS OUT OF DATE!
-    Please download the latest version from here:
-    https://www.nexusmods.com/fallout4/mods/69413
-"""
-Warn_Invalid_INI_Path = """
-❌  WARNING : YOUR PACT INI PATHS ARE INCORRECT!
-    Please run the PACT program or open PACT Settings.toml
-    And make sure that file / folder paths are correctly set!
-"""
-Warn_Invalid_INI_Setup = """
-❌  WARNING : YOUR PACT INI SETUP IS INCORRECT!
-    You likely set the wrong XEdit version for your game.
-    Check your EXE or PACT Settings.toml settings and try again.
-"""
-Err_Invalid_LO_File = """
-❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!
-   You have to set your load order file path to loadorder.txt and NOT plugins.txt
-   This is so PACT can detect the right game. Change the load order file path and try again.
-"""
-Err_Invalid_XEDIT_File = """
-❌ ERROR : CANNOT DETERMINE THE SET XEDIT EXECUTABLE FROM PACT SETTINGS!
-   Make sure that you have set XEDIT EXE path to a valid .exe file!
-   OR try changing XEDIT EXE path to a different XEdit version.
-"""
 PAUSE_MESSAGE = "Press Enter to continue..."
 
 # =================== UPDATE FUNCTION ===================
 
 
 def pact_update_check():
-    if PACT_config["MAIN"]["Update_Check"] is True:  # type: ignore
+    if pact_settings("Update Check"):  # type: ignore
         print("❓ CHECKING FOR ANY NEW PLUGIN AUTO CLEANING TOOL (PACT) UPDATES...")
         print("   (You can disable this check in the EXE or PACT Settings.toml) \n")
         try:
-            response = requests.get("https://api.github.com/repos/GuidanceOfGrace/XEdit-PACT/releases/latest")
+            response = requests.get("https://api.github.com/repos/evildarkarchon/XEdit-PACT/releases/latest")
             PACT_Received = response.json()["name"]
-            if PACT_Received == PACT_Current:
+            if PACT_Received == yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.version"):
                 print("\n✔️ You have the latest version of PACT!")
                 return True
             else:
-                print(Warn_Outdated_PACT)
+                print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Warnings.Outdated_PACT"))
                 print("===============================================================================")
         except (OSError, requests.exceptions.RequestException):
-            print(Warn_PACT_Update_Failed)
+            print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Warnings.PACT_Update_Failed"))
             print("===============================================================================")
     else:
         print("\n ❌ NOTICE: UPDATE CHECK IS DISABLED IN PACT INI SETTINGS \n")
@@ -162,59 +124,59 @@ def pact_update_check():
 
 
 # =================== TERMINAL OUTPUT START ====================
-print("Hello World! | Plugin Auto Cleaning Tool (PACT) | Version", PACT_Current[-4:], "| FO3, FNV, FO4, SSE")
+print(f"Hello World! | Plugin Auto Cleaning Tool (PACT) | Version {str(yaml_settings('PACT Data/PACT Main.yaml', 'PACT_Data.version'))} | FO3, FNV, FO4, SSE")
 print("MAKE SURE TO SET THE CORRECT LOAD ORDER AND XEDIT PATHS BEFORE CLEANING PLUGINS")
 print("===============================================================================")
 
 
 @dataclass
 class Info:
-    MO2_EXE: Union[str, Path] = field(default_factory=Path)
-    MO2_PATH: Union[str, Path] = field(default_factory=Path)
-    XEDIT_EXE: Union[str, Path] = field(default_factory=Path)
-    XEDIT_PATH: Union[str, Path] = field(default_factory=Path)
-    LOAD_ORDER_TXT: Union[str, Path] = field(default_factory=Path)
-    LOAD_ORDER_PATH: Union[str, Path] = field(default_factory=Path)
+    MO2_EXE: str | Path = field(default_factory=Path)
+    MO2_PATH: str | Path = field(default_factory=Path)
+    XEDIT_EXE: str | Path = field(default_factory=Path)
+    XEDIT_PATH: str | Path = field(default_factory=Path)
+    LOAD_ORDER_TXT: str | Path = field(default_factory=Path)
+    LOAD_ORDER_PATH: str | Path = field(default_factory=Path)
     Journal_Expiration = 7
     Cleaning_Timeout = 300
 
     MO2Mode = False
-    xedit_list_fallout3 = ("fo3edit.exe", "fo3edit64.exe")
-    xedit_list_newvegas = ("fnvedit.exe", "fnvedit64.exe")
-    xedit_list_fallout4 = ("fo4edit.exe", "fo4edit64.exe", "fo4vredit.exe")
-    xedit_list_skyrimse = ("sseedit.exe", "sseedit64.exe", "tes5vredit.exe")
-    xedit_list_universal = ("xedit.exe", "xedit64.exe", "xfoedit.exe", "xfoedit64.exe")
+    xedit_list_fallout3 = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO3")
+    lower_fo3 = set(map(str.lower, xedit_list_fallout3))
+    xedit_list_newvegas = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FNV")
+    lower_fnv = set(map(str.lower, xedit_list_newvegas))
+    xedit_list_fallout4 = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO4")
+    xedit_list_fallout4.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.FO4VR"))
+    lower_fo4 = set(map(str.lower, xedit_list_fallout4))
+    xedit_list_skyrimse = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.SSE")
+    xedit_list_skyrimse.extend(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.SkyrimVR"))
+    lower_sse = set(map(str.lower, xedit_list_skyrimse))
+    xedit_list_universal = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.XEdit_Lists.Universal")
     xedit_list_specific = xedit_list_fallout3 + xedit_list_newvegas + xedit_list_fallout4 + xedit_list_skyrimse
 
-    clean_results_UDR = []  # Undisabled References
-    clean_results_ITM = []  # Identical To Master
-    clean_results_NVM = []  # Deleted Navmeshes
-    clean_failed_list = []  # Cleaning Failed
+    lower_specific = set(map(str.lower, xedit_list_specific))
+    lower_universal = set(map(str.lower, xedit_list_universal)) 
+
+    clean_results_UDR = set()  # Undisabled References
+    clean_results_ITM = set()  # Identical To Master
+    clean_results_NVM = set()  # Deleted Navmeshes
+    clean_results_PARTIAL_FORMS = set()  # Partial Forms
+    clean_failed_list = set()  # Cleaning Failed
     plugins_processed = 0
     plugins_cleaned = 0
 
     LCL_skip_list = []
-    if not os.path.exists("PACT Ignore.txt"):  # Local plugin skip / ignore list.
-        with open("PACT Ignore.txt", "w", encoding="utf-8", errors="ignore") as PACT_Ignore:
-            PACT_Ignore.write("Write plugin names you want CLAS to ignore here. (ONE PLUGIN PER LINE)\n")
-    else:
-        with open("PACT Ignore.txt", "r", encoding="utf-8", errors="ignore") as PACT_Ignore:
-            LCL_skip_list = [line.replace("\n", "").strip() for line in PACT_Ignore.readlines()[1:]]
 
     # HARD EXCLUDE PLUGINS PER GAME HERE
-    FO3_skip_list = ["", "Fallout3.esm", "Anchorage.esm", "ThePitt.esm", "BrokenSteel.esm", "PointLookout.esm", "Zeta.esm", "Unofficial Fallout 3 Patch.esm"]
+    FO3_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO3")
 
-    FNV_skip_list = ["", "FalloutNV.esm", "DeadMoney.esm", "OldWorldBlues.esm", "HonestHearts.esm", "LonesomeRoad.esm", "TribalPack.esm", "MercenaryPack.esm",
-                     "ClassicPack.esm", "CaravanPack.esm", "GunRunnersArsenal.esm", "Unofficial Patch NVSE Plus.esp"]
+    FNV_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FNV")
 
-    TTW_skip_list = ["", "TaleOfTwoWastelands.esm", "TTWInteriors_Core.esm", "TTWInteriorsProject_Combo.esm", "TTWInteriorsProject_ComboHotfix.esm", "TTWInteriorsProject_Merged.esm", "TTWInteriors_Core_Hotfix.esm"]  # How the hell did Github Copilot know the file names for TTW?
+    FO4_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.FO4")
 
-    FO4_skip_list = ["", "Fallout4.esm", "DLCCoast.esm", "DLCNukaWorld.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCworkshop02.esm", "DLCworkshop03.esm",
-                     "Unofficial Fallout 4 Patch.esp", "PPF.esm", "PRP.esp", "PRP-Compat", "SS2.esm", "SS2_XPAC_Chapter2.esm", "SS2_XPAC_Chapter3.esm", "SS2Extended.esp"]
+    SSE_skip_list = yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Skip_Lists.SSE")
 
-    SSE_skip_list = ["", "Skyrim.esm", "Update.esm", "HearthFires.esm", "Dragonborn.esm", "Dawnguard.esm", "Unofficial Skyrim Special Edition Patch.esp"]
-
-    VIP_skip_list = FO3_skip_list + FNV_skip_list + TTW_skip_list + FO4_skip_list + SSE_skip_list
+    VIP_skip_list = FO3_skip_list + FNV_skip_list + FO4_skip_list + SSE_skip_list
 
     XEDIT_LOG_TXT: str = field(default_factory=str)
     XEDIT_EXC_LOG: str = field(default_factory=str)
@@ -225,37 +187,48 @@ info = Info()
 
 def update_load_order_path(info, load_order_path):
     info.LOAD_ORDER_PATH = load_order_path
-    info.LOAD_ORDER_TXT = os.path.basename(load_order_path)
+    if load_order_path is not None:
+        info.LOAD_ORDER_TXT = os.path.basename(load_order_path)
+    else:
+        info.LOAD_ORDER_TXT = ""
 
 
 def update_xedit_path(info, xedit_path):
     info.XEDIT_PATH = xedit_path
-    if ".exe" in xedit_path:
-        info.XEDIT_EXE = os.path.basename(xedit_path)
-    elif os.path.exists(xedit_path):
-        for file in os.listdir(xedit_path):
-            if file.endswith(".exe") and "edit" in str(file).lower():
-                info.XEDIT_PATH = os.path.join(xedit_path, file)
-                info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
+    if xedit_path is not None:
+        if ".exe" in xedit_path:
+            info.XEDIT_EXE = os.path.basename(xedit_path)
+        elif os.path.exists(xedit_path):
+            for file in os.listdir(xedit_path):
+                if file.endswith(".exe") and is_it_xedit(str(file).lower(), info):
+                    info.XEDIT_PATH = os.path.join(xedit_path, file)
+                    info.XEDIT_EXE = os.path.basename(info.XEDIT_PATH)
+    else:
+        info.XEDIT_EXE = ""
+        info.XEDIT_PATH = ""
 
 
 def update_mo2_path(info, mo2_path):
-    info.MO2_PATH = mo2_path
-    if ".exe" in mo2_path:
-        info.MO2_EXE = os.path.basename(mo2_path)
-    elif os.path.exists(mo2_path):
-        for file in os.listdir(mo2_path):
-            if file.endswith(".exe") and ("mod" in str(file).lower() or "mo2" in str(file).lower()):
-                info.MO2_PATH = os.path.join(mo2_path, file)
-                info.MO2_EXE = os.path.basename(info.MO2_PATH)
+    if mo2_path is not None:
+        info.MO2_PATH = mo2_path
+        if ".exe" in mo2_path:
+            info.MO2_EXE = os.path.basename(mo2_path)
+        elif os.path.exists(mo2_path):
+            for file in os.listdir(mo2_path):
+                if file.endswith(".exe") and ("mod" in str(file).lower() or "mo2" in str(file).lower()):
+                    info.MO2_PATH = os.path.join(mo2_path, file)
+                    info.MO2_EXE = os.path.basename(info.MO2_PATH)
+    else:
+        info.MO2_EXE = ""
+        info.MO2_PATH = ""
 
 
-def pact_update_settings(info, pact_config):
-    update_load_order_path(info, pact_config["MAIN"]["LoadOrder_TXT"])
-    update_xedit_path(info, pact_config["MAIN"]["XEDIT_EXE"])
-    update_mo2_path(info, pact_config["MAIN"]["MO2_EXE"])
-    info.Cleaning_Timeout = int(pact_config["MAIN"]["Cleaning_Timeout"])
-    info.Journal_Expiration = int(pact_config["MAIN"]["Journal_Expiration"])
+def pact_update_settings(info):
+    update_load_order_path(info, pact_settings("LoadOrder TXT"))
+    update_xedit_path(info, pact_settings("XEDIT EXE"))
+    update_mo2_path(info, pact_settings("MO2 EXE"))
+    info.Cleaning_Timeout = int(pact_settings("Cleaning Timeout"))
+    info.Journal_Expiration = int(pact_settings("Journal Expiration"))
 
     if not isinstance(info.Cleaning_Timeout, int) or info.Cleaning_Timeout <= 0:
         raise ValueError("""❌ ERROR : CLEANING TIMEOUT VALUE IN PACT SETTINGS IS NOT VALID.)
@@ -272,20 +245,20 @@ Please change Journal Expiration to a valid positive number.""")
 Journal Expiration must be set to at least 1 day or more.""")
 
 
-pact_update_settings(info, PACT_config)
+pact_update_settings(info)
 if ".exe" in str(info.XEDIT_PATH) and info.XEDIT_EXE in info.xedit_list_specific:
     xedit_path = Path(info.XEDIT_PATH)
     info.XEDIT_LOG_TXT = str(xedit_path.with_name(xedit_path.stem.upper() + '_log.txt'))
     info.XEDIT_EXC_LOG = str(xedit_path.with_name(xedit_path.stem.upper() + 'Exception.log'))
 elif info.XEDIT_PATH and not ".exe" in str(info.XEDIT_PATH):
-    print(Err_Invalid_XEDIT_File)
+    print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Errors.Invalid_XEDIT_File"))
     input(PAUSE_MESSAGE)
     raise ValueError
 
 
 # Make sure Mod Organizer 2 is not already running.
 def check_process_mo2(progress_emitter):
-    pact_update_settings(info, PACT_config)
+    pact_update_settings(info)
     if os.path.exists(info.MO2_PATH):
         mo2_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name']) if str(info.MO2_EXE).lower() in proc.name().lower()]
         for proc in mo2_procs:
@@ -310,11 +283,11 @@ def clear_xedit_logs():
 
 # Make sure right XEDIT is running for the right game.
 def check_settings_integrity():
-    pact_update_settings(info, PACT_config)
+    pact_update_settings(info)
     if os.path.exists(info.LOAD_ORDER_PATH) and os.path.exists(info.XEDIT_PATH):
         print("✔️ REQUIRED FILE PATHS FOUND! CHECKING IF INI SETTINGS ARE CORRECT...")
     else:
-        print(Warn_Invalid_INI_Path)
+        print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Warnings.Invalid_INI_Path"))
         input(PAUSE_MESSAGE)
         raise ValueError
 
@@ -324,21 +297,21 @@ def check_settings_integrity():
         info.MO2Mode = False
 
     valid_xedit_executables = {
-        "Fallout3.esm": info.xedit_list_fallout3,
-        "FalloutNV.esm": info.xedit_list_newvegas,
-        "Fallout4.esm": info.xedit_list_fallout4,
-        "Skyrim.esm": info.xedit_list_skyrimse
+        "Fallout3.esm": info.lower_fo3,
+        "FalloutNV.esm": info.lower_fnv,
+        "Fallout4.esm": info.lower_fo4,
+        "Skyrim.esm": info.lower_sse
     }
 
-    if str(info.XEDIT_EXE).lower() not in info.xedit_list_universal:
+    if str(info.XEDIT_EXE).lower() not in info.lower_universal:
         with open(info.LOAD_ORDER_PATH, "r", encoding="utf-8", errors="ignore") as LO_Check:
             LO_Plugins = LO_Check.read()
             if not any(game in LO_Plugins and str(info.XEDIT_EXE).lower() in executables for game, executables in valid_xedit_executables.items()):
-                print(Warn_Invalid_INI_Setup)
+                print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Warnings.Invalid_INI_Setup"))
                 input(PAUSE_MESSAGE)
                 raise ValueError
-    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.xedit_list_universal:
-        print(Err_Invalid_LO_File)
+    elif "loadorder" not in str(info.LOAD_ORDER_PATH) and str(info.XEDIT_EXE).lower() in info.lower_universal:
+        print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Errors.Invalid_LO_File"))
         input(PAUSE_MESSAGE)
         raise ValueError
 
@@ -352,55 +325,28 @@ def update_log_paths(info, game_mode=None):
         info.XEDIT_LOG_TXT = str(path.with_name(f"{path.stem.upper()}_log.txt"))
         info.XEDIT_EXC_LOG = str(path.with_name(f"{path.stem.upper()}Exception.log"))
 
-
-def create_bat_command(info, plugin_name):
-    xedit_exe_lower = str(info.XEDIT_EXE).lower()
-    xedit_path_str = str(info.XEDIT_PATH)
-
-    if xedit_exe_lower in info.xedit_list_specific:
-        update_log_paths(info)
-        bat_command = create_specific_xedit_command(info, plugin_name)
-        if bat_command:
-            return bat_command
-
-    if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.xedit_list_universal:
-        game_mode = get_game_mode(info)
-        if game_mode is None:
-            print(Err_Invalid_LO_File)
-            input(PAUSE_MESSAGE)
-            raise ValueError
-
-        update_log_paths(info, game_mode)
-        bat_command = create_universal_xedit_command(info, plugin_name, game_mode)
-        if bat_command:
-            return bat_command
-
-    print("""❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?
-    If you're seeing this, make sure that your load order / xedit paths are correct.
-    If problems continue, try a different load order file or xedit executable.
-    If nothing works, please report this error to the PACT Nexus page.""")
-    input(PAUSE_MESSAGE)
-    raise RuntimeError("Unable to start the cleaning process")
-
     # Additional helper functions
 
+def create_xedit_command(info, plugin_name, universal, game_mode=None):
+    commandline=""
+    match info.MO2Mode, universal:
+        case True, True:
+            commandline = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
+        case True, False:
+            commandline = f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
+        case False, True:
+            commandline = f'"{info.XEDIT_PATH}" -a -{game_mode} -QAC -autoexit -autoload "{plugin_name}"'
+        case False, False:
+            commandline = f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
+        case _:
+            print("Invalid xedit executable specified")
 
-def create_specific_xedit_command(info, plugin_name):
-    xedit_exe_lower = str(info.XEDIT_EXE).lower()
-    if info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:
-        return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-QAC -autoexit -autoload \\"{plugin_name}\\""'
-    elif not info.MO2Mode and xedit_exe_lower in info.xedit_list_specific:
-        return f'"{info.XEDIT_PATH}" -a -QAC -autoexit -autoload "{plugin_name}"'
+    if commandline:
+        commandline = commandline.replace("-QAC", "-iknowwhatimdoing -QAC -allowmakepartial") if pact_settings("Partial Forms") else commandline
+        return commandline
     else:
         print("Invalid xedit executable specified")
         return None
-
-
-def create_universal_xedit_command(info, plugin_name, game_mode):
-    if info.MO2Mode:
-        return f'"{info.MO2_PATH}" run "{info.XEDIT_PATH}" -a "-{game_mode} -QAC -autoexit -autoload \\"{plugin_name}\\""'
-    else:
-        return f'"{info.XEDIT_PATH}" -a -{game_mode} -QAC -autoexit -autoload "{plugin_name}"'
 
 
 def get_game_mode(info):
@@ -422,14 +368,15 @@ def get_game_mode(info):
     except Exception as e:
         print(f"Error reading load order file: {info.LOAD_ORDER_PATH}, error: {str(e)}")
         raise
-    return None
+    else:
+        raise ValueError("❌ ERROR: UNABLE TO DETERMINE GAME MODE!")
 
 
 def check_cpu_usage(proc):
     """
     Checks the CPU usage of a process.
 
-    If CPU usage is below 1% for 10 seconds, returns True, indicating a likely error. 
+    If CPU usage is below 1% after an interval of 5 seconds, returns True, indicating a likely error. 
 
     Args:
         proc (psutil.Process): The process to check.
@@ -437,7 +384,7 @@ def check_cpu_usage(proc):
     Returns:
         bool: True if CPU usage is low, False otherwise.
     """
-    """if proc.is_running() and proc.cpu_percent() < 1:
+    """proc.is_running() and (proc.cpu_percent(interval=5) < 1 or proc.status() == psutil.STATUS_ZOMBIE or proc.status() == psutil.STATUS_DEAD):
         return True
     return False"""
     try:
@@ -494,7 +441,7 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         plugin_name (str): The name of the plugin being processed.
         info (Info): An object containing relevant information.
         error_message (str): The error message to print.
-        add_ignore (bool, optional): Whether or not to add the plugin to the ignore list. Defaults to True.
+        add_ignore (bool, str): Whether or not to add the plugin to the ignore list. Defaults to True.
     """
     try:
         proc.kill()
@@ -502,13 +449,46 @@ def handle_error(proc, plugin_name, info, error_message, add_ignore=True):
         pass
     finally:
         time.sleep(1)
-        clear_xedit_logs()
+        if not pact_settings("Debug Mode"):
+            clear_xedit_logs()
         info.plugins_processed -= 1
-        info.clean_failed_list.append(plugin_name)
+        if isinstance(info.clean_failed_list, set):
+            info.clean_failed_list.add(plugin_name)
+        else:
+            info.clean_failed_list.append(plugin_name)
         print(error_message)
         if add_ignore:
-            pact_ignore_update(plugin_name)
+            pact_ignore_update(plugin_name, get_game_mode(info).upper())
 
+def create_bat_command(info, plugin_name):
+    xedit_exe_lower = str(info.XEDIT_EXE).lower()
+    xedit_path_str = str(info.XEDIT_PATH)
+
+    if xedit_exe_lower in info.lower_specific:
+        update_log_paths(info)
+        bat_command = create_xedit_command(info, plugin_name, False)
+        if bat_command:
+            return bat_command
+
+    if "loadorder" in str(info.LOAD_ORDER_PATH).lower() and xedit_exe_lower in info.lower_universal:
+        game_mode = get_game_mode(info)
+        if game_mode is None:
+            print(yaml_settings("PACT Data/PACT Main.yaml", "PACT_Data.Errors.Invalid_LO_File"))
+            input(PAUSE_MESSAGE)
+            raise ValueError
+
+        update_log_paths(info, game_mode)
+        bat_command = create_xedit_command(info, plugin_name, True, game_mode)
+        
+        if bat_command:
+            return bat_command
+
+    print("""❓ ERROR : UNABLE TO START THE CLEANING PROCESS! WRONG INI SETTINGS OR FILE PATHS?
+    If you're seeing this, make sure that your load order / xedit paths are correct.
+    If problems continue, try a different load order file or xedit executable.
+    If nothing works, please report this error to the PACT Nexus page.""")
+    input(PAUSE_MESSAGE)
+    raise RuntimeError("Unable to start the cleaning process")
 
 def run_auto_cleaning(plugin_name):
     """
@@ -521,14 +501,15 @@ def run_auto_cleaning(plugin_name):
     bat_command = create_bat_command(info, plugin_name)
 
     # Clear logs and start subprocess
-    clear_xedit_logs()
-    print(f"\nCURRENTLY RUNNING : {bat_command}".replace("\\", "").replace('"', ""))
+    if not pact_settings("Debug Mode"):
+        clear_xedit_logs()
+    print(f"\nCURRENTLY CLEANING : {plugin_name}")
     bat_process = subprocess.Popen(bat_command)
     time.sleep(1)
 
     # Check subprocess for errors until it finishes
     while bat_process.poll() is None:
-        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if 'edit.exe' in proc.name().lower()]
+        xedit_procs = [proc for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'create_time']) if is_it_xedit(proc.name().lower(), info)]
         for proc in xedit_procs:
             if proc.name().lower() == str(info.XEDIT_EXE).lower():
                 # Check for low CPU usage (indicative of an error)
@@ -555,7 +536,7 @@ def run_auto_cleaning(plugin_name):
 udr_pattern = re.compile(r"Undeleting:\s*(.*)")
 itm_pattern = re.compile(r"Removing:\s*(.*)")
 nvm_pattern = re.compile(r"Skipping:\s*(.*)")
-
+partial_form_pattern = re.compile(r"Making Partial Form:\s*(.*)")
 
 def check_cleaning_results(plugin_name):
     time.sleep(1)  # Wait to make sure xedit generates the logs.
@@ -567,21 +548,23 @@ def check_cleaning_results(plugin_name):
                 udr_pattern: ("Cleaned UDRs", info.clean_results_UDR),
                 itm_pattern: ("Cleaned ITMs", info.clean_results_ITM),
                 nvm_pattern: ("Found Deleted Navmeshes", info.clean_results_NVM),
+                partial_form_pattern: ("Created Partial Forms", info.clean_results_PARTIAL_FORMS)
             }
             for line in XE_Check:
                 for pattern, (message, results_list) in patterns.items():
                     if pattern.search(line):
                         pact_log_update(f"\n{plugin_name} -> {message}")
-                        results_list.append(plugin_name)
+                        results_list.add(plugin_name)
                         cleaned_something = True
             if cleaned_something:
                 info.plugins_cleaned += 1
             else:
                 pact_log_update(f"\n{plugin_name} -> NOTHING TO CLEAN")
                 print("NOTHING TO CLEAN ! Adding plugin to PACT Ignore file...")
-                pact_ignore_update(plugin_name, numnewlinesafter=0)
+                pact_ignore_update(plugin_name, get_game_mode(info).upper())
                 info.LCL_skip_list.append(plugin_name)
-        clear_xedit_logs()
+        if not pact_settings("Debug Mode"):
+            clear_xedit_logs()
 
 
 def get_plugin_list(load_order_path):
@@ -642,6 +625,8 @@ def clean_plugins(progress_emitter: ProgressEmitter):
         print("✔️ MO2 EXECUTABLE WAS FOUND! SWITCHING TO MOD ORGANIZER 2 MODE...")
     else:
         print("❌ MO2 EXECUTABLE NOT SET OR FOUND. SWITCHING TO VORTEX MODE...")
+    
+    info.LCL_skip_list.extend(yaml_settings("PACT Ignore.yaml", f"PACT_Ignore_{get_game_mode(info).upper()}"))
 
     plugin_list, plugin_count, ALL_skip_list = init_plugins_info()
     progress_emitter.report_max_value()
@@ -670,7 +655,8 @@ def clean_plugins(progress_emitter: ProgressEmitter):
     for plugins, message in [(info.clean_failed_list, "❌ {0} WAS UNABLE TO CLEAN THESE PLUGINS: (Invalid Plugin Name or {0} Timed Out):"),
                              (info.clean_results_UDR, "✔️ The following plugins had Undisabled Records and {0} properly disabled them:"),
                              (info.clean_results_ITM, "✔️ The following plugins had Identical To Master Records and {0} successfully cleaned them:"),
-                             (info.clean_results_NVM, "❌ CAUTION : The following plugins contain Deleted Navmeshes!\n   Such plugins may cause navmesh related problems or crashes.")]:
+                             (info.clean_results_NVM, "❌ CAUTION : The following plugins contain Deleted Navmeshes!\n   Such plugins may cause navmesh related problems or crashes."),
+                             (info.clean_results_PARTIAL_FORMS, f"✔️ The following plugins had ITMs converted to Partial Forms {0}:")]:
         if len(plugins) > 0:
             print(f"\n{message.format(info.XEDIT_EXE)}")
             for plugin in plugins:

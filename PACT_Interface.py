@@ -226,7 +226,7 @@ class UiPACTMainWin(object):
                                                         background-color: lightblue;
                                                         }
                                                     """,
-                                                  self.backup_popup,
+                                                  self.pact_placeholder_popup,
                                                   enabled=False  # Temporary, not functional right now.
                                                   )
 
@@ -246,7 +246,7 @@ class UiPACTMainWin(object):
                                                         background-color: lightblue;
                                                         }
                                                     """,
-                                                  self.restore_popup,
+                                                  self.pact_placeholder_popup,
                                                   enabled=False  # Temporary, not functional right now.
                                                   )
 
@@ -434,10 +434,26 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
     Please READ the #👋-welcome2 channel, react with the '2' emoji on the bot message there and leave your feedback in #💡-poet-guides-mods channel.
     Press OK to open the server link in your internet browser."""
 
-    # ================= PLUGIN BACKUP / RESTORE =================
     # @staticmethod recommended for func that don't call "self".
 
     @staticmethod
+    def help_popup():
+        Box_Help = QtWidgets.QMessageBox()
+        Box_Help.setIcon(QtWidgets.QMessageBox.Question)  # type: ignore
+        Box_Help.setWindowTitle("Need Help?")
+        Box_Help.setText(UiPACTMainWin.help_box_msg)  # RESERVED | Box_Help.setInformativeText("...")
+        Box_Help.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)  # type: ignore
+        if Box_Help.exec() != QtWidgets.QMessageBox.Cancel:  # type: ignore
+            QDesktopServices.openUrl(QUrl("https://discord.com/invite/7ZZbrsGQh4"))
+
+    @staticmethod
+    def update_popup():
+        if pact_update_check():
+            QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Update", "You have the latest version of PACT!")
+        else:
+            QtWidgets.QMessageBox.warning(PACT_WINDOW, "PACT Update", "New PACT version is available!\nPress OK to open the PACT Nexus Page.")
+            QDesktopServices.openUrl(QUrl("https://www.nexusmods.com/fallout4/mods/56255"))
+    """ @staticmethod
     def backup_popup():
         Box_Backup = QMessageBox()
         Box_Backup.setIcon(QMessageBox.Question)  # type: ignore
@@ -530,25 +546,10 @@ folders to the Primary Backup folder, overwrite plugins and then run RESTORE."""
                                     print(f"❌ ERROR : Unable to restore a backup for {file}")
                                     print("   You can run PACT in admin mode and try again.")
                                     continue
-                print("PRIMARY BACKUP RESTORED!")
-
+                print("PRIMARY BACKUP RESTORED!")""" # This is commented out because it's not functional right now.
     @staticmethod
-    def help_popup():
-        Box_Help = QtWidgets.QMessageBox()
-        Box_Help.setIcon(QtWidgets.QMessageBox.Question)  # type: ignore
-        Box_Help.setWindowTitle("Need Help?")
-        Box_Help.setText(UiPACTMainWin.help_box_msg)  # RESERVED | Box_Help.setInformativeText("...")
-        Box_Help.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)  # type: ignore
-        if Box_Help.exec() != QtWidgets.QMessageBox.Cancel:  # type: ignore
-            QDesktopServices.openUrl(QUrl("https://discord.com/invite/7ZZbrsGQh4"))
-
-    @staticmethod
-    def update_popup():
-        if pact_update_check():
-            QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Update", "You have the latest version of PACT!")
-        else:
-            QtWidgets.QMessageBox.warning(PACT_WINDOW, "PACT Update", "New PACT version is available!\nPress OK to open the PACT Nexus Page.")
-            QDesktopServices.openUrl(QUrl("https://www.nexusmods.com/fallout4/mods/56255"))
+    def pact_placeholder_popup():
+        QtWidgets.QMessageBox.information(PACT_WINDOW, "PACT Placeholder", "This feature is not available yet!")
 
     # ================= MAIN BUTTON FUNCTIONS ===================
 

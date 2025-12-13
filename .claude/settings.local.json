@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo doc:*)",
+      "WebFetch(domain:docs.rs)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "serana"
+  ]
+}

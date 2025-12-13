@@ -1,0 +1,3 @@
+[submodule "autoqac-rust"]
+	path = autoqac-rust
+	url = https://github.com/evildarkarchon/AutoQAC-rs.git

@@ -1,0 +1,161 @@
+AutoQAC_Data:
+  default_settings: |
+    AutoQAC_Settings:
+    # This file contains settings for AutoQAC (Auto Quick Auto Clean).
+    # Set to true if you want AutoQAC to check that you have the latest version.
+      Update Check: true
+
+    # Set to true if you want AutoQAC to show extra stats about cleaned plugins in the command line window.
+      Stat Logging: true
+
+    # In seconds, set below how long should AutoQAC wait for xedit to clean any plugin.
+    # If it takes longer than the set amount, the plugin will be immediately skipped.
+      Cleaning Timeout: 300
+
+    # In days, set below how long should AutoQAC wait until the logging journal is cleared.
+    # If AutoQAC Journal.txt is older than the set amount, it is immediately deleted.
+      Journal Expiration: 7
+
+    # Set or copy-paste your load order (loadorder.txt / plugins.txt) file path below.
+    # See the AutoQAC documentation for instructions on where you can find these files.
+      LoadOrder TXT: ""
+
+    # Set or copy-paste your XEdit (FO3Edit.exe / FNVEdit.exe / FO4Edit.exe / SSEEdit.exe) executable file path below.
+    # xEdit.exe is also supported, but requires that you set LoadOrder TXT path to loadorder.txt only.
+      XEDIT EXE: ""
+
+    # Set or copy-paste your MO2 (ModOrganizer.exe) executable file path below.
+    # Required if MO2 is your main mod manager. Otherwise, leave this blank.
+      MO2 EXE: ""
+
+    # Allow XEdit to use partial forms.
+    # This is an extremely experimental feature, and may cause issues.
+    # It requires an XEdit version >= 4.1.5b.
+    # Because of the experimental nature of this feature, it will not be configurable in the GUI.
+    # Use at your own risk. No support will be provided for this feature.
+      Partial Forms: false
+
+    # Enables features that help debug AutoQAC.
+      Debug Mode: false
+
+  default_ignorefile: |
+    # This file contains plugin names that AutoQAC will IGNORE while cleaning your plugins.
+    # When adding plugin names, make sure you add it under the correct game list, same applies to VR plugins.
+
+    # To add plugin names yourself, make sure each plugin starts with a dash followed by a space,
+    # AND ends with either .esm | .esp | .esl | Uppercase / lowercase does not matter.
+    AutoQAC_Ignore_FO3:
+      - Example Plugin.esp
+    AutoQAC_Ignore_FNV:
+      - Example Plugin.esp
+    AutoQAC_Ignore_FO4:
+      - Example Plugin.esp
+    AutoQAC_Ignore_SSE:
+      - Example Plugin.esp
+
+  version: "2.0.0"
+  version_date: 24.12.11 #YY/MM/DD
+
+  Errors:
+    Invalid_XEDIT_File: |
+      ❌ ERROR : CANNOT DETERMINE THE SET XEDIT EXECUTABLE FROM AUTOQAC SETTINGS!
+      Make sure that you have set XEDIT EXE path to a valid .exe file!
+      OR try changing XEDIT EXE path to a different XEdit version.
+    Invalid_LO_File: |
+      ❌ ERROR : CANNOT PROCESS LOAD ORDER FILE FOR XEDIT IN THIS SITUATION!
+      You have to set your load order file path to loadorder.txt and NOT plugins.txt
+      This is so AutoQAC can detect the right game. Change the load order file path and try again.
+
+  Warnings:
+    Invalid_INI_Setup: |
+      ❌  WARNING : YOUR AUTOQAC SETUP IS INCORRECT!
+      You likely set the wrong XEdit version for your game.
+      Check your EXE or AutoQAC settings and try again.
+    Outdated_AutoQAC: |
+      ❌  WARNING : YOUR AUTOQAC VERSION IS OUTDATED!
+      You can download the latest version from Nexus Mods.
+      https://www.nexusmods.com/fallout4/mods/69413
+    AutoQAC_Update_Failed: |
+      ❌  WARNING : AUTOQAC FAILED TO CHECK FOR UPDATES!
+      You can download the latest version from Nexus Mods.
+      https://www.nexusmods.com/fallout4/mods/69413
+
+  XEdit_Lists:
+    FO3:
+      - FO3Edit.exe
+      - FO3Edit64.exe
+    FNV:
+      - FNVEdit.exe
+      - FNVEdit64.exe
+    FO4:
+      - FO4Edit.exe
+      - FO4Edit64.exe
+    SSE:
+      - SSEEdit.exe
+      - SSEEdit64.exe
+    FO4VR:
+      - FO4VREdit.exe
+      - FO4VREdit64.exe
+    SkyrimVR:
+      - TES5VREdit.exe
+    Universal:
+      - xEdit.exe
+      - xEdit64.exe
+      - xfoedit.exe
+      - xfoedit64.exe
+
+  Skip_Lists:
+    FO3:
+      - ""
+      - Fallout3.esm
+      - Anchorage.esm
+      - ThePitt.esm
+      - BrokenSteel.esm
+      - PointLookout.esm
+      - Zeta.esm
+      - Unofficial Fallout 3 Patch.esm
+    FNV:
+      - ""
+      - FalloutNV.esm
+      - DeadMoney.esm
+      - OldWorldBlues.esm
+      - HonestHearts.esm
+      - LonesomeRoad.esm
+      - TribalPack.esm
+      - MercenaryPack.esm
+      - ClassicPack.esm
+      - CaravanPack.esm
+      - GunRunnersArsenal.esm
+      - Unofficial Patch NVSE Plus.esp
+      - TaleOfTwoWastelands.esm
+      - TTWInteriors_Core.esm
+      - TTWInteriorsProject_Combo.esm
+      - TTWInteriorsProject_ComboHotfix.esm
+      - TTWInteriorsProject_Merged.esm
+      - TTWInteriors_Core_Hotfix.esm
+    FO4:
+      - ""
+      - Fallout4.esm
+      - DLCCoast.esm
+      - DLCNukaWorld.esm
+      - DLCRobot.esm
+      - DLCworkshop01.esm
+      - DLCworkshop02.esm
+      - DLCworkshop03.esm
+      - Unofficial Fallout 4 Patch.esp
+      - PPF.esm
+      - PRP.esp
+      - PRP-Compat
+      - SS2.esm
+      - SS2_XPAC_Chapter2.esm
+      - SS2_XPAC_Chapter3.esm
+      - SS2Extended.esp
+    SSE:
+      - ""
+      - Skyrim.esm
+      - Update.esm
+      - HearthFires.esm
+      - Dragonborn.esm
+      - Dawnguard.esm
+      - Unofficial Skyrim Special Edition Patch.esp
+      - _ResourcePack.esl

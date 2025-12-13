@@ -1,0 +1,35 @@
+﻿/PACT Ignore.yaml
+/PACT Settings.yaml
+/PACT Data/PACT Config.yaml
+/AutoQAC Data/AutoQAC Config.yaml
+*.backup
+__pycache__/
+*.pyc
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+##
+## Visual Studio Code
+##
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+poetry.lock
+logs/
+*.code-workspace
+test_*.yaml
+!tests/test_*.yaml
+
+# Test output directory - ignore contents but keep the directory
+tests/test_output/*
+!tests/test_output/.gitkeep
+!tests/test_output/README.md
+temp_*
+uv.lock
+.coverage
+coverage.xml
+migrate_to_refactored.py
+AutoQAC Data/AutoQAC Ignore.yaml

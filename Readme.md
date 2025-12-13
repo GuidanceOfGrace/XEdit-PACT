@@ -1,126 +1,295 @@
-===========================================================================
-# LINKS #
+# AutoQAC
 
-Mod Organizer 2 - https://github.com/ModOrganizer2/modorganizer/releases
+**Auto Quick Auto Clean - Batch Plugin Cleaning Tool for Bethesda Games**
 
-SSEEdit - https://www.nexusmods.com/skyrimspecialedition/mods/164?tab=files
+Automated batch cleaning of Bethesda game plugins using xEdit's Quick Auto Clean (-QAC) functionality.
 
-FO4Edit - https://www.nexusmods.com/fallout4/mods/2737/?tab=files
+## Overview
 
-FO4 PACT - https://www.nexusmods.com/fallout4/mods/69413
+AutoQAC automates the process of cleaning game plugins (ESP/ESM/ESL files) to remove:
+- **ITMs (Identical To Master)**: Records that are identical to the master file
+- **UDRs (Undisabled References)**: References that should be disabled but aren't
+- **Deleted Navmeshes**: Navigation meshes that can cause crashes
 
-SSE PACT - https://www.nexusmods.com/skyrimspecialedition/mods/86683
+This project provides **two implementations**:
 
-===========================================================================
-# BEFORE YOU ASK #
+### 1. Python/Qt Implementation (Legacy)
 
-> Is it safe to clean plugins?
+The original implementation using Python 3.12+ with PySide6 (Qt for Python).
 
-Short answer? Yes. Long answer?
-Yeeeeeeeeeeeeeeeee... Though PACT won't clean official DLC plugins for now.
+- **Location**: Root directory (`AutoQAC_Interface.py`, `AutoQACLib/`)
+- **Status**: Stable, feature-complete
+- **UI Framework**: PySide6 (Qt 6)
+- **Documentation**: See [CLAUDE.md](CLAUDE.md)
 
-Sometimes, a mod author will open a plugin record simply to investigate a field or property and not change anything.
-But the CK will still flag that record as edited, even if it remains identical in every way. These are *Identical To Master Records (ITMs)*
-They will frequently overwrite valid changes made by other mods and should be cleaned whenever possible. Intentional ITMs are next to nonexistent.
+**Quick Start**:
+```bash
+# Install dependencies
+uv sync --extra dev
 
-*Undisabled References (UDRs)* are potentially more harmful. Mod authors will sometimes delete records they no longer wish to use.
-Depending on what record has been deleted, other mods may try to reference it. When they can't find this record,
-this can lead to broken quests to game crashes. These records need to be restored and properly disabled.
+# Run application
+uv run python AutoQAC_Interface.py
+```
 
-Cleaning plugins removes Identical To Master Records (ITMs) and Undisabled References (UDRs), which is what *PACT* will automate.
-While cleaning official DLC plugins is recommended for *Skyrim*, it is NOT recommended for *Fallout 4*
-All other mod plugins, including Creation Club Content, can and should be cleaned.
+### 2. Rust/Slint Implementation (Modern)
 
-*If you know any better, feel free to enlighten me.*
+A modern rewrite in Rust with Slint UI framework and Microsoft Fluent Design.
 
-===========================================================================
-# CONTENTS & FILES #
+- **Location**: `autoqac-rust/` directory
+- **Status**: Feature parity with Qt version (16/20 milestones complete)
+- **UI Framework**: Slint 1.13 with Fluent Design
+- **Documentation**: See [autoqac-rust/README.md](autoqac-rust/README.md)
 
-*PACT Readme.md* - The file that you're reading right now.
+**Quick Start**:
+```bash
+cd autoqac-rust
 
-*Plugin Auto Cleaning Tool.exe* - Main exe / tool for batch cleaning plugins with XEdit (FO4Edit, SSEEdit).
-Simply run it, then set up the required file paths and click on the big CLEAN PLUGINS button.
+# Build and run
+cargo run --release
+```
 
-*PACT Settings.ini* - Configuration file for the main exe / tool where some parameters can be adjusted.
-This file will be auto generated after running the exe for the first time. Remove it to reset settings.
+**Benefits of Rust Implementation**:
+- ✅ Type safety (compile-time error checking)
+- ✅ Modern async runtime (tokio)
+- ✅ Better performance (native code)
+- ✅ Fluent Design UI (modern, consistent)
+- ✅ Memory safety guarantees
+- ✅ Cross-platform support
 
-*PACT Journal.log* - Logging file where PACT records all cleaned plugins and deleted navmeshes found during each session.
+---
 
-*PACT Ignore.txt* - Additional file where you can exclude plugins from cleaning, simply add one plugin name to each line.
-This file will be auto generated after running the exe for the first time. Remove it to reset the ignore list.
+## Is it Safe to Clean Plugins?
 
-===========================================================================
-# HOW TO USE PACT (DO NOT RUN PACT THROUGH MO2, RUN THE EXE NORMALLY) #
+**Short answer**: Yes.
+**Long answer**: Yeeeeeeeeeeeeeeeee...
 
-After running the PACT EXE, you'll have to set up file paths for either *loadorder.txt* or *plugins.txt* and *XEdit.exe* executable.
-All paths can be set directly through PACT EXE or by manually editing *PACT Settings.ini* after you run the PACT EXE at least once.
+### Identical To Master Records (ITMs)
 
-- *plugins.txt* file contains all currently active plugins for your game.
-- *loadorder.txt* file contains all currently loaded plugins for your game.
+Sometimes, a mod author will open a plugin record simply to investigate a field or property and not change anything. But the Creation Kit will still flag that record as edited, even if it remains identical in every way. These are **Identical To Master Records (ITMs)**.
 
-Vortex -> Both *plugins.txt* and *loadorder.txt* can be found by selecting *Open* > *Game Application Data Folder* in Vortex.
+- They frequently overwrite valid changes made by other mods
+- Should be cleaned whenever possible
+- Intentional ITMs are extremely rare
 
-MO2 -> Both *plugins.txt* and *loadorder.txt* can be found in your current MO2 profile folder. (MO2 / profiles / <profile name>)
+### Undisabled References (UDRs)
 
-- *XEdit.exe* file is the main program that does the actual cleaning, where the X part of the name is different depending on the game.
-You should run your *XEdit* tool at least once before running *PACT* to ensure that both tools are properly configured before cleaning plugins.
-Both FO4Edit (Fallout 4) and SSEEdit (Skyrim Special Edition) are supported and can be downloaded form their respective Nexus sites, links on top.
+**Undisabled References (UDRs)** are potentially more harmful. Mod authors will sometimes delete records they no longer wish to use. Depending on what record has been deleted, other mods may try to reference it. When they can't find this record, this can lead to broken quests or game crashes.
 
-- *Mod Organizer 2* users also need to set the file path for the *ModOrganizer.exe* executable in PACT.
-Vortex and other mod manager users don't need to do this, simply leave the MO2 EXE line blank.
+- Records need to be restored and properly disabled
+- Can cause crashes and broken quests if not cleaned
+- AutoQAC automatically handles UDR restoration
 
-# MAKE SURE THAT MO2 IS COMPLETELY CLOSED BEFORE YOU START CLEANING #
+### DLC Cleaning
 
-Once you set each file path, the buttons will turn green to indicate that the required files are correct, though you can still change them.
-Once at least *loadorder.txt* file and *XEdit.exe* executable are set, the *START CLEANING* button will become colored blue and enabled.
+While cleaning official DLC plugins is recommended for **Skyrim**, it is **NOT recommended** for **Fallout 4**. However, AutoQAC will skip official DLC plugins by default for safety.
 
-Press *START CLEANING* to start the cleaning process, at which point *STOP CLEANING* button will be displayed instead until cleaning completes.
-You can either press *STOP CLEANING* or exit the EXE to terminate the cleaning process. All other programs should also close shortly after.
+All other mod plugins, including **Creation Club Content**, can and should be cleaned.
 
-While cleaning, PACT will show the number of plugins it found that need to be processed, then auto run the cleaning command for each one.
+---
 
-- If anything gets cleaned, PACT will tell you about it and any ITMs, URDs and other records it found after the whole cleaning session completes.
-- If NOTHING gets cleaned, PACT will automatically add that plugin name to the ignore / exclude list, which is the *PACT Ignore.txt* file.
+## Features
 
-You can add or remove plugin names from *PACT Ignore.txt* if you wish to include or exclude certain plugins from cleaning.
+### Core Functionality
+- ✅ Batch cleaning of multiple plugins
+- ✅ Skip list integration (base game files protected)
+- ✅ Auto-detection of game type
+- ✅ MO2 (Mod Organizer 2) integration
+- ✅ Configurable timeout per plugin
+- ✅ Real-time progress tracking
+- ✅ Comprehensive logging
 
-PACT will add to *PACT Ignore.txt* file any plugin which is already clean (no ITMs or UDRs found to clean).
-PACT will skip and add to ignore list any plugin that *XEdit* cannot load because of missing plugin requirements.
-PACT will also skip other invalid plugins, though it will take *5 minutes* for the process to time out, unless you close *XEdit* manually.
+### Advanced Features
+- ✅ Record-level statistics (UDRs, ITMs, navmeshes, partial forms)
+- ✅ Partial Forms experimental support
+- ✅ Game detection from xEdit executable or load order
+- ✅ Configuration validation with feedback
+- ✅ Cancellation support
+- ✅ Detailed error reporting
 
-===========================================================================
-# IF YOU WANT TO STOP PACT AND XEDIT POP-UPS FROM BOTHERING YOU #
+---
 
-Simply press [ WIN ] + [ CTRL ] + [ -> ] keys on your keyboard to switch to another virtual desktop.
-Run PACT there and switch back to your main desktop with [ WIN ] + [ CTRL ] + [ <- ]
+## Supported Games
 
-More info and complete guide here:
-- Windows 11 - https://www.howtogeek.com/796349/how-to-use-virtual-desktops-on-windows-11/
-- Windows 10 - https://www.howtogeek.com/197625/how-to-use-virtual-desktops-in-windows-10/
+| Game                   | Short Code | xEdit Executables          |
+| ---------------------- | ---------- | -------------------------- |
+| Fallout 3              | FO3        | FO3Edit.exe, FO3Edit64.exe |
+| Fallout New Vegas      | FNV        | FNVEdit.exe, FNVEdit64.exe |
+| Fallout 4              | FO4        | FO4Edit.exe, FO4Edit64.exe |
+| Skyrim Special Edition | SSE        | SSEEdit.exe, SSEEdit64.exe |
+| Fallout 4 VR           | FO4VR      | FO4VREdit.exe              |
+| Skyrim VR              | SkyrimVR   | TES5VREdit.exe             |
 
-===========================================================================
-# KNOWN ISSUES #
+**Universal xEdit**: Also supports universal xEdit executables (`xEdit.exe`, `xEdit64.exe`) with automatic game detection.
 
-PACT SHOULD ONLY CLEAN ONE ( 1 ) PLUGIN AT A TIME AND ONLY HAVE ONE ( 1 ) INSTANCE OF FO4EDIT OPEN
-IF IT STARTS SPAMMING MULTIPLE XEDIT WINDOWS, IMMEDIATELY CLOSE PACT AND REPORT TO PACT NEXUS SITE
+---
 
-- If any plugin takes longer than *5 minutes* to clean, PACT will automatically close *XEdit* and skip that plugin.
-  (You can close XEdit yourself to skip the wait. PACT will add that plugin name to the ignore list in PACT Ignore.txt)
+## How to Use (Quick Guide)
 
-- If you get a message in XEdit saying *Exactly one module must be selected for Quick Clean mode*, this means either:
+### Python/Qt Version
 
-1)	The plugin name is invalid. Simply press OK to close XEdit and PACT will continue cleaning other plugins.
-2)	You didn't set the ModOrganizer.exe file path correctly and PACT is running in Vortex mode instead.
+1. **Install dependencies**:
+   ```bash
+   uv sync --extra dev
+   ```
 
-- If you get an error in XEdit saying *This application failed to start because no Qt Platform...*, this means either:
+2. **Run the application**:
+   ```bash
+   uv run python AutoQAC_Interface.py
+   ```
 
-1)	You are trying to run PACT with MO2 already open. Don't do that. Close all MO2 instances and run PACT normally.
-2)	Your MO2 might be missing some files. Make sure to reinstall latest 2.4 version of MO2 or try the portable version.
+3. **Configure paths**:
+   - Set **Load Order** path (`plugins.txt` or `loadorder.txt`)
+   - Set **xEdit** executable path (FO4Edit.exe, SSEEdit.exe, etc.)
+   - (Optional) Set **MO2** path for Mod Organizer 2 integration
 
-===========================================================================
-# LATEST CHANGES #
+4. **Start cleaning**:
+   - Click **Start Cleaning**
+   - Monitor progress
+   - Review results when complete
 
-1.75
-- Fixed an issue where PACT would sometimes refuse to start if *loadorder.txt* was set.
-- Fixed an issue where PACT would error out if *PACT Journal.log* didn't already exist.
-- Updated PACT Readme with some more details.
+### Rust/Slint Version
+
+1. **Build and run**:
+   ```bash
+   cd autoqac-rust
+   cargo run --release
+   ```
+
+2. **Configure and clean**: Same as Python version (modern Fluent UI)
+
+---
+
+## Finding Configuration Files
+
+### Load Order Files
+
+**Vortex**:
+- Select **Open** → **Game Application Data Folder** in Vortex
+- Files: `plugins.txt` and `loadorder.txt`
+
+**Mod Organizer 2**:
+- Navigate to: `MO2/profiles/<profile name>/`
+- Files: `plugins.txt` and `loadorder.txt`
+
+### xEdit Executable
+
+Download from Nexus Mods:
+- [SSEEdit](https://www.nexusmods.com/skyrimspecialedition/mods/164?tab=files) (Skyrim Special Edition)
+- [FO4Edit](https://www.nexusmods.com/fallout4/mods/2737/?tab=files) (Fallout 4)
+
+**Important**: Run xEdit at least once before using AutoQAC to ensure proper configuration.
+
+### Mod Organizer 2 Users
+
+**⚠ IMPORTANT**: Make sure MO2 is **completely closed** before starting cleaning.
+
+Set the **ModOrganizer.exe** path in AutoQAC. Vortex and other mod manager users can leave this blank.
+
+---
+
+## Configuration Files
+
+### Python/Qt Version
+
+Located in `AutoQAC Data/`:
+- `AutoQAC Main.yaml`: Game configurations, skip lists
+- `AutoQAC Config.yaml`: User settings, paths
+- `AutoQAC Ignore.yaml`: Additional ignore list
+
+### Rust/Slint Version
+
+Same structure in `AutoQAC Data/` (shared configuration).
+
+---
+
+## Logging & Journal
+
+Both implementations create log files:
+
+**Python Version**:
+- `logs/autoqac_<timestamp>.log`: Application log (rotating)
+
+**Rust Version**:
+- `logs/autoqac_<timestamp>.log`: Structured logging with tracing
+
+**Journal** (both):
+- Records all cleaned plugins and statistics
+- Configurable retention (default: 7 days)
+
+---
+
+## Known Issues
+
+### Critical Constraint
+
+**⚠ AutoQAC SHOULD ONLY CLEAN ONE (1) PLUGIN AT A TIME**
+
+If multiple xEdit windows start opening simultaneously, immediately close AutoQAC and report the issue.
+
+### Timeout Handling
+
+- Default timeout: **5 minutes** (300s) per plugin
+- AutoQAC will automatically close xEdit and skip the plugin if timeout is reached
+- You can manually close xEdit to skip the wait
+
+### Common Errors
+
+**"Exactly one module must be selected for Quick Clean mode"**:
+1. Plugin name is invalid → Press OK, AutoQAC will continue
+2. MO2 path not set correctly → Set ModOrganizer.exe path
+
+**"This application failed to start because no Qt Platform..."**:
+1. MO2 is already open → Close all MO2 instances
+2. MO2 missing files → Reinstall MO2 2.4+ or use portable version
+
+---
+
+## Pro Tip: Virtual Desktops
+
+To avoid xEdit pop-ups interrupting your work:
+
+1. Press **WIN + CTRL + →** to switch to another virtual desktop
+2. Run AutoQAC on that desktop
+3. Press **WIN + CTRL + ←** to switch back to your main desktop
+
+**Guides**:
+- [Windows 11](https://www.howtogeek.com/796349/how-to-use-virtual-desktops-on-windows-11/)
+- [Windows 10](https://www.howtogeek.com/197625/how-to-use-virtual-desktops-in-windows-10/)
+
+---
+
+## Documentation
+
+- **Python/Qt Architecture**: See [CLAUDE.md](CLAUDE.md)
+- **Rust/Slint Architecture**: See [autoqac-rust/README.md](autoqac-rust/README.md)
+- **Development Guide**: See implementation-specific docs
+
+---
+
+## Links
+
+- **Mod Organizer 2**: [GitHub Releases](https://github.com/ModOrganizer2/modorganizer/releases)
+- **SSEEdit**: [Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/164?tab=files)
+- **FO4Edit**: [Nexus Mods](https://www.nexusmods.com/fallout4/mods/2737/?tab=files)
+- **FO4 AutoQAC**: [Nexus Mods](https://www.nexusmods.com/fallout4/mods/69413)
+- **SSE AutoQAC**: [Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/86683)
+
+---
+
+## License
+
+GPL-3.0 License - See [LICENSE.md](LICENSE.md) for details.
+
+## Credits
+
+- **Original Author**: Poet (aka GuidanceOfGrace)
+- **xEdit Team**: For the powerful xEdit tools
+- **Contributors**: See commit history for full list
+
+---
+
+**Choose your implementation**:
+- **Stable & Familiar**: Use the Python/Qt version
+- **Modern & Fast**: Use the Rust/Slint version
+
+Both implementations are production-ready and feature-complete for core functionality.

@@ -1,0 +1,2 @@
+# This file ensures the test_output directory is tracked by git
+# The directory is used to store test output files that are ignored by git
